@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>בדיקת מקלדת כימית</title>
+
+<script>
+window.MathJax={
+  tex:{
+    inlineMath:[["\\(","\\)"]]
+  },
+  svg:{
+    fontCache:"global"
+  }
+};
+</script>
+
+<script async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+</head>
+<body style="font-family:Arial,sans-serif;max-width:1050px;margin:20px auto;padding:0 12px;background:#f6f8fb">
+<h1>מקלדת לנוסחאות ולמשוואות כימיות — גרסת בדיקה</h1>
+<h2>1. מצב עריכה</h2><div id="editor"></div>
+
+<div id="rendered" style="direction:ltr;font-size:32px"></div> 
+
+<p><button type="button" id="loadWater">טען H₂O</button> 
+<button type="button" id="loadEquation">טען משוואה</button> <button type="button" id="copyToReadonly">העבר לתצוגה</button></p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;direction:ltr">
+<div><b>LaTeX</b><pre id="latex" style="white-space:pre-wrap;background:#fff;padding:8px"></pre></div>
+<div><b>AST</b><pre id="ast" style="white-space:pre-wrap;max-height:360px;overflow:auto;padding:8px"></pre></div></div>
+<h2>2. מצב קריאה בלבד</h2><div id="readonly"></div>
+<h2>3. קריאה בלבד עם הדגשת שגיאות</h2>
+<p>בדוגמה מודגשים הסמל והאינדקס השגויים באמצעות טווחי תווים.</p>
+<div id="checked"></div>
+<h2>בדיקת API</h2><pre id="api" style="direction:ltr;text-align:left;background:#fff;padding:10px"></pre>
+<script src="chemical-keyboard-v2.js"></script>
+
+
+<script>
+var editor=new ChemicalKeyboard({
+  divId:"editor",
+  language:"he",
+  mode:"edit",
+  elements:["H","C","N","O","Na","Cl","Ca","Fe"],
+
+  onChange:function(result){
+    var preview=document.getElementById("rendered");
+
+    document.getElementById("latex").textContent=result.latex;
+    document.getElementById("ast").textContent=JSON.stringify(result.ast,null,2);
+
+    preview.textContent="\\("+result.latex+"\\)";
+
+    if(window.MathJax&&MathJax.startup&&MathJax.startup.promise){
+      MathJax.startup.promise.then(function(){
+        if(MathJax.typesetClear){
+          MathJax.typesetClear([preview]);
+        }
+
+        return MathJax.typesetPromise([preview]);
+      });
+    }
+  }
+});
+
+var readonly=new ChemicalKeyboard({divId:"readonly",language:"he",mode:"readonly",value:"2H_{2}+O_{2}→2H_{2}O"});
+var checked=new ChemicalKeyboard({divId:"checked",language:"he",mode:"readonly-errors",value:"CaCl_{3}",highlights:[{start:2,end:4,color:"#ffe49c"},{start:4,end:5,color:"#ffb9b9"}]});
+document.getElementById("loadWater").addEventListener("click",
+function(){editor.setValue("H_{2}O");});
+document.getElementById("loadEquation").addEventListener("click",
+function(){editor.setValue("2Fe_{2}O_{3}(s)→4FeO(s)+O_{2}(g)");});
+document.getElementById("copyToReadonly").addEventListener("click",
+function(){readonly.setValue(editor.getModel());});
+document.getElementById("api").textContent="getValue()\\ngetModel()\\ngetAST()\\nresult()\\nsetValue(textOrModel)\\nsetMode('edit' | 'readonly' | 'readonly-errors')\\nsetHighlights([{start, end, color}])";
+editor.setValue("2Fe_{2}O_{3(s)}→4FeO_{(s)}+O_{2(g)}");
+</script>
+
+<div id="mathjaxPreview"></div>
+
+</body></html>

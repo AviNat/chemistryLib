@@ -1201,7 +1201,7 @@ function syntaxErrors(ast,errors,answerName){
         "unknown-element",
         {
           answer:answerName,
-          symbol:error.value,
+          atom:error.value,
           range:error.range
         },
         "The symbol "+error.value+" in the "+answerName+
@@ -1509,7 +1509,17 @@ function compareSide(studentSide,referenceSide,side,errors){
     }
   }
 }
-function compareChemicalAnswers(studentValue,referenceValue){
+function localizedErrorDescription(error,language){
+  var text=localizedErrorTemplate(error,language);
+  var atom=error.atom||error.symbol||"";
+
+  text=replaceTextToken(text,"species",error.species||"");
+  text=replaceTextToken(text,"atom",atom);
+
+  return text;
+}
+
+function compareChemicalAnswers(studentValue,referenceValue,language){
   var studentAst=studentValue&&studentValue.type?studentValue:analyzeValue(studentValue);
   var referenceAst=referenceValue&&referenceValue.type?referenceValue:analyzeValue(referenceValue);
   var studentCanonical=canonicalizeAst(studentAst);
@@ -1648,7 +1658,9 @@ function compareChemicalAnswers(studentValue,referenceValue){
       errors
     );
   }
-
+  for(i=0;i<errors.length;i++){
+    errors[i].description=localizedErrorDescription(errors[i],language);
+  }
   return {
     correct:errors.length===0,
     studentCanonical:studentCanonical,
@@ -1679,7 +1691,7 @@ ChemicalKeyboard.prototype.compare=function(referenceAnswer){
     };
   }
 
-  return compareChemicalAnswers(this.getAST(),reference);
+  return compareChemicalAnswers(this.getAST(),reference,this.language);
 };
 
 ChemicalKeyboard.prototype.setCorrectAnswer=function(value){
@@ -2949,7 +2961,7 @@ ChemicalKeyboard.prototype.toLatex=function(){
       }
 
       if(subText||stateText){
-        out+="_{"+esc(subText);
+        out+="_{\\scriptscriptstyle "+esc(subText);
 
         if(stateText){
           out+="\\mathrm{"+esc(stateText)+"}";
@@ -2959,7 +2971,7 @@ ChemicalKeyboard.prototype.toLatex=function(){
       }
 
       if(supText){
-        out+="^{"+esc(supText)+"}";
+        out+="^{\\scriptscriptstyle "+esc(supText)+"}";
       }
 
       i=j-1;

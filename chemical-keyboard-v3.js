@@ -6,35 +6,97 @@
   var SET = {};
   var uid = 1;
 
-  var T = {
-    en: {
-      elements: "Elements",
-      all: "All elements",
-      normal: "Normal",
-      sub: "Subscript",
-      sup: "Superscript",
-      state: "State",
-      close: "Close"
-    },
-    he: {
-      elements: "יסודות",
-      all: "כל היסודות",
-      normal: "רגיל",
-      sub: "כתב תחתי",
-      sup: "כתב עילי",
-      state: "מצב צבירה",
-      close: "סגירה"
-    },
-    ar: {
-      elements: "العناصر",
-      all: "كل العناصر",
-      normal: "عادي",
-      sub: "نص سفلي",
-      sup: "نص علوي",
-      state: "حالة المادة",
-      close: "إغلاق"
-    }
-  };
+  var T={
+  en:{
+    keyboard:"Chemical keyboard",
+    elements:"Elements",
+    all:"All elements",
+    normal:"Normal",
+    sub:"Subscript",
+    sup:"Superscript",
+    state:"State",
+    close:"Close",
+
+    tipParentheses:"Insert a pair of parentheses",
+    tipNormal:"Continue typing at the normal level",
+    tipSub:"Enter an atom count as a subscript",
+    tipSup:"Enter an ionic charge as a superscript",
+    tipPlus:"Separates substances or indicates a positive charge",
+    tipMinus:"Minus sign or negative charge",
+    tipForward:"Insert a one-direction reaction arrow",
+    tipEquilibrium:"Insert a reversible equilibrium arrow",
+    tipDot:"Insert a centered dot, for example in a hydrate",
+    tipSolid:"Solid state (s)",
+    tipLiquid:"Liquid state (l)",
+    tipGas:"Gas state (g)",
+    tipAqueous:"Aqueous state (aq)",
+    tipLeft:"Move the cursor one chemical unit to the left",
+    tipRight:"Move the cursor one chemical unit to the right",
+    tipDelete:"Delete the chemical unit to the left of the cursor",
+    tipClear:"Clear the complete formula or equation",
+    tipAllElements:"Open the complete list of chemical elements"
+  },
+
+  he:{
+    keyboard:"מקלדת כימית",
+    elements:"יסודות",
+    all:"כל היסודות",
+    normal:"רגיל",
+    sub:"כתב תחתי",
+    sup:"כתב עילי",
+    state:"מצב צבירה",
+    close:"סגירה",
+
+    tipParentheses:"הוספת זוג סוגריים",
+    tipNormal:"המשך הקלדה בגובה רגיל",
+    tipSub:"הקלדת מספר האטומים ככתב תחתי",
+    tipSup:"הקלדת מטען היון ככתב עילי",
+    tipPlus:"הפרדה בין חומרים או מטען חיובי",
+    tipMinus:"סימן מינוס או מטען שלילי",
+    tipForward:"הוספת חץ תגובה חד־כיווני",
+    tipEquilibrium:"הוספת חץ של תגובה הפיכה או שיווי משקל",
+    tipDot:"הוספת נקודה אמצעית, למשל בנוסחה של הידרט",
+    tipSolid:" מצב צבירה מוצק (s)",
+    tipLiquid:" מצב צבירה נוזל (l)",
+    tipGas:" מצב צבירה גז (g)",
+    tipAqueous:" מצב של תמיסה מימית (aq)",
+    tipLeft:"הזזת הסמן יחידה כימית אחת שמאלה",
+    tipRight:"הזזת הסמן יחידה כימית אחת ימינה",
+    tipDelete:"מחיקת היחידה הכימית שמשמאל לסמן",
+    tipClear:"מחיקת הנוסחה או המשוואה כולה",
+    tipAllElements:"פתיחת הרשימה המלאה של היסודות הכימיים"
+  },
+
+  ar:{
+    keyboard:"لوحة مفاتيح كيميائية",
+    elements:"العناصر",
+    all:"كل العناصر",
+    normal:"عادي",
+    sub:"نص سفلي",
+    sup:"نص علوي",
+    state:"حالة المادة",
+    close:"إغلاق",
+
+    tipParentheses:"إضافة زوج من الأقواس",
+    tipNormal:"متابعة الكتابة في المستوى العادي",
+    tipSub:"إدخال عدد الذرات كنص سفلي",
+    tipSup:"إدخال شحنة الأيون كنص علوي",
+    tipPlus:"فصل بين المواد أو شحنة موجبة",
+    tipMinus:"علامة طرح أو شحنة سالبة",
+    tipForward:"إضافة سهم تفاعل أحادي الاتجاه",
+    tipEquilibrium:"إضافة سهم تفاعل عكوس أو اتزان",
+    tipDot:"إضافة نقطة وسطية، مثلًا في صيغة الهيدرات",
+    tipSolid:"إضافة الحالة الصلبة (s)",
+    tipLiquid:"إضافة الحالة السائلة (l)",
+    tipGas:"إضافة الحالة الغازية (g)",
+    tipAqueous:"إضافة حالة المحلول المائي (aq)",
+    tipLeft:"تحريك المؤشر وحدة كيميائية واحدة إلى اليسار",
+    tipRight:"تحريك المؤشر وحدة كيميائية واحدة إلى اليمين",
+    tipDelete:"حذف الوحدة الكيميائية الموجودة إلى يسار المؤشر",
+    tipClear:"مسح الصيغة أو المعادلة كاملة",
+    tipAllElements:"فتح القائمة الكاملة للعناصر الكيميائية"
+  }
+};
 
   var NAMES={
   H:["Hydrogen","מימן","هيدروجين"],He:["Helium","הליום","هيليوم"],Li:["Lithium","ליתיום","ليثيوم"],Be:["Beryllium","בריליום","بيريليوم"],B:["Boron","בור","بورون"],C:["Carbon","פחמן","كربون"],N:["Nitrogen","חנקן","نيتروجين"],O:["Oxygen","חמצן","أكسجين"],F:["Fluorine","פלואור","فلور"],Ne:["Neon","ניאון","نيون"],
@@ -193,16 +255,16 @@ function localizedErrorTemplate(error,language){
   var text=messages[error.code]||error.description||error.code;
 
   text=replaceTextToken(text,"count",error.count);
-  text=replaceTextToken(text,"left",error.reactantCount);
-  text=replaceTextToken(text,"right",error.productCount);
-  text=replaceTextToken(text,"actual",error.actual);
-  text=replaceTextToken(text,"expected",error.expected);
+  text=replaceTextToken(text,"left",error.left);
+  text=replaceTextToken(text,"right",error.right);
   text=replaceTextToken(text,"parserCode",error.parserCode);
   text=replaceTextToken(text,"side",localizedSide(error.side,language));
   text=replaceTextToken(text,"actualState",localizedState(error.actual,language));
   text=replaceTextToken(text,"expectedState",localizedState(error.expected,language));
   text=replaceTextToken(text,"actualCharge",chargeLabel(error.actual));
   text=replaceTextToken(text,"expectedCharge",chargeLabel(error.expected));
+  text=replaceTextToken(text,"actual",error.actual);
+  text=replaceTextToken(text,"expected",error.expected);
 
   return text;
 }
@@ -306,7 +368,44 @@ function appendErrorMessage(parent,error,language,index){
 
     return e;
   }
+    function scriptIcon(mode){
+      var icon=node("span");
+      var normal=node("span");
+      var sup=node("span");
+      var sub=node("span");
 
+      apply(icon,{
+        display:"inline-block",
+        position:"relative",
+        width:"30px",
+        height:"24px",
+        verticalAlign:"middle",
+        pointerEvents:"none"
+      });
+
+      function stylePart(part,left,top,width,height,active){
+        apply(part,{
+          position:"absolute",
+          left:left+"px",
+          top:top+"px",
+          width:width+"px",
+          height:height+"px",
+          boxSizing:"border-box",
+          border:"1px "+(active?"solid":"dashed")+" "+(active?"#8f9397":"#c7cbd0"),
+          background:active?"#9da1a5":"transparent"
+        });
+      }
+
+      stylePart(normal,1,4,13,17,mode==="normal");
+      stylePart(sup,18,1,10,9,mode==="sup");
+      stylePart(sub,18,14,10,9,mode==="sub");
+
+      icon.appendChild(normal);
+      icon.appendChild(sup);
+      icon.appendChild(sub);
+
+      return icon;
+    }
   function makeDraggable(el,handle){
   var startX,startY,startLeft,startTop,moving=false;
   handle.style.touchAction="none";
@@ -1703,6 +1802,26 @@ ChemicalKeyboard.prototype.build=function(){
   operatorsRow,statesRow,lowerRow,digitsPanel,digitsGrid,navigationRow,atomsPanel,
   atomsGrid,common,digits,i;
 
+  function removeButtonFocus(button){
+    button.tabIndex=-1;
+    button.style.outline="none";
+
+    button.addEventListener("pointerdown",function(e){
+      e.preventDefault();
+    });
+
+    button.addEventListener("mousedown",function(e){
+      e.preventDefault();
+    });
+
+    button.addEventListener("click",function(){
+      button.blur();
+
+      setTimeout(function(){
+        self.display.focus();
+      },0);
+    });
+  }
   apply(root,{
     fontFamily:"Arial,sans-serif",
     direction:"ltr",
@@ -1808,30 +1927,16 @@ makeDraggable(root,windowHeader);
   root.appendChild(this.panel);
 
   function btn(parent,label,fn,title,extra){
-    var b=node("button",label);
-
-    b.type="button";
-    b.title=title||label;
-
-    apply(b,{
-      minWidth:"44px",
-      height:"38px",
-      fontSize:"18px",
-      border:"1px solid #8aa",
-      borderRadius:"5px",
-      background:"#fff",
-      cursor:"pointer"
-    });
-
-    if(extra){
-      apply(b,extra);
-    }
-
-    b.addEventListener("click",fn);
-    parent.appendChild(b);
-
-    return b;
-  }
+  var b=node("button",label);
+  b.type="button";
+  b.title=title||label;
+  b.setAttribute("aria-label",title||label);
+  apply(b,{minWidth:"44px",height:"38px",fontSize:"18px",border:"1px solid #8aa",borderRadius:"5px",background:"#fff",cursor:"pointer"});
+  if(extra)apply(b,extra);
+  b.addEventListener("click",fn);
+  parent.appendChild(b);
+  return b;
+}
 
   /*
    * Operators
@@ -1849,39 +1954,57 @@ makeDraggable(root,windowHeader);
 
   btn(operatorsRow,"()",function(){
     self.insertPair();
-  });
+  },t.tipParentheses);
 
-  btn(operatorsRow,"x",function(){
+  var normalButton=btn(operatorsRow,"",function(){
     self.setScript("normal");
-  },t.normal);
+  },t.tipNormal);
 
-  btn(operatorsRow,"x₂",function(){
+  var subButton=btn(operatorsRow,"",function(){
     self.setScript("sub");
-  },t.sub);
+  },t.tipSub);
 
-  btn(operatorsRow,"x²",function(){
+  var supButton=btn(operatorsRow,"",function(){
     self.setScript("sup");
-  },t.sup);
+  },t.tipSup);
+
+  normalButton.appendChild(scriptIcon("normal"));
+  subButton.appendChild(scriptIcon("sub"));
+  supButton.appendChild(scriptIcon("sup"));
+
+  normalButton.setAttribute("aria-label",t.normal);
+  subButton.setAttribute("aria-label",t.sub);
+  supButton.setAttribute("aria-label",t.sup);
+
+  removeButtonFocus(normalButton);
+  removeButtonFocus(subButton);
+  removeButtonFocus(supButton);
+
+  this.scriptButtons={
+    normal:normalButton,
+    sub:subButton,
+    sup:supButton
+  };
 
   btn(operatorsRow,"+",function(){
     self.insertSign("+");
-  });
+  },t.tipPlus);
 
   btn(operatorsRow,"−",function(){
     self.insertSign("−");
-  });
+  },t.tipMinus);
 
   btn(operatorsRow,"→",function(){
     self.insertText("→","normal");
-  });
+  },t.tipForward);
 
   btn(operatorsRow,"⇌",function(){
     self.insertText("⇌","normal");
-  });
+  },t.tipEquilibrium);
 
   btn(operatorsRow,"·",function(){
     self.insertText("·","normal");
-  });
+  },t.tipDot);
 
   /*
    * States
@@ -1899,19 +2022,19 @@ makeDraggable(root,windowHeader);
 
   btn(statesRow,"(s)",function(){
     self.insertState("s");
-  });
+  },t.tipSolid);
 
   btn(statesRow,"(l)",function(){
     self.insertState("l");
-  });
+  },t.tipLiquid);
 
   btn(statesRow,"(g)",function(){
     self.insertState("g");
-  });
+  },t.tipGas);
 
   btn(statesRow,"(aq)",function(){
     self.insertState("aq");
-  });
+  },t.tipAqueous);
 
   /*
    * Lower area: digits on the left,
@@ -1989,36 +2112,22 @@ makeDraggable(root,windowHeader);
 
   btn(navigationRow,"←",function(){
     self.move(-1);
-  },null,{
-    minWidth:"0",
-    width:"100%"
-  });
+  },t.tipLeft,{minWidth:"0",width:"100%"});
 
   btn(navigationRow,"→|",function(){
     self.move(1);
-  },null,{
-    minWidth:"0",
-    width:"100%"
-  });
+  },t.tipRight,{minWidth:"0",width:"100%"});
 
   btn(navigationRow,"DEL",function(){
     self.del();
-  },null,{
-    minWidth:"0",
-    width:"100%",
-    fontSize:"14px"
-  });
+  },t.tipDelete,{minWidth:"0",width:"100%",fontSize:"14px"});
 
   btn(navigationRow,"AC",function(){
     self.chars=[];
     self.cursor=0;
     self.script="normal";
     self.changed();
-  },null,{
-    minWidth:"0",
-    width:"100%",
-    fontSize:"14px"
-  });
+  },t.tipClear,{minWidth:"0",width:"100%",fontSize:"14px"});
 
   /*
    * Atom symbols panel
@@ -2047,24 +2156,33 @@ makeDraggable(root,windowHeader);
   atomsPanel.appendChild(atomsGrid);
 
   common=this.config.elements||COMMON;
-
+  var nameIndex=this.language==="he"?1:this.language==="ar"?2:0;
   for(i=0;i<common.length;i++){
     (function(sym){
-      btn(atomsGrid,sym,function(){
-        self.insertText(sym,"normal");
-      },sym,{
-        width:"100%"
-      });
+      var elementName=NAMES[sym]?NAMES[sym][nameIndex]:sym;
+      var tooltip=sym+" — "+elementName;
+
+      btn(
+        atomsGrid,
+        sym,
+        function(){self.insertText(sym,"normal");},
+        tooltip,
+        {width:"100%"}
+      );
     })(common[i]);
   }
 
-  btn(atomsGrid,t.all,function(){
-    self.openElements();
-  },t.all,{
-    width:"100%",
-    gridColumn:"1 / span 2",
-    fontSize:"15px"
-  });
+  btn(
+    atomsGrid,
+    t.all,
+    function(){self.openElements();},
+    t.tipAllElements,
+    {
+      width:"100%",
+      gridColumn:"1 / span 2",
+      fontSize:"15px"
+    }
+  );
 
   /*
    * Initial-letter window
@@ -2109,10 +2227,23 @@ makeDraggable(root,windowHeader);
     boxSizing:"border-box",
     zIndex:"10002"
   });
+    function closePanelsOnEscape(e){
+      if(e.key!=="Escape")return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      self.closeElementWindows();
+      self.root.focus();
+    }
+
 
   if(this.mode==="edit"){
     document.body.appendChild(this.elementPanel);
     document.body.appendChild(this.atomPanel);
+    this.elementPanel.addEventListener("keydown",closePanelsOnEscape);
+    this.atomPanel.addEventListener("keydown",closePanelsOnEscape);
+    this.elementPanel.tabIndex=-1;
+    this.atomPanel.tabIndex=-1;
   }
 
   this.host.textContent="";
@@ -2256,11 +2387,24 @@ ChemicalKeyboard.prototype.buildPopupWindow=function(root,t){
   document.body.appendChild(root);
 };
 
-  ChemicalKeyboard.prototype.setScript =
-    function (s) {
-      this.script = s;
-      this.render();
-    };
+ChemicalKeyboard.prototype.setScript=function(s){
+    var modes=["normal","sub","sup"],i,button;
+
+    this.script=s;
+
+    if(this.scriptButtons){
+      for(i=0;i<modes.length;i++){
+        button=this.scriptButtons[modes[i]];
+        button.style.background= modes[i]===s?"#cfe3f5":"#fff";
+        button.style.borderColor= modes[i]===s?"#3779ad":"#8aa";
+
+        button.style.background="#fff";
+        button.style.borderColor="#8aa";
+      }
+    }
+
+    this.render();
+  };
 
   ChemicalKeyboard.prototype.inSpeciesStart =
     function () {
@@ -2502,6 +2646,12 @@ ChemicalKeyboard.prototype.key =
   function (e) {
     var k = e.key;
 
+    if(k==="Enter"){
+      e.preventDefault();
+      e.stopPropagation();
+      this.display.focus();
+      return;
+    }
     if (k === "Escape") {
       e.preventDefault();
       this.closeElementWindows();
@@ -3139,41 +3289,46 @@ ChemicalKeyboard.prototype.setMode =
       this.render();
     };
 
-ChemicalKeyboard.prototype.makeCloseButton =
-  function (panel) {
-    var self = this;
-    var b = node("button", "×");
+ChemicalKeyboard.prototype.makeCloseButton=function(panel){
+  var self=this,b=node("button","×");
 
-    b.type = "button";
+  b.type="button";
+  b.title=(T[this.language]||T.en).close;
+  b.setAttribute("aria-label",b.title);
 
-    b.title =
-      (T[this.language] || T.en).close;
+  apply(b,{
+    position:"absolute",
+    top:"4px",
+    right:"6px",
+    width:"26px",
+    height:"26px",
+    padding:"0",
+    border:"0",
+    borderRadius:"4px",
+    background:"transparent",
+    fontSize:"24px",
+    lineHeight:"24px",
+    cursor:"pointer",
+    zIndex:"2"
+  });
 
-    apply(b, {
-      position: "absolute",
-      top: "5px",
-      right: "6px",
-      width: "26px",
-      height: "26px",
-      padding: "0",
-      border: "0",
-      borderRadius: "4px",
-      background: "transparent",
-      fontSize: "24px",
-      lineHeight: "24px",
-      cursor: "pointer"
-    });
+  b.addEventListener("pointerdown",function(e){
+    e.stopPropagation();
+  });
 
-    b.addEventListener(
-      "click",
-      function () {
-        panel.style.display = "none";
-        self.display.focus();
-      }
-    );
+  b.addEventListener("mousedown",function(e){
+    e.stopPropagation();
+  });
 
-    return b;
-  };
+  b.addEventListener("click",function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    panel.style.display="none";
+    self.root.focus();
+  });
+
+  return b;
+};
 
 ChemicalKeyboard.prototype.closeElementWindows =
   function () {
@@ -3290,6 +3445,7 @@ ChemicalKeyboard.prototype.openElements=function(){
       this.elementPanel.style.top=Math.max(8,this.root.offsetTop+40)+"px";
       this.elementPanel._positioned=true;
     }
+    this.elementPanel.focus();
 };
 ChemicalKeyboard.prototype.show=function(){
   if(this.mode!=="edit")return;
@@ -3306,12 +3462,7 @@ ChemicalKeyboard.prototype.showElementLetter =
   function (letter) {
     var self = this;
 
-    var idx =
-      this.language === "he"
-        ? 1
-        : this.language === "ar"
-          ? 2
-          : 0;
+    var idx = this.language === "he" ? 1 : this.language === "ar" ? 2 : 0;
 
     var i;
     var s;
@@ -3327,20 +3478,15 @@ ChemicalKeyboard.prototype.showElementLetter =
     }
 
     this.elementPanel.style.display = "none";
+    this.atomPanel.focus();
 
     this.atomPanel.textContent="";
     this.makePopupHeader(this.atomPanel,letter);
 
-    for (
-      i = 0;
-      i < SYMBOLS.length;
-      i++
-    ) {
+    for ( i = 0; i < SYMBOLS.length; i++ ) {
       s = SYMBOLS[i];
 
-      if (
-        s.charAt(0) !== letter
-      ) {
+      if ( s.charAt(0) !== letter ) {
         continue;
       }
 

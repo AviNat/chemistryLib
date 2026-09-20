@@ -47,7 +47,7 @@ window.MathJax={
 <script>
 var editor=new ChemicalKeyboard({
   divId:"editor",
-  language:"en",
+  language:"he",
   mode:"edit",
   elements:["H","C","N","O","Na","Cl","Ca","Fe","Ag"],
   correctAnswer:"2Fe_{2}O_{3}(s)→4FeO(s)+O_{2}(g)",
@@ -108,6 +108,9 @@ document.getElementById("copyToReadonly").addEventListener("click",
 function(){readonly.setValue(editor.getModel());});
 document.getElementById("api").textContent="getValue()\\ngetModel()\\ngetAST()\\nresult()\\nsetValue(textOrModel)\\nsetMode('edit' | 'readonly' | 'readonly-errors')\\nsetHighlights([{start, end, color}])";
 editor.setValue("2Fe_{2}O_{3(s)}→4FeO_{(s)}+O_{2(g)}");
+
+document.getElementById("ast").style.display="none";
+document.getElementById("latex").style.display="none";
 </script>
 
 

@@ -1124,11 +1124,15 @@ function canonicalizeValue(value){
     canonical:canonicalizeAst(ast)
   };
 }
-function addError(errors,code,data,description){
-  var error={code:code,description:description},k;
+function addError(errors,code,data){
+  var error={code:code},k;
+
+  data=data||{};
 
   for(k in data){
-    if(Object.prototype.hasOwnProperty.call(data,k))error[k]=data[k];
+    if(Object.prototype.hasOwnProperty.call(data,k)){
+      error[k]=data[k];
+    }
   }
 
   errors.push(error);
@@ -1203,9 +1207,7 @@ function syntaxErrors(ast,errors,answerName){
           answer:answerName,
           atom:error.value,
           range:error.range
-        },
-        "The symbol "+error.value+" in the "+answerName+
-        " answer is not a recognized chemical element."
+        }
       );
     }else if(error.code!=="unknown-element"){
       addError(
@@ -1216,8 +1218,7 @@ function syntaxErrors(ast,errors,answerName){
           parserCode:error.code,
           range:error.range,
           value:error.value
-        },
-        "The "+answerName+" answer contains a syntax error: "+error.code+"."
+        }
       );
     }
   }
@@ -1263,10 +1264,7 @@ function compareStates(student,reference,side,errors){
         species:formulaLabel(reference),
         expected:reference.state,
         actual:null
-      },
-      "The state of "+formulaLabel(reference)+" on the "+side+
-      " side is missing. The reference answer specifies "+
-      stateName(reference.state)+"."
+      }
     );
 
     return;
@@ -1298,10 +1296,7 @@ function compareStates(student,reference,side,errors){
       species:formulaLabel(reference),
       expected:reference.state,
       actual:student.state
-    },
-    formulaLabel(reference)+" on the "+side+
-    " side is marked as "+stateName(student.state)+
-    ", but the reference answer specifies "+stateName(reference.state)+"."
+    }
   );
 }
 
@@ -1333,11 +1328,7 @@ function compareAtomCounts(student,reference,side,errors){
           atom:atom,
           expected:expected,
           actual:actual
-        },
-        "The corresponding substance on the "+side+
-        " side contains "+actual+" atom"+(actual===1?"":"s")+
-        " of "+atom+", but the reference substance contains "+
-        expected+"."
+        }
       );
     }
   }
@@ -1403,10 +1394,7 @@ function compareCharges(student,reference,side,errors){
         species:species,
         expected:reference.charge,
         actual:student.charge
-      },
-      "The charge of "+species+" on the "+side+
-      " side is missing. The reference answer specifies a charge of "+
-      chargeLabel(reference.charge)+"."
+      }
     );
 
     return;
@@ -1421,10 +1409,7 @@ function compareCharges(student,reference,side,errors){
         species:species,
         expected:reference.charge,
         actual:student.charge
-      },
-      species+" on the "+side+" side has an unexpected charge of "+
-      chargeLabel(student.charge)+
-      ". The reference substance has no charge."
+      }
     );
 
     return;
@@ -1438,10 +1423,7 @@ function compareCharges(student,reference,side,errors){
       species:species,
       expected:reference.charge,
       actual:student.charge
-    },
-    "The charge of "+species+" on the "+side+" side is "+
-    chargeLabel(student.charge)+", but the reference answer specifies "+
-    chargeLabel(reference.charge)+"."
+    }
   );
 }
 
@@ -1461,9 +1443,7 @@ function compareSide(studentSide,referenceSide,side,errors){
           side:side,
           species:formulaLabel(reference),
           expectedCoefficient:reference.coefficient
-        },
-        "The substance "+formulaLabel(reference)+" is required on the "+
-        side+" side but is missing from the student's answer."
+        }
       );
 
       continue;
@@ -1485,10 +1465,7 @@ function compareSide(studentSide,referenceSide,side,errors){
           species:formulaLabel(reference),
           expected:reference.coefficient,
           actual:student.coefficient
-        },
-        "The coefficient of "+formulaLabel(reference)+" on the "+side+
-        " side is "+student.coefficient+", but the normalized reference "+
-        "coefficient is "+reference.coefficient+"."
+        }
       );
     }
   }
@@ -1502,9 +1479,7 @@ function compareSide(studentSide,referenceSide,side,errors){
           side:side,
           species:formulaLabel(studentSide[i]),
           actualCoefficient:studentSide[i].coefficient
-        },
-        "The substance "+formulaLabel(studentSide[i])+" appears on the "+
-        side+" side of the student's answer but not in the reference answer."
+        }
       );
     }
   }
@@ -1539,9 +1514,7 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
       {
         expected:referenceAst.type,
         actual:studentAst.type
-      },
-      "The reference answer is a chemical "+referenceAst.type+
-      ", but the student's answer is a chemical "+studentAst.type+"."
+      }
     );
   }
 
@@ -1557,10 +1530,6 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
         expected:referenceCanonical.arrow,
         actual:studentCanonical.arrow
       },
-      "The equation uses the wrong arrow. The reference answer uses a "+
-      (referenceCanonical.arrow==="equilibrium"
-        ?"bidirectional equilibrium arrow"
-        :"one-direction reaction arrow")+"."
     );
   }
 
@@ -1577,9 +1546,7 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
           atom:atom,
           expected:0,
           actual:studentAtoms[atom]
-        },
-        "The student's answer contains "+atom+
-        ", but this element does not appear anywhere in the reference answer."
+        }
       );
     }
   }
@@ -1597,9 +1564,7 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
           atom:atom,
           expected:referenceAtoms[atom],
           actual:0
-        },
-        "The reference answer contains "+atom+
-        ", but this element is completely missing from the student's answer."
+        }
       );
     }
   }
@@ -1623,20 +1588,12 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
       atom=keys[i];
 
       if((studentLeftTotals[atom]||0)!==(studentRightTotals[atom]||0)){
-        addError(
-          errors,
-          "unbalanced-atom",
-          {
-            atom:atom,
-            reactantCount:studentLeftTotals[atom]||0,
-            productCount:studentRightTotals[atom]||0,
-            difference:(studentLeftTotals[atom]||0)-(studentRightTotals[atom]||0)
-          },
-          "The equation is not balanced for "+atom+
-          ": the left side contains "+(studentLeftTotals[atom]||0)+
-          " atom"+((studentLeftTotals[atom]||0)===1?"":"s")+
-          " and the right side contains "+(studentRightTotals[atom]||0)+"."
-        );
+        addError(errors,"unbalanced-atom",{
+          atom:atom,
+          left:studentLeftTotals[atom]||0,
+          right:studentRightTotals[atom]||0,
+          difference:(studentLeftTotals[atom]||0)-(studentRightTotals[atom]||0)
+        });
       }
     }
   }

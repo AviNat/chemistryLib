@@ -8,7 +8,10 @@
 
   var T={
   en:{
+    studentAnswer:"Student answer",
+    referenceAnswer:"Reference answer",
     keyboard:"Chemical keyboard",
+    openKeyboard:"Open chemical keyboard",
     elements:"Elements",
     all:"All elements",
     normal:"Normal",
@@ -38,7 +41,10 @@
   },
 
   he:{
+    studentAnswer:"תשובת התלמיד",
+    referenceAnswer:"תשובת הייחוס",
     keyboard:"מקלדת כימית",
+    openKeyboard:"פתיחת המקלדת הכימית",
     elements:"יסודות",
     all:"כל היסודות",
     normal:"רגיל",
@@ -68,7 +74,10 @@
   },
 
   ar:{
+    studentAnswer:"إجابة الطالب",
+    referenceAnswer:"الإجابة المرجعية",
     keyboard:"لوحة مفاتيح كيميائية",
+    openKeyboard:"فتح لوحة المفاتيح الكيميائية",
     elements:"العناصر",
     all:"كل العناصر",
     normal:"عادي",
@@ -235,7 +244,7 @@ function formulaTextToLatex(text){
         i++;
       }
 
-      if(digits)out+="_{"+digits+"}";
+      if(digits)out+="_{\\scriptscriptstyle "+digits+"}";
       continue;
     }
 
@@ -258,7 +267,7 @@ function replaceTextToken(text,token,value){
 
 function localizedErrorTemplate(error,language){
   var messages=ERROR_TEXT[language]||ERROR_TEXT.en;
-  var text=messages[error.code]||error.description||error.code;
+  var text=messages[error.code]||error.code;
 
   text=replaceTextToken(text,"count",error.count);
   text=replaceTextToken(text,"left",error.left);
@@ -585,6 +594,7 @@ function makeChar(ch, script, pair, kind) {
           var st = x.start;
           var children;
           var count = 1;
+          var groupCountRange = null;
 
           i++;
           children = group(")");
@@ -595,6 +605,7 @@ function makeChar(ch, script, pair, kind) {
             isDigits(tokens[i].text)
           ) {
             count = Number(tokens[i].text);
+            groupCountRange = [tokens[i].start,tokens[i].end];
             i++;
           }
 
@@ -602,6 +613,7 @@ function makeChar(ch, script, pair, kind) {
             type: "group",
             children: children,
             count: count,
+            countRange: groupCountRange,
             range: [
               st,
               i ? tokens[i - 1].end : x.end
@@ -618,6 +630,7 @@ function makeChar(ch, script, pair, kind) {
           var count2 = 1;
           var el = x.text;
           var st2 = x.start;
+          var countRange2 = null;
 
           i++;
 
@@ -635,6 +648,7 @@ function makeChar(ch, script, pair, kind) {
             isDigits(tokens[i].text)
           ) {
             count2 = Number(tokens[i].text);
+            countRange2 = [tokens[i].start,tokens[i].end];
 
             if (count2 === 1) {
               errors.push({
@@ -653,6 +667,8 @@ function makeChar(ch, script, pair, kind) {
             type: "element",
             symbol: el,
             count: count2,
+            symbolRange:[x.start,x.end],
+            countRange:countRange2,
             range: [
               st2,
               i ? tokens[i - 1].end : x.end
@@ -726,6 +742,9 @@ function makeChar(ch, script, pair, kind) {
     var charge = 0;
     var errors = [];
     var formulaEnd = to;
+    var coefficientRange = null;
+    var stateRange = null;
+    var chargeRange = null;
 
     if (
       i < to &&
@@ -733,6 +752,7 @@ function makeChar(ch, script, pair, kind) {
       isDigits(tokens[i].text)
     ) {
       coefficient = Number(tokens[i].text);
+      coefficientRange = [tokens[i].start,tokens[i].end];
       i++;
     }
 
@@ -751,6 +771,7 @@ function makeChar(ch, script, pair, kind) {
       tokens[to - 1].script === "sub"
     ) {
       state = tokens[to - 2].text;
+      stateRange = [tokens[to-3].start,tokens[to-1].end];
       formulaEnd = to - 3;
     }
 
@@ -804,6 +825,8 @@ function makeChar(ch, script, pair, kind) {
         });
       }
 
+      chargeRange = [tokens[chargeStart].start,tokens[formulaEnd-1].end];
+
       formulaEnd = chargeStart;
     }
 
@@ -823,6 +846,10 @@ function makeChar(ch, script, pair, kind) {
       composition: composition(p.items),
       charge: charge,
       state: state,
+      coefficientRange:coefficientRange,
+      formulaRange:i<formulaEnd?[tokens[i].start,tokens[formulaEnd-1].end]:null,
+      chargeRange:chargeRange,
+      stateRange:stateRange,
       range: [
         tokens[from].start,
         tokens[to - 1].end
@@ -960,9 +987,11 @@ function makeChar(ch, script, pair, kind) {
           ? null
           : {
               type: arrowType,
+              range:[tokens[arrow].start,tokens[arrow].end],
               conditionsAbove: null
             },
 
+      range:[0,chars.length],
       errors: errors,
       valid: errors.length === 0
     };
@@ -1145,6 +1174,17 @@ function equationCoefficientDivisor(ast){
   return d||1;
 }
 
+function atomOccurrences(items,mult,out){
+  var i,item;
+  mult=mult||1;out=out||[];
+  for(i=0;i<items.length;i++){
+    item=items[i];
+    if(item.type==="element")out.push({symbol:item.symbol,count:item.count*mult,range:item.range?item.range.slice():null,symbolRange:item.symbolRange?item.symbolRange.slice():null,countRange:item.countRange?item.countRange.slice():null});
+    else atomOccurrences(item.children,mult*item.count,out);
+  }
+  return out;
+}
+
 function canonicalSide(speciesList,divisor){
   var items=[],i,s,coefficient;
 
@@ -1158,6 +1198,11 @@ function canonicalSide(speciesList,divisor){
     charge:s.charge,
     state:s.state,
     range:s.range?s.range.slice():null,
+    coefficientRange:s.coefficientRange?s.coefficientRange.slice():null,
+    formulaRange:s.formulaRange?s.formulaRange.slice():null,
+    chargeRange:s.chargeRange?s.chargeRange.slice():null,
+    stateRange:s.stateRange?s.stateRange.slice():null,
+    atoms:atomOccurrences(s.formula),
     formulaKey:speciesFormulaKey(s),
     atomSetKey:atomSetKey(s.composition),
     key:speciesKey(s,coefficient)
@@ -1189,6 +1234,7 @@ function canonicalizeAst(ast){
     return {
       type:ast.type,
       arrow:null,
+      arrowRange:null,
       divisor:divisor,
       left:left,
       right:right,
@@ -1211,6 +1257,7 @@ function canonicalizeAst(ast){
   return {
     type:ast.type,
     arrow:ast.arrow.type,
+    arrowRange:ast.arrow.range?ast.arrow.range.slice():null,
     divisor:divisor,
     left:left,
     right:right,
@@ -1297,6 +1344,19 @@ function formulaLabel(species){
   return text;
 }
 
+function feedbackTarget(range,part){return range?{start:range[0],end:range[1],part:part}:null;}
+function oneTarget(range,part){var target=feedbackTarget(range,part);return target?[target]:[];}
+function atomTargets(species,atom,preferCount){
+  var targets=[],i,item,range;
+  for(i=0;i<species.atoms.length;i++)if(species.atoms[i].symbol===atom){item=species.atoms[i];range=preferCount&&item.countRange?item.countRange:item.symbolRange||item.range;if(range)targets.push(feedbackTarget(range,preferCount&&item.countRange?"count":"atom"));}
+  return targets;
+}
+function astAtomTargets(ast,atom){
+  var targets=[],sides=[ast.reactants,ast.products],a,i,j,items,item;
+  for(a=0;a<sides.length;a++)for(i=0;i<sides[a].length;i++){items=atomOccurrences(sides[a][i].formula);for(j=0;j<items.length;j++){item=items[j];if(item.symbol===atom&&item.symbolRange)targets.push(feedbackTarget(item.symbolRange,"atom"));}}
+  return targets;
+}
+
 function syntaxErrors(ast,errors,answerName){
   var i,error,seen={};
 
@@ -1312,7 +1372,8 @@ function syntaxErrors(ast,errors,answerName){
         {
           answer:answerName,
           atom:error.value,
-          range:error.range
+          studentRanges:answerName==="student"?oneTarget(error.range,"atom"):[],
+          referenceRanges:answerName==="reference"?oneTarget(error.range,"atom"):[]
         }
       );
     }else if(error.code!=="unknown-element"){
@@ -1322,8 +1383,9 @@ function syntaxErrors(ast,errors,answerName){
         {
           answer:answerName,
           parserCode:error.code,
-          range:error.range,
-          value:error.value
+          value:error.value,
+          studentRanges:answerName==="student"?oneTarget(error.range,"syntax"):[],
+          referenceRanges:answerName==="reference"?oneTarget(error.range,"syntax"):[]
         }
       );
     }
@@ -1370,7 +1432,8 @@ function compareStates(student,reference,side,errors){
         species:formulaLabel(reference),
         expected:reference.state,
         actual:null,
-        range:student.range
+        studentRanges:oneTarget(student.formulaRange||student.range,"species"),
+        referenceRanges:oneTarget(reference.stateRange,"state")
       }
     );
 
@@ -1386,11 +1449,9 @@ function compareStates(student,reference,side,errors){
         species:formulaLabel(reference),
         expected:null,
         actual:student.state,
-        range:student.range
-      },
-      formulaLabel(reference)+" on the "+side+
-      " side is marked as "+stateName(student.state)+
-      ", but the reference answer does not specify a state."
+        studentRanges:oneTarget(student.stateRange||student.range,"state"),
+        referenceRanges:[]
+      }
     );
 
     return;
@@ -1404,7 +1465,8 @@ function compareStates(student,reference,side,errors){
       species:formulaLabel(reference),
       expected:reference.state,
       actual:student.state,
-      range:student.range
+      studentRanges:oneTarget(student.stateRange||student.range,"state"),
+      referenceRanges:oneTarget(reference.stateRange||reference.range,"state")
     }
   );
 }
@@ -1437,7 +1499,8 @@ function compareAtomCounts(student,reference,side,errors){
           atom:atom,
           expected:expected,
           actual:actual,
-          range:student.range
+          studentRanges:atomTargets(student,atom,true),
+          referenceRanges:atomTargets(reference,atom,true)
         }
       );
     }
@@ -1503,7 +1566,9 @@ function compareCharges(student,reference,side,errors){
         side:side,
         species:species,
         expected:reference.charge,
-        actual:student.charge
+        actual:student.charge,
+        studentRanges:oneTarget(student.formulaRange||student.range,"species"),
+        referenceRanges:oneTarget(reference.chargeRange,"charge")
       }
     );
 
@@ -1518,7 +1583,9 @@ function compareCharges(student,reference,side,errors){
         side:side,
         species:species,
         expected:reference.charge,
-        actual:student.charge
+        actual:student.charge,
+        studentRanges:oneTarget(student.chargeRange||student.range,"charge"),
+        referenceRanges:[]
       }
     );
 
@@ -1532,7 +1599,9 @@ function compareCharges(student,reference,side,errors){
       side:side,
       species:species,
       expected:reference.charge,
-      actual:student.charge
+      actual:student.charge,
+      studentRanges:oneTarget(student.chargeRange||student.range,"charge"),
+      referenceRanges:oneTarget(reference.chargeRange||reference.range,"charge")
     }
   );
 }
@@ -1552,7 +1621,10 @@ function compareSide(studentSide,referenceSide,side,errors){
         {
           side:side,
           species:formulaLabel(reference),
-          expectedCoefficient:reference.coefficient
+          expected:reference.coefficient,
+          actual:0,
+          studentRanges:[],
+          referenceRanges:oneTarget(reference.range,"species")
         }
       );
 
@@ -1575,7 +1647,8 @@ function compareSide(studentSide,referenceSide,side,errors){
           species:formulaLabel(reference),
           expected:reference.coefficient,
           actual:student.coefficient,
-          range:student.range
+          studentRanges:oneTarget(student.coefficientRange||student.formulaRange||student.range,"coefficient"),
+          referenceRanges:oneTarget(reference.coefficientRange||reference.formulaRange||reference.range,"coefficient")
         }
       );
     }
@@ -1589,8 +1662,10 @@ function compareSide(studentSide,referenceSide,side,errors){
         {
           side:side,
           species:formulaLabel(studentSide[i]),
-          actualCoefficient:studentSide[i].coefficient,
-          range:studentSide[i].range
+          expected:0,
+          actual:studentSide[i].coefficient,
+          studentRanges:oneTarget(studentSide[i].range,"species"),
+          referenceRanges:[]
         }
       );
     }
@@ -1598,55 +1673,24 @@ function compareSide(studentSide,referenceSide,side,errors){
 }
 function localizedErrorDescription(error,language){
   var text=localizedErrorTemplate(error,language);
-  var atom=error.atom||error.symbol||"";
 
   text=replaceTextToken(text,"species",error.species||"");
-  text=replaceTextToken(text,"atom",atom);
+  text=replaceTextToken(text,"atom",error.atom||"");
 
   return text;
 }
-ChemicalKeyboard.prototype.highlightsFromErrors=function(errors){
-  var highlights=[],i,error,color;
-
-  errors=errors||[];
-
-  for(i=0;i<errors.length;i++){
-    error=errors[i];
-
-    if(
-      !error.range||
-      error.range.length!==2||
-      error.range[0]===error.range[1]
-    ){
-      continue;
-    }
-
-    color=
-      error.code==="unknown-element"||
-      error.code==="unexpected-atom"||
-      error.code==="unexpected-species"
-        ?"#ffb9b9"
-        :"#ffe49c";
-
-    highlights.push({
-      start:error.range[0],
-      end:error.range[1],
-      color:color,
-      code:error.code
-    });
-  }
-
+function comparisonHighlights(result,answer){
+  var highlights=[],errors=result&&result.errors?result.errors:[],field=answer==="reference"?"referenceRanges":"studentRanges",i,j,error,target,color;
+  for(i=0;i<errors.length;i++){error=errors[i];color=answer==="reference"?"#cfe8ff":error.code==="unbalanced-atom"?"#ffe49c":"#ffb9b9";for(j=0;j<(error[field]||[]).length;j++){target=error[field][j];if(target&&target.end>target.start)highlights.push({start:target.start,end:target.end,color:color,code:error.code,part:target.part});}}
   return highlights;
-};
-ChemicalKeyboard.prototype.setComparisonResult=function(result){
-  this.highlights=this.highlightsFromErrors(
-    result&&result.errors?result.errors:[]
-  );
-
-  this.render();
+}
+ChemicalKeyboard.prototype.setComparisonFeedback=function(result,answer,value){
+  if(value!==undefined)this.setValue(value);
+  this.setHighlights(comparisonHighlights(result,answer));
 };
 
 function compareChemicalAnswers(studentValue,referenceValue,language){
+  language=language==="he"||language==="ar"?language:"en";
   var studentAst=studentValue&&studentValue.type?studentValue:analyzeValue(studentValue);
   var referenceAst=referenceValue&&referenceValue.type?referenceValue:analyzeValue(referenceValue);
   var studentCanonical=canonicalizeAst(studentAst);
@@ -1665,7 +1709,9 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
       "wrong-answer-type",
       {
         expected:referenceAst.type,
-        actual:studentAst.type
+        actual:studentAst.type,
+        studentRanges:oneTarget(studentAst.range,"answer"),
+        referenceRanges:oneTarget(referenceAst.range,"answer")
       }
     );
   }
@@ -1680,8 +1726,10 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
       "wrong-arrow",
       {
         expected:referenceCanonical.arrow,
-        actual:studentCanonical.arrow
-      },
+        actual:studentCanonical.arrow,
+        studentRanges:oneTarget(studentCanonical.arrowRange,"arrow"),
+        referenceRanges:oneTarget(referenceCanonical.arrowRange,"arrow")
+      }
     );
   }
 
@@ -1697,7 +1745,9 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
         {
           atom:atom,
           expected:0,
-          actual:studentAtoms[atom]
+          actual:studentAtoms[atom],
+          studentRanges:astAtomTargets(studentAst,atom),
+          referenceRanges:[]
         }
       );
     }
@@ -1715,7 +1765,9 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
         {
           atom:atom,
           expected:referenceAtoms[atom],
-          actual:0
+          actual:0,
+          studentRanges:[],
+          referenceRanges:astAtomTargets(referenceAst,atom)
         }
       );
     }
@@ -1744,7 +1796,9 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
           atom:atom,
           left:studentLeftTotals[atom]||0,
           right:studentRightTotals[atom]||0,
-          difference:(studentLeftTotals[atom]||0)-(studentRightTotals[atom]||0)
+          difference:(studentLeftTotals[atom]||0)-(studentRightTotals[atom]||0),
+          studentRanges:astAtomTargets(studentAst,atom),
+          referenceRanges:[]
         });
       }
     }
@@ -1772,6 +1826,7 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
   }
   return {
     correct:errors.length===0,
+    language:language,
     studentCanonical:studentCanonical,
     referenceCanonical:referenceCanonical,
     reversed:orientation.reversed,
@@ -1788,16 +1843,18 @@ ChemicalKeyboard.prototype.compare=function(referenceAnswer){
     :this.correctAnswer;
 
   if(reference===null||reference===undefined){
-    return {
+    var missingResult={
       correct:false,
+      language:this.language,
       studentCanonical:this.canonicalize(),
       referenceCanonical:null,
       reversed:false,
       errors:[{
-        code:"missing-reference-answer",
-        description:"No correct reference answer was supplied to the keyboard."
+        code:"missing-reference-answer",studentRanges:[],referenceRanges:[]
       }]
     };
+    missingResult.errors[0].description=localizedErrorDescription(missingResult.errors[0],this.language);
+    return missingResult;
   }
 
   return compareChemicalAnswers(this.getAST(),reference,this.language);
@@ -2322,14 +2379,25 @@ makeDraggable(root,windowHeader);
 };
 
 ChemicalKeyboard.prototype.buildRenderedElement=function(){
-  var self=this;
+  var self=this,t=T[this.language]||T.en;
+
+  this.displayContainer=node("div");
+
+  apply(this.displayContainer,{
+    display:"flex",
+    direction:"ltr",
+    alignItems:"stretch",
+    gap:"8px",
+    width:"100%"
+  });
 
   this.renderedDisplay=node("div");
 
   apply(this.renderedDisplay,{
     direction:"ltr",
     minHeight:"56px",
-    width:"100%",
+    flex:"1 1 auto",
+    minWidth:"0",
     padding:"12px",
     border:"1px solid #789",
     borderRadius:"8px",
@@ -2341,13 +2409,36 @@ ChemicalKeyboard.prototype.buildRenderedElement=function(){
     cursor:"pointer"
   });
 
-  this.renderedDisplay.title="Click to edit";
+  this.renderedDisplay.title=t.openKeyboard;
 
   this.renderedDisplay.addEventListener("click",function(){
     self.show();
   });
 
-  this.host.appendChild(this.renderedDisplay);
+  this.keyboardToggleButton=node("button","⌨");
+  this.keyboardToggleButton.type="button";
+  this.keyboardToggleButton.title=t.openKeyboard;
+  this.keyboardToggleButton.setAttribute("aria-label",t.openKeyboard);
+
+  apply(this.keyboardToggleButton,{
+    flex:"0 0 42px",
+    width:"42px",
+    border:"1px solid #888",
+    borderRadius:"6px",
+    backgroundColor:"#fff",
+    cursor:"pointer",
+    fontSize:"20px"
+  });
+
+  this.keyboardToggleButton.addEventListener("click",function(event){
+    event.preventDefault();
+    event.stopPropagation();
+    self.show();
+  });
+
+  this.displayContainer.appendChild(this.renderedDisplay);
+  this.displayContainer.appendChild(this.keyboardToggleButton);
+  this.host.appendChild(this.displayContainer);
 };
 ChemicalKeyboard.prototype.buildEmbeddedWindow=function(root){
   apply(root,{
@@ -2797,18 +2888,29 @@ ChemicalKeyboard.prototype.key =
       return null;
     };
 ChemicalKeyboard.prototype.syncRenderedDisplay=function(){
-  var copy,carets,i;
+  var self=this,latex,revision;
 
   if(!this.renderedDisplay)return;
 
-  copy=this.display.cloneNode(true);
-  carets=copy.querySelectorAll("[data-chemical-caret='1']");
+  latex=this.toLatex();
+  this.renderRevision=(this.renderRevision||0)+1;
+  revision=this.renderRevision;
 
-  for(i=0;i<carets.length;i++)carets[i].parentNode.removeChild(carets[i]);
+  this.renderedDisplay.textContent="\\("+latex+"\\)";
 
-  this.renderedDisplay.textContent="";
+  if(window.MathJax&&MathJax.startup&&MathJax.startup.promise){
+    MathJax.startup.promise.then(function(){
+      if(revision!==self.renderRevision)return;
 
-  while(copy.firstChild)this.renderedDisplay.appendChild(copy.firstChild);
+      if(MathJax.typesetClear){
+        MathJax.typesetClear([self.renderedDisplay]);
+      }
+
+      self.renderedDisplay.textContent="\\("+self.toLatex()+"\\)";
+
+      return MathJax.typesetPromise([self.renderedDisplay]);
+    });
+  }
 };
 ChemicalKeyboard.prototype.setCursorFromClick=function(e){
   var target=e.target,start,end,rect,after,script;
@@ -3341,35 +3443,7 @@ ChemicalKeyboard.prototype.setMode =
       this.highlights = h || [];
       this.render();
     };
-function comparisonHighlights(result,answer){
-  var highlights=[],errors=result&&result.errors?result.errors:[],field=answer==="reference"?"referenceRanges":"studentRanges",i,j,error,target,color;
 
-  for(i=0;i<errors.length;i++){
-    error=errors[i];
-    color=answer==="reference"?"#cfe8ff":error.code==="unbalanced-atom"?"#ffe49c":"#ffb9b9";
-
-    for(j=0;j<(error[field]||[]).length;j++){
-      target=error[field][j];
-
-      if(target&&target.end>target.start){
-        highlights.push({
-          start:target.start,
-          end:target.end,
-          color:color,
-          code:error.code,
-          part:target.part
-        });
-      }
-    }
-  }
-
-  return highlights;
-}
-
-ChemicalKeyboard.prototype.setComparisonFeedback=function(result,answer,value){
-  if(value!==undefined)this.setValue(value);
-  this.setHighlights(comparisonHighlights(result,answer));
-};
 ChemicalKeyboard.prototype.makeCloseButton=function(panel){
   var self=this,b=node("button","×");
 
@@ -3662,11 +3736,13 @@ function renderComparisonResult(result,language,summary,details){
     });
   }
 }
+function feedbackText(language,key){
+  var messages=ERROR_TEXT[language]||ERROR_TEXT.en;
+  var interfaceText=T[language]||T.en;
+  return messages[key]||interfaceText[key]||ERROR_TEXT.en[key]||T.en[key]||key;
+}
   global.ChemicalKeyboard = ChemicalKeyboard;
-  function feedbackText(language,key){
-    var messages=ERROR_TEXT[language]||ERROR_TEXT.en;
-    return messages[key]||ERROR_TEXT.en[key]||key;
-  }
+
   global.ChemicalGrammar={
   analyzeModel:analyze,
   analyzeValue:analyzeValue,
@@ -3676,6 +3752,6 @@ function renderComparisonResult(result,language,summary,details){
   feedbackText:feedbackText,
   renderComparison:renderComparisonResult,
   elements:SYMBOLS.slice(),
-  version:"2.0.0"
+  version:"2.0.2"
 };
 })(window);

@@ -40,7 +40,7 @@ window.MathJax={
 <h2>2. מצב קריאה בלבד</h2><div id="readonly" style="display:none"></div>
 <h2>3. קריאה בלבד עם הדגשת שגיאות</h2>
 <p>בדוגמה מודגשים הסמל והאינדקס השגויים באמצעות טווחי תווים.</p>
-<div id="checked" style="display:none"></div>
+<div id="checked" style="display:"></div>
 <h2>בדיקת API</h2><pre id="api" style="display:noen; direction:ltr;text-align:left;background:#fff;padding:10px"></pre>
 <script src="chemical-keyboard-v3.js"></script>
 
@@ -69,6 +69,13 @@ var editor=new ChemicalKeyboard({
   }
 });
 
+var checkedKeyboard=new ChemicalKeyboard({
+  divId:"checked",
+  language:"he",
+  mode:"readonly-errors",
+  value:""
+});
+
 document.getElementById("loadIronEquation").addEventListener("click",function(){
   var equation="2Fe_{2}O_{3}(s)→4FeO(s)+O_{2}(g)";
   loadExample( equation);
@@ -90,6 +97,8 @@ function loadExample(equation){
 
 document.getElementById("submitAnswer").addEventListener("click",function(){
   var result=editor.compare();
+  checkedKeyboard.setValue(editor.getModel());
+  checkedKeyboard.setComparisonResult(result);
 
   ChemicalGrammar.renderComparison(
     result,
@@ -100,7 +109,7 @@ document.getElementById("submitAnswer").addEventListener("click",function(){
 });
 
 var readonly=new ChemicalKeyboard({divId:"readonly",language:"he",mode:"readonly",value:"2H_{2}+O_{2}→2H_{2}O"});
-var checked=new ChemicalKeyboard({divId:"checked",language:"he",mode:"readonly-errors",value:"CaCl_{3}",highlights:[{start:2,end:4,color:"#ffe49c"},{start:4,end:5,color:"#ffb9b9"}]});
+
 document.getElementById("loadWater").addEventListener("click",
 function(){loadExample( "H_{2}O");});
 

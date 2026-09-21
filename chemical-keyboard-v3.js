@@ -1147,14 +1147,15 @@ function canonicalSide(speciesList,divisor){
     coefficient=s.coefficient/divisor;
 
     items.push({
-      coefficient:coefficient,
-      composition:copy(s.composition),
-      charge:s.charge,
-      state:s.state,
-      formulaKey:speciesFormulaKey(s),
-      atomSetKey:atomSetKey(s.composition),
-      key:speciesKey(s,coefficient)
-    });
+    coefficient:coefficient,
+    composition:copy(s.composition),
+    charge:s.charge,
+    state:s.state,
+    range:s.range?s.range.slice():null,
+    formulaKey:speciesFormulaKey(s),
+    atomSetKey:atomSetKey(s.composition),
+    key:speciesKey(s,coefficient)
+  });
   }
 
   items.sort(function(a,b){
@@ -1362,7 +1363,8 @@ function compareStates(student,reference,side,errors){
         side:side,
         species:formulaLabel(reference),
         expected:reference.state,
-        actual:null
+        actual:null,
+        range:student.range
       }
     );
 
@@ -1377,7 +1379,8 @@ function compareStates(student,reference,side,errors){
         side:side,
         species:formulaLabel(reference),
         expected:null,
-        actual:student.state
+        actual:student.state,
+        range:student.range
       },
       formulaLabel(reference)+" on the "+side+
       " side is marked as "+stateName(student.state)+
@@ -1394,7 +1397,8 @@ function compareStates(student,reference,side,errors){
       side:side,
       species:formulaLabel(reference),
       expected:reference.state,
-      actual:student.state
+      actual:student.state,
+      range:student.range
     }
   );
 }
@@ -1426,7 +1430,8 @@ function compareAtomCounts(student,reference,side,errors){
           species:formulaLabel(reference),
           atom:atom,
           expected:expected,
-          actual:actual
+          actual:actual,
+          range:student.range
         }
       );
     }
@@ -1563,7 +1568,8 @@ function compareSide(studentSide,referenceSide,side,errors){
           side:side,
           species:formulaLabel(reference),
           expected:reference.coefficient,
-          actual:student.coefficient
+          actual:student.coefficient,
+          range:student.range
         }
       );
     }
@@ -1577,7 +1583,8 @@ function compareSide(studentSide,referenceSide,side,errors){
         {
           side:side,
           species:formulaLabel(studentSide[i]),
-          actualCoefficient:studentSide[i].coefficient
+          actualCoefficient:studentSide[i].coefficient,
+          range:studentSide[i].range
         }
       );
     }
@@ -1592,6 +1599,46 @@ function localizedErrorDescription(error,language){
 
   return text;
 }
+ChemicalKeyboard.prototype.highlightsFromErrors=function(errors){
+  var highlights=[],i,error,color;
+
+  errors=errors||[];
+
+  for(i=0;i<errors.length;i++){
+    error=errors[i];
+
+    if(
+      !error.range||
+      error.range.length!==2||
+      error.range[0]===error.range[1]
+    ){
+      continue;
+    }
+
+    color=
+      error.code==="unknown-element"||
+      error.code==="unexpected-atom"||
+      error.code==="unexpected-species"
+        ?"#ffb9b9"
+        :"#ffe49c";
+
+    highlights.push({
+      start:error.range[0],
+      end:error.range[1],
+      color:color,
+      code:error.code
+    });
+  }
+
+  return highlights;
+};
+ChemicalKeyboard.prototype.setComparisonResult=function(result){
+  this.highlights=this.highlightsFromErrors(
+    result&&result.errors?result.errors:[]
+  );
+
+  this.render();
+};
 
 function compareChemicalAnswers(studentValue,referenceValue,language){
   var studentAst=studentValue&&studentValue.type?studentValue:analyzeValue(studentValue);

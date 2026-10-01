@@ -2831,7 +2831,12 @@ ChemicalKeyboard.prototype.key =
       this.del();
       return;
     }
-
+    if(k==="_"||k==="^"){
+      e.preventDefault();
+      this.navigationScript=false;
+      this.setScript(k==="_"?"sub":"sup");
+      return;
+    }
     if (k.length !== 1) {
       return;
     }
@@ -3752,6 +3757,6 @@ function feedbackText(language,key){
   feedbackText:feedbackText,
   renderComparison:renderComparisonResult,
   elements:SYMBOLS.slice(),
-  version:"2.0.2"
+  version:"2.0.3"
 };
 })(window);

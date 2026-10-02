@@ -25,7 +25,7 @@
     tipSub:"Enter an atom count as a subscript",
     tipSup:"Enter an ionic charge as a superscript",
     tipPlus:"Separates substances or indicates a positive charge",
-    tipMinus:"Minus sign or negative charge",
+    tipMinus:"Negative charge (active at the superscript level)",
     tipForward:"Insert a one-direction reaction arrow",
     tipEquilibrium:"Insert a reversible equilibrium arrow",
     tipDot:"Insert a centered dot, for example in a hydrate",
@@ -64,7 +64,7 @@
     tipSub:"הקלדת מספר האטומים ככתב תחתי",
     tipSup:"הקלדת מטען היון ככתב עילי",
     tipPlus:"הפרדה בין חומרים או מטען חיובי",
-    tipMinus:"סימן מינוס או מטען שלילי",
+    tipMinus:"מטען שלילי (פעיל בכתב עילי)",
     tipForward:"הוספת חץ תגובה חד־כיווני",
     tipEquilibrium:"הוספת חץ של תגובה הפיכה או שיווי משקל",
     tipDot:"הוספת נקודה אמצעית, למשל בנוסחה של הידרט",
@@ -103,7 +103,7 @@
     tipSub:"إدخال عدد الذرات كنص سفلي",
     tipSup:"إدخال شحنة الأيون كنص علوي",
     tipPlus:"فصل بين المواد أو شحنة موجبة",
-    tipMinus:"علامة طرح أو شحنة سالبة",
+    tipMinus:"شحنة سالبة (فعّالة في النص العلوي)",
     tipForward:"إضافة سهم تفاعل أحادي الاتجاه",
     tipEquilibrium:"إضافة سهم تفاعل عكوس أو اتزان",
     tipDot:"إضافة نقطة وسطية، مثلًا في صيغة الهيدرات",
@@ -2135,7 +2135,8 @@ function localizedErrorDescription(error,language){
 }
 function comparisonHighlights(result,answer){
   var highlights=[],errors=result&&result.errors?result.errors:[],field=answer==="reference"?"referenceRanges":"studentRanges",i,j,error,target,color;
-  for(i=0;i<errors.length;i++){error=errors[i];color=answer==="reference"?"#cfe8ff":error.code==="unbalanced-atom"?"#ffe49c":"#ffb9b9";for(j=0;j<(error[field]||[]).length;j++){target=error[field][j];if(target&&target.end>target.start)highlights.push({start:target.start,end:target.end,color:color,code:error.code,part:target.part});}}
+  for(i=0;i<errors.length;i++){
+    error=errors[i];color=answer==="reference"?"#cfe8ff":error.code==="unbalanced-atom"?"#ffe49c":"#ffb9b9";for(j=0;j<(error[field]||[]).length;j++){target=error[field][j];if(target&&target.end>target.start)highlights.push({start:target.start,end:target.end,color:color,code:error.code,part:target.part});}}
 
   /* Notes: soft grey, student answer only. Errors come first, so they win on overlap. */
   if(answer!=="reference"&&result&&result.notes){
@@ -2593,7 +2594,8 @@ makeDraggable(root,windowHeader);
     self.insertSign("+");
   },t.tipPlus);
 
-  btn(operatorsRow,"−",function(){
+  /* Minus: only a negative charge, so active only at the superscript level. */
+  this.minusButton=btn(operatorsRow,"−",function(){
     self.insertSign("−");
   },t.tipMinus);
 
@@ -3092,19 +3094,26 @@ ChemicalKeyboard.prototype.updateScriptButtons=function(){
       button=this.scriptButtons[modes[i]];
       active=modes[i]===this.script;
 
-      button.style.background=active?"#cfe3f5":"#fff";
+      // button.style.background=active?"#cfe3f5":"#fff";
       button.style.borderColor=active?"#1769aa":"#8aa";
       button.style.boxShadow=active?"0 0 0 2px #1769aa":"none";
       button.setAttribute("aria-pressed",active?"true":"false");
     }
 
     /* The comma only belongs in the condition above the arrow. */
-    if(this.commaButton){
-      this.commaButton.disabled=!this.cond;
-      this.commaButton.style.opacity=this.cond?"1":".4";
-      this.commaButton.style.cursor=this.cond?"pointer":"default";
-    }
+    setButtonEnabled(this.commaButton,!!this.cond);
+
+    /* The minus: a negative charge (superscript) or condition text (−78°C). */
+    setButtonEnabled(this.minusButton,this.script==="sup"||!!this.cond);
   };
+
+function setButtonEnabled(button,enabled){
+  if(!button)return;
+
+  button.disabled=!enabled;
+  button.style.opacity=enabled?"1":".4";
+  button.style.cursor=enabled?"pointer":"default";
+}
 
   ChemicalKeyboard.prototype.inSpeciesStart = function () {
       var i = this.cursor - 1;
@@ -3263,6 +3272,12 @@ ChemicalKeyboard.prototype.insertText=function(s,script){
   this.changed();
 };
 ChemicalKeyboard.prototype.insertSign = function (sign) {
+    /*
+     * A minus is a negative charge (superscript) or part of the condition
+     * text (−78°C); anywhere else in the formula it is ignored.
+     */
+    if ((sign === "−" || sign === "-") && this.script !== "sup" && !this.cond) return;
+
     var mode = this.script === "sup"
         ? "sup"
         : "normal";
@@ -3557,6 +3572,17 @@ ChemicalKeyboard.prototype.key = function (e) {
        * normal level. States (aq), (s)... are inserted by their buttons.
        */
       if (isLower(k) && this.script !== "normal") {
+        return;
+      }
+
+      /*
+       * In the formula a lowercase letter is only the second letter of a
+       * symbol (C + a = Ca): it must follow a capital letter at the normal
+       * level. "cA" or "Cla" are rejected. Condition text may contain words.
+       */
+      var prev = this.cursor > 0 ? this.chars[this.cursor - 1] : null;
+
+      if (isLower(k) && !this.cond && !(prev && prev.script === "normal" && isUpper(prev.ch))) {
         return;
       }
 

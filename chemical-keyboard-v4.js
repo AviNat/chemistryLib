@@ -166,6 +166,7 @@ var ERROR_TEXT={
     "missing-condition":"The reaction conditions above the arrow are missing; the reference answer specifies {expectedCondition}.",
     "wrong-condition":"The reaction conditions above the arrow are {condition}, but the reference answer specifies {expectedCondition}.",
     "missing-structure":"The formula {species} does not show the structure of the substance; the reference answer writes it as {referenceSpecies}.",
+    "wrong-dot-parts":"{species} has the same total atoms as {referenceSpecies}, but the parts joined by the dot are different. The number after the dot counts whole molecules: 5H₂O is five H₂O molecules.",
     "wrong-answer-type":"The expected answer is a chemical {expectedType}, but the student's answer is a chemical {actualType}.",
     "syntax-error":"The answer contains a syntax error: {parserCode}.",
     "missing-reference-answer":"No reference answer was supplied."
@@ -195,6 +196,7 @@ var ERROR_TEXT={
     "missing-condition":"חסרים תנאי התגובה מעל החץ; בתשובת הייחוס מופיע: {expectedCondition}.",
     "wrong-condition":"תנאי התגובה מעל החץ הם {condition}, אך בתשובת הייחוס מופיע: {expectedCondition}.",
     "missing-structure":"הנוסחה {species} אינה מראה את מבנה החומר; בתשובת הייחוס הוא כתוב כך: {referenceSpecies}.",
+    "wrong-dot-parts":"ל־{species} יש אותו מספר אטומים כולל כמו ל־{referenceSpecies}, אך החלקים המחוברים בנקודה שונים. המספר אחרי הנקודה סופר מולקולות שלמות: ⁦5H₂O⁩ הן חמש מולקולות ⁦H₂O⁩.",
     "wrong-answer-type":"נדרשת תשובה מסוג {expectedType}, אך תשובת התלמיד היא מסוג {actualType}.",
     "syntax-error":"התשובה מכילה שגיאת תחביר: {parserCode}.",
     "missing-reference-answer":"לא הוגדרה תשובת ייחוס."
@@ -224,6 +226,7 @@ var ERROR_TEXT={
     "missing-condition":"شروط التفاعل فوق السهم مفقودة؛ تحدد الإجابة المرجعية: {expectedCondition}.",
     "wrong-condition":"شروط التفاعل فوق السهم هي {condition}، لكن الإجابة المرجعية تحدد: {expectedCondition}.",
     "missing-structure":"الصيغة {species} لا تُظهر بنية المادة؛ الإجابة المرجعية تكتبها هكذا: {referenceSpecies}.",
+    "wrong-dot-parts":"تحتوي {species} على نفس العدد الكلي من الذرات مثل {referenceSpecies}، لكن الأجزاء المرتبطة بالنقطة مختلفة. الرقم بعد النقطة يعدّ جزيئات كاملة: ⁦5H₂O⁩ هي خمسة جزيئات ⁦H₂O⁩.",
     "wrong-answer-type":"نوع الإجابة المطلوب هو {expectedType}، لكن إجابة الطالب من النوع {actualType}.",
     "syntax-error":"تحتوي الإجابة على خطأ في الصياغة: {parserCode}.",
     "missing-reference-answer":"لم يتم تحديد إجابة مرجعية."
@@ -233,11 +236,14 @@ var ERROR_TEXT={
 /*
   Parser (syntax) codes caused by student input, shown inside
   the "syntax-error" message as {parserCode}.
-  "unexpected-token" is intentionally not listed: it can also be
-  caused by a parser gap (e.g. the hydrate dot), so it stays in
-  English until that is fixed.
+  Codes that could only come from a bug stay untranslated (English code).
 */
 var SYNTAX_TEXT={
+  "unexpected-token":{
+    en:"a symbol is in an unexpected place",
+    he:"סימן מופיע במקום לא צפוי",
+    ar:"يوجد رمز في مكان غير متوقع"
+  },
   "missing-close-parenthesis":{
     en:"a closing parenthesis is missing",
     he:"חסרים סוגריים סוגרים",
@@ -289,6 +295,11 @@ var NOTE_TEXT={
     en:"{species} has the correct atoms, but the reference answer writes it as {referenceSpecies}.",
     he:"ל־{species} יש את האטומים הנכונים, אך בתשובת הייחוס הוא כתוב כך: {referenceSpecies}.",
     ar:"تحتوي {species} على الذرات الصحيحة، لكن الإجابة المرجعية تكتبها هكذا: {referenceSpecies}."
+  },
+  "missing-dot":{
+    en:"{species} has the correct atoms, but the reference answer writes it with a dot (·): {referenceSpecies}.",
+    he:"ל־{species} יש את האטומים הנכונים, אך בתשובת הייחוס הוא כתוב עם נקודה (·): {referenceSpecies}.",
+    ar:"تحتوي {species} على الذرات الصحيحة، لكن الإجابة المرجعية تكتبها مع نقطة (·): {referenceSpecies}."
   },
   "condition-not-required":{
     en:"The reaction conditions above the arrow ({condition}) are not required in this answer.",
@@ -372,6 +383,12 @@ function formulaTextToLatex(text){
 
   while(i<text.length){
     ch=text.charAt(i);
+
+    if(ch==="·"){
+      out+="\\cdot ";
+      i++;
+      continue;
+    }
 
     /* "^" starts the charge: everything after it is a superscript. */
     if(ch==="^"){
@@ -773,15 +790,61 @@ function makeChar(ch, script, pair, kind) {
     var errors = [];
     var notes = [];
 
+    /*
+     * stop: null  - the whole formula
+     *       ")"   - inside parentheses (the ")" is consumed)
+     *       "·"   - one part after a dot; ends before the next dot
+     */
     function group(stop) {
       var arr = [];
 
       while (i < to) {
         var x = tokens[i];
 
+        if (stop === "·" && x.text === "·" && x.script === "normal") {
+          return arr;
+        }
+
         if (x.text === stop && x.script === "normal") {
           i++;
           return arr;
+        }
+
+        /*
+         * Dot of a hydrate / addition compound: CuSO4·5H2O.
+         * The optional number after the dot multiplies only the next part,
+         * which is stored as a group: CuSO4 + (H2O)5.
+         */
+        if (x.text === "·" && x.script === "normal" && stop !== ")") {
+          var dotStart = x.start;
+          var multiplier = 1;
+          var multiplierRange = null;
+          var part;
+
+          i++;
+
+          if (i < to && tokens[i].script === "normal" && isDigits(tokens[i].text)) {
+            multiplier = Number(tokens[i].text);
+            multiplierRange = [tokens[i].start, tokens[i].end];
+            i++;
+          }
+
+          part = group("·");
+
+          if (!part.length) {
+            errors.push({ code: "missing-species", range: [x.start, x.end] });
+          }
+
+          arr.push({
+            type: "group",
+            hydrate: true,
+            children: part,
+            count: multiplier,
+            countRange: multiplierRange,
+            range: [dotStart, i ? tokens[i - 1].end : x.end]
+          });
+
+          continue;
         }
 
         if (x.text === "(" && x.script === "normal") {
@@ -888,7 +951,7 @@ function makeChar(ch, script, pair, kind) {
         i++;
       }
 
-      if (stop) {
+      if (stop === ")") {
         errors.push({
           code: "missing-close-parenthesis",
           range: [charsLength(tokens), charsLength(tokens)]
@@ -1006,6 +1069,41 @@ function makeChar(ch, script, pair, kind) {
     var k;
 
     /*
+     * Parts joined by a dot (CuSO4·5H2O): each part's atoms and multiplier,
+     * sorted. "1*Cu:1,O:4,S:1|5*H:2,O:1". Null when there is no dot.
+     * 5H2O (five molecules) and H10O5 (one molecule) give different keys.
+     */
+    /* hydrateParts: [{key, range}] - range covers the part only (not the dot), for highlighting. */
+    var hydrateKey = null;
+    var hydrateParts = null;
+    var firstPart = [];
+    var parts = [];
+    var item, partStart;
+
+    for (k = 0; k < p.items.length; k++) {
+      item = p.items[k];
+
+      if (item.hydrate) {
+        partStart = item.countRange ? item.countRange[0] : item.children.length ? item.children[0].range[0] : item.range[0];
+        parts.push({ key: item.count + "*" + compositionKey(composition(item.children)), range: [partStart, item.range[1]] });
+      } else {
+        firstPart.push(item);
+      }
+    }
+
+    if (parts.length) {
+      if (firstPart.length) {
+        parts.push({
+          key: "1*" + compositionKey(composition(firstPart)),
+          range: [firstPart[0].range[0], firstPart[firstPart.length - 1].range[1]]
+        });
+      }
+
+      hydrateParts = parts;
+      hydrateKey = parts.map(function (x) { return x.key; }).sort().join("|");
+    }
+
+    /*
      * label:          the formula exactly as written (with charge), shown
      *                 in messages so the student can find it in the answer.
      * writtenFormula: the written order and brackets without charge and
@@ -1041,6 +1139,8 @@ function makeChar(ch, script, pair, kind) {
       composition: speciesComposition,
       label: writtenLabel,
       writtenFormula: writtenFormula,
+      hydrateKey: hydrateKey,
+      hydrateParts: hydrateParts,
       charge: charge,
       state: state,
       coefficientRange:coefficientRange,
@@ -1462,6 +1562,8 @@ function mergeSide(speciesList,options){
       composition:s.composition,
       label:s.label,
       writtenFormula:s.writtenFormula,
+      hydrateKey:s.hydrateKey,
+      hydrateParts:s.hydrateParts,
       charge:s.charge,
       state:s.state,
       range:s.range,
@@ -1504,6 +1606,8 @@ function canonicalSide(speciesList,divisor,options){
     composition:copy(s.composition),
     label:s.label,
     writtenFormula:s.writtenFormula,
+    hydrateKey:s.hydrateKey,
+    hydrateParts:s.hydrateParts,
     charge:s.charge,
     state:s.state,
     range:s.range?s.range.slice():null,
@@ -2032,11 +2136,25 @@ function compareWrittenForms(pairs,errors,notes,options){
 
     code="different-form";
 
-    if(options&&options.distinguishIsomers&&isStructuralFormula(reference.writtenFormula)){
+    /*
+     * The reference writes a hydrate / addition compound with a dot and the
+     * student has the same atoms without it: always a note, never an error
+     * (also when distinguishIsomers is on).
+     */
+    if(reference.writtenFormula.indexOf("·")>=0&&student.writtenFormula.indexOf("·")<0){
+      code="missing-dot";
+    }else if(reference.hydrateKey&&student.hydrateKey&&reference.hydrateKey!==student.hydrateKey){
+      /*
+       * Both use a dot but the parts differ: CuSO4·H10O5 vs CuSO4·5H2O.
+       * Same total atoms, but 5H2O is five water molecules: an error.
+       */
+      code="wrong-dot-parts";
+    }else if(options&&options.distinguishIsomers&&isStructuralFormula(reference.writtenFormula)){
       code=isStructuralFormula(student.writtenFormula)?"wrong-structure":"missing-structure";
     }
 
-    isError=code!=="different-form";
+    /* A different structure (isomer mode) or different dot parts are errors; other forms are notes. */
+    isError=code==="wrong-structure"||code==="missing-structure"||code==="wrong-dot-parts";
 
     addError(
       isError?errors:notes,
@@ -2045,11 +2163,40 @@ function compareWrittenForms(pairs,errors,notes,options){
         side:pair.side,
         species:speciesLabel(student),
         referenceSpecies:speciesLabel(reference),
-        studentRanges:oneTarget(student.formulaRange||student.range,isError?"species":"note"),
-        referenceRanges:oneTarget(reference.formulaRange||reference.range,"species")
+        studentRanges:code==="wrong-dot-parts"
+          ?unmatchedPartTargets(student.hydrateParts,reference.hydrateParts)
+          :oneTarget(student.formulaRange||student.range,isError?"species":"note"),
+        referenceRanges:code==="wrong-dot-parts"
+          ?unmatchedPartTargets(reference.hydrateParts,student.hydrateParts)
+          :oneTarget(reference.formulaRange||reference.range,"species")
       }
     );
   }
+}
+
+/*
+  Highlight targets for the dot parts of "parts" that have no equal part
+  in "other" (each part of "other" matches once): for CuSO4·H10O5 against
+  CuSO4·5H2O only H10O5 is highlighted, CuSO4 is correct.
+*/
+function unmatchedPartTargets(parts,other){
+  var used=[],targets=[],i,j,found;
+
+  for(i=0;i<parts.length;i++){
+    found=false;
+
+    for(j=0;j<other.length;j++){
+      if(!used[j]&&other[j].key===parts[i].key){
+        used[j]=true;
+        found=true;
+        break;
+      }
+    }
+
+    if(!found)targets.push(feedbackTarget(parts[i].range,"species"));
+  }
+
+  return targets;
 }
 /*
   Reaction conditions above the arrow (equations only).
@@ -2138,11 +2285,15 @@ function comparisonHighlights(result,answer){
   for(i=0;i<errors.length;i++){
     error=errors[i];color=answer==="reference"?"#cfe8ff":error.code==="unbalanced-atom"?"#ffe49c":"#ffb9b9";for(j=0;j<(error[field]||[]).length;j++){target=error[field][j];if(target&&target.end>target.start)highlights.push({start:target.start,end:target.end,color:color,code:error.code,part:target.part});}}
 
-  /* Notes: soft grey, student answer only. Errors come first, so they win on overlap. */
-  if(answer!=="reference"&&result&&result.notes){
+  /*
+   * Notes: soft grey, in both answers (e.g. missing-dot marks the hydrate
+   * in the student's answer and its dotted form in the reference).
+   * Errors come first, so they win on overlap.
+   */
+  if(result&&result.notes){
     for(i=0;i<result.notes.length;i++){
-      for(j=0;j<result.notes[i].studentRanges.length;j++){
-        target=result.notes[i].studentRanges[j];
+      for(j=0;j<(result.notes[i][field]||[]).length;j++){
+        target=result.notes[i][field][j];
         if(target&&target.end>target.start)highlights.push({start:target.start,end:target.end,color:"#e2e6ea",code:result.notes[i].code,part:"note"});
       }
     }
@@ -2402,7 +2553,6 @@ ChemicalKeyboard.prototype.setCorrectAnswer=function(value){
 
 ChemicalKeyboard.prototype.build=function(){
   var self=this,t=T[this.language]||T.en,root=node("div"),
-  windowHeader,windowTitle, windowClose,
   operatorsRow,statesRow,lowerRow,digitsPanel,digitsGrid,navigationRow,atomsPanel,
   atomsGrid,common,digits,i;
 
@@ -2426,63 +2576,11 @@ ChemicalKeyboard.prototype.build=function(){
       },0);
     });
   }
-  apply(root,{
-    fontFamily:"Arial,sans-serif",
-    direction:"ltr",
-    boxSizing:"border-box"
-  });
-
-  windowHeader=node("div");
-
-  apply(windowHeader,{
-    position:"absolute",
-    left:"0",
-    top:"0",
-    right:"0",
-    height:"34px",
-    padding:"7px 38px 6px 10px",
-    borderBottom:"1px solid #c3ced8",
-    borderRadius:"9px 9px 0 0",
-    background:"#dce7f0",
-    boxSizing:"border-box",
-    cursor:"move",
-    userSelect:"none",
-    fontWeight:"bold"
-  });
-
-  windowTitle=node("span",this.config.title||"Chemical keyboard");
-  windowHeader.appendChild(windowTitle);
-
-  windowClose=node("button","×");
-  windowClose.type="button";
-  windowClose.title=t.close;
-
-  apply(windowClose,{
-    position:"absolute",
-    right:"5px",
-    top:"3px",
-    width:"28px",
-    height:"28px",
-    padding:"0",
-    border:"0",
-    borderRadius:"4px",
-    background:"transparent",
-    fontSize:"24px",
-    lineHeight:"24px",
-    cursor:"pointer"
-  });
-
-  windowClose.addEventListener("pointerdown",function(e){e.stopPropagation();});
-
-  windowClose.addEventListener("click",function(){
-    self.closeElementWindows();
-    root.style.display="none";
-  });
-
-windowHeader.appendChild(windowClose);
-root.appendChild(windowHeader);
-makeDraggable(root,windowHeader);
-
+  /*
+   * No title bar here: in edit mode buildPopupWindow adds the draggable
+   * header with its close button; read-only keyboards are part of the
+   * page (feedback), so they have no title bar, close button or dragging.
+   */
   apply(root,{
     fontFamily:"Arial,sans-serif",
     direction:"ltr",
@@ -3124,7 +3222,8 @@ function setButtonEnabled(button,enabled){
 
       var c = this.chars[i].ch;
 
-      return (c === "+" || c === "→" || c === "⇌");
+      /* After "·" a number multiplies the next part (CuSO4·5H2O): normal level. */
+      return (c === "+" || c === "→" || c === "⇌" || c === "·");
     };
 
 /* ============================================================
@@ -3254,6 +3353,15 @@ ChemicalKeyboard.prototype.insertText=function(s,script){
   }
 
   script=script||this.script;
+
+  /*
+   * A dot or an arrow ends any subscript: the number after it is a
+   * multiplier (CuSO4·5H2O) or a coefficient (→ 2H2O), at the normal level.
+   */
+  if(s==="·"||isArrowChar(s)){
+    this.script="normal";
+    script="normal";
+  }
 
   for(i=0;i<s.length;i++){
     a.push(makeChar(s.charAt(i),script));

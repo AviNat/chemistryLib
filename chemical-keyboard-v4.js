@@ -29,6 +29,12 @@
     tipForward:"Insert a one-direction reaction arrow",
     tipEquilibrium:"Insert a reversible equilibrium arrow",
     tipDot:"Insert a centered dot, for example in a hydrate",
+    tipInfo:"Add reaction conditions above the arrow",
+    tipHeat:"Heating (Δ) above the arrow",
+    tipLight:"Light (hν) above the arrow",
+    tipComma:"Comma: separates conditions above the arrow, e.g. Fe, 450°C",
+    tipCelsius:"Degrees Celsius (°C) above the arrow",
+    tipKelvin:"Kelvin (K) above the arrow",
     tipSolid:"Solid state (s)",
     tipLiquid:"Liquid state (l)",
     tipGas:"Gas state (g)",
@@ -62,6 +68,12 @@
     tipForward:"הוספת חץ תגובה חד־כיווני",
     tipEquilibrium:"הוספת חץ של תגובה הפיכה או שיווי משקל",
     tipDot:"הוספת נקודה אמצעית, למשל בנוסחה של הידרט",
+    tipInfo:"הוספת תנאי תגובה מעל החץ",
+    tipHeat:"חימום (Δ) מעל החץ",
+    tipLight:"אור (hν) מעל החץ",
+    tipComma:"פסיק: מפריד בין תנאים מעל החץ, למשל Fe, 450°C",
+    tipCelsius:"מעלות צלזיוס (°C) מעל החץ",
+    tipKelvin:"קלווין (K) מעל החץ",
     tipSolid:" מצב צבירה מוצק (s)",
     tipLiquid:" מצב צבירה נוזל (l)",
     tipGas:" מצב צבירה גז (g)",
@@ -95,6 +107,12 @@
     tipForward:"إضافة سهم تفاعل أحادي الاتجاه",
     tipEquilibrium:"إضافة سهم تفاعل عكوس أو اتزان",
     tipDot:"إضافة نقطة وسطية، مثلًا في صيغة الهيدرات",
+    tipInfo:"إضافة شروط التفاعل فوق السهم",
+    tipHeat:"تسخين (Δ) فوق السهم",
+    tipLight:"ضوء (hν) فوق السهم",
+    tipComma:"فاصلة: تفصل بين الشروط فوق السهم، مثل Fe, 450°C",
+    tipCelsius:"درجة مئوية (°C) فوق السهم",
+    tipKelvin:"كلفن (K) فوق السهم",
     tipSolid:"إضافة الحالة الصلبة (s)",
     tipLiquid:"إضافة الحالة السائلة (l)",
     tipGas:"إضافة الحالة الغازية (g)",
@@ -140,11 +158,15 @@ var ERROR_TEXT={
     "missing-charge":"The charge of {species} is missing. The reference answer specifies {expectedCharge}.",
     "unexpected-charge":"{species} has an unexpected charge of {actualCharge}.",
     "wrong-charge":"The charge of {species} is {actualCharge}, but the reference answer specifies {expectedCharge}.",
-    "missing-species":"{species} is required on the {side} side but is missing.",
-    "unexpected-species":"{species} appears on the {side} side but is not present there in the reference answer.",
+    "missing-species":"{species} is required{onSide} but is missing.",
+    "unexpected-species":"The reference answer does not contain {species}{onSide}.",
     "wrong-coefficient":"The coefficient of {species} is {actual}, but the reference coefficient is {expected}.",
     "wrong-arrow":"The equation uses the wrong reaction arrow.",
-    "wrong-answer-type":"The expected answer is a chemical {expected}, but the student's answer is a chemical {actual}.",
+    "wrong-structure":"{species} has the same atoms as {referenceSpecies} but a different structure; they are different substances (isomers).",
+    "missing-condition":"The reaction conditions above the arrow are missing; the reference answer specifies {expectedCondition}.",
+    "wrong-condition":"The reaction conditions above the arrow are {condition}, but the reference answer specifies {expectedCondition}.",
+    "missing-structure":"The formula {species} does not show the structure of the substance; the reference answer writes it as {referenceSpecies}.",
+    "wrong-answer-type":"The expected answer is a chemical {expectedType}, but the student's answer is a chemical {actualType}.",
     "syntax-error":"The answer contains a syntax error: {parserCode}.",
     "missing-reference-answer":"No reference answer was supplied."
   },
@@ -165,11 +187,15 @@ var ERROR_TEXT={
     "missing-charge":"המטען של {species} חסר. בתשובת הייחוס מופיע המטען {expectedCharge}.",
     "unexpected-charge":"ל־{species} הוגדר מטען לא צפוי: {actualCharge}.",
     "wrong-charge":"המטען של {species} הוא {actualCharge}, אך בתשובת הייחוס מופיע המטען {expectedCharge}.",
-    "missing-species":"החומר {species} צריך להופיע בצד {side}, אך הוא חסר.",
-    "unexpected-species":"החומר {species} מופיע בצד {side}, אך אינו מופיע בצד זה בתשובת הייחוס.",
+    "missing-species":"החומר {species} צריך להופיע{onSide}, אך הוא חסר.",
+    "unexpected-species":"תשובת הייחוס אינה מכילה את {species}{onSide}.",
     "wrong-coefficient":"המקדם של {species} הוא {actual}, אך המקדם בתשובת הייחוס הוא {expected}.",
     "wrong-arrow":"במשוואה נעשה שימוש בחץ תגובה שגוי.",
-    "wrong-answer-type":"נדרשת תשובה מסוג {expected}, אך תשובת התלמיד היא מסוג {actual}.",
+    "wrong-structure":"ל־{species} יש אותם אטומים כמו ל־{referenceSpecies}, אך מבנה שונה; אלה חומרים שונים (איזומרים).",
+    "missing-condition":"חסרים תנאי התגובה מעל החץ; בתשובת הייחוס מופיע: {expectedCondition}.",
+    "wrong-condition":"תנאי התגובה מעל החץ הם {condition}, אך בתשובת הייחוס מופיע: {expectedCondition}.",
+    "missing-structure":"הנוסחה {species} אינה מראה את מבנה החומר; בתשובת הייחוס הוא כתוב כך: {referenceSpecies}.",
+    "wrong-answer-type":"נדרשת תשובה מסוג {expectedType}, אך תשובת התלמיד היא מסוג {actualType}.",
     "syntax-error":"התשובה מכילה שגיאת תחביר: {parserCode}.",
     "missing-reference-answer":"לא הוגדרה תשובת ייחוס."
   },
@@ -190,15 +216,113 @@ var ERROR_TEXT={
     "missing-charge":"شحنة {species} مفقودة. تحدد الإجابة المرجعية الشحنة {expectedCharge}.",
     "unexpected-charge":"للمادة {species} شحنة غير متوقعة هي {actualCharge}.",
     "wrong-charge":"شحنة {species} هي {actualCharge}، لكن الإجابة المرجعية تحدد {expectedCharge}.",
-    "missing-species":"يجب أن تظهر المادة {species} في الطرف {side}، لكنها مفقودة.",
-    "unexpected-species":"تظهر المادة {species} في الطرف {side}، لكنها غير موجودة هناك في الإجابة المرجعية.",
+    "missing-species":"يجب أن تظهر المادة {species}{onSide}، لكنها مفقودة.",
+    "unexpected-species":"لا تحتوي الإجابة المرجعية على {species}{onSide}.",
     "wrong-coefficient":"معامل {species} هو {actual}، لكن المعامل المرجعي هو {expected}.",
     "wrong-arrow":"تم استخدام سهم تفاعل غير صحيح.",
-    "wrong-answer-type":"نوع الإجابة المطلوب هو {expected}، لكن إجابة الطالب من النوع {actual}.",
+    "wrong-structure":"تحتوي {species} على نفس ذرات {referenceSpecies} لكن ببنية مختلفة؛ إنهما مادتان مختلفتان (متصاوغات).",
+    "missing-condition":"شروط التفاعل فوق السهم مفقودة؛ تحدد الإجابة المرجعية: {expectedCondition}.",
+    "wrong-condition":"شروط التفاعل فوق السهم هي {condition}، لكن الإجابة المرجعية تحدد: {expectedCondition}.",
+    "missing-structure":"الصيغة {species} لا تُظهر بنية المادة؛ الإجابة المرجعية تكتبها هكذا: {referenceSpecies}.",
+    "wrong-answer-type":"نوع الإجابة المطلوب هو {expectedType}، لكن إجابة الطالب من النوع {actualType}.",
     "syntax-error":"تحتوي الإجابة على خطأ في الصياغة: {parserCode}.",
     "missing-reference-answer":"لم يتم تحديد إجابة مرجعية."
   }
 };
+
+/*
+  Parser (syntax) codes caused by student input, shown inside
+  the "syntax-error" message as {parserCode}.
+  "unexpected-token" is intentionally not listed: it can also be
+  caused by a parser gap (e.g. the hydrate dot), so it stays in
+  English until that is fixed.
+*/
+var SYNTAX_TEXT={
+  "missing-close-parenthesis":{
+    en:"a closing parenthesis is missing",
+    he:"חסרים סוגריים סוגרים",
+    ar:"قوس الإغلاق مفقود"
+  },
+  "missing-species":{
+    en:"a substance is missing before or after a + sign or the arrow",
+    he:"חסר חומר לפני או אחרי סימן + או החץ",
+    ar:"توجد مادة مفقودة قبل أو بعد علامة + أو السهم"
+  },
+  "multiple-arrows":{
+    en:"the equation contains more than one reaction arrow",
+    he:"במשוואה יש יותר מחץ תגובה אחד",
+    ar:"تحتوي المعادلة على أكثر من سهم تفاعل واحد"
+  },
+  "invalid-charge":{
+    en:"the ionic charge is not written correctly: write the number first and then the sign (+ or −)",
+    he:"מטען היון אינו כתוב נכון: יש לכתוב קודם את המספר ואחריו את הסימן (+ או −)",
+    ar:"شحنة الأيون غير مكتوبة بشكل صحيح: اكتب الرقم أولاً ثم الإشارة (+ أو −)"
+  },
+  "subscript-zero":{
+    en:"a subscript cannot be 0",
+    he:"המספר 0 אינו יכול להופיע ככתב תחתי",
+    ar:"لا يمكن كتابة الرقم 0 كنص سفلي"
+  },
+};
+
+/*
+  Notes: remarks about notation that are NOT errors and do not
+  affect "correct". {species} is rendered as a formula.
+*/
+var NOTE_TEXT={
+  "notes-heading":{
+    en:"Notes (not errors)",
+    he:"הערות (אינן שגיאות)",
+    ar:"ملاحظات (ليست أخطاء)"
+  },
+  "redundant-subscript-one":{
+    en:"In {species}, the subscript 1 is redundant and should be omitted.",
+    he:"ב־{species} הכתב התחתי 1 מיותר ויש להשמיט אותו.",
+    ar:"في {species}، الرقم 1 في النص السفلي زائد ويجب حذفه."
+  },
+  "repeated-species":{
+    en:"{species} appears more than once{onSide}; write it once with a combined coefficient.",
+    he:"החומר {species} מופיע יותר מפעם אחת{onSide}; יש לכתוב אותו פעם אחת עם מקדם משותף.",
+    ar:"تظهر المادة {species} أكثر من مرة{onSide}؛ اكتبها مرة واحدة بمعامل مجمّع."
+  },
+  "different-form":{
+    en:"{species} has the correct atoms, but the reference answer writes it as {referenceSpecies}.",
+    he:"ל־{species} יש את האטומים הנכונים, אך בתשובת הייחוס הוא כתוב כך: {referenceSpecies}.",
+    ar:"تحتوي {species} على الذرات الصحيحة، لكن الإجابة المرجعية تكتبها هكذا: {referenceSpecies}."
+  },
+  "condition-not-required":{
+    en:"The reaction conditions above the arrow ({condition}) are not required in this answer.",
+    he:"תנאי התגובה מעל החץ ({condition}) אינם נדרשים בתשובה זו.",
+    ar:"شروط التفاعل فوق السهم ({condition}) غير مطلوبة في هذه الإجابة."
+  },
+  "redundant-charge-one":{
+    en:"In {species}, the number 1 in the charge is redundant and should be omitted.",
+    he:"ב־{species} המספר 1 במטען מיותר ויש להשמיט אותו.",
+    ar:"في {species}، الرقم 1 في الشحنة زائد ويجب حذفه."
+  }
+};
+
+/* Answer types, used by "wrong-answer-type" as {expectedType} / {actualType}. */
+var ANSWER_TYPE_TEXT={
+  formula:{
+    en:"formula",
+    he:"נוסחה כימית",
+    ar:"صيغة كيميائية"
+  },
+  equation:{
+    en:"equation",
+    he:"משוואה כימית",
+    ar:"معادلة كيميائية"
+  }
+};
+
+function localizedFromTable(table,key,language){
+  var entry=table[key];
+
+  if(!entry)return key;
+
+  return entry[language]||entry.en||key;
+}
 
 function localizedState(state,language){
   var states={
@@ -210,14 +334,36 @@ function localizedState(state,language){
   return state?(states[language]||states.en)[state]||state:"";
 }
 
-function localizedSide(side,language){
-  var sides={
-    en:{left:"left",right:"right",expression:"expression"},
-    he:{left:"שמאל",right:"ימין",expression:"הביטוי"},
-    ar:{left:"الأيسر",right:"الأيمن",expression:"التعبير"}
-  };
+/*
+  {onSide} in message templates: the complete "on the ... side" phrase,
+  including its leading space. A formula has no sides, so "expression"
+  becomes an empty string and the same template reads correctly
+  for both formulas and equations.
+*/
+var SIDE_TEXT={
+  left:{
+    en:" on the left side",
+    he:" בצד שמאל",
+    ar:" في الطرف الأيسر"
+  },
+  right:{
+    en:" on the right side",
+    he:" בצד ימין",
+    ar:" في الطرف الأيمن"
+  },
+  expression:{
+    en:"",
+    he:"",
+    ar:""
+  }
+};
 
-  return (sides[language]||sides.en)[side]||side;
+function localizedOnSide(side,language){
+  var entry=SIDE_TEXT[side];
+
+  if(!entry)return "";
+
+  return entry[language]!==undefined?entry[language]:entry.en;
 }
 function formulaTextToLatex(text){
   var out="",i=0,symbol,digits,ch;
@@ -226,6 +372,27 @@ function formulaTextToLatex(text){
 
   while(i<text.length){
     ch=text.charAt(i);
+
+    /* "^" starts the charge: everything after it is a superscript. */
+    if(ch==="^"){
+      out+="^{\\scriptscriptstyle "+text.substring(i+1)+"}";
+      break;
+    }
+
+    /* Count after a closing parenthesis: (OH)2 */
+    if(ch===")"){
+      out+=")";
+      i++;
+      digits="";
+
+      while(i<text.length&&isDigit(text.charAt(i))){
+        digits+=text.charAt(i);
+        i++;
+      }
+
+      if(digits)out+="_{\\scriptscriptstyle "+digits+"}";
+      continue;
+    }
 
     if(isUpper(ch)){
       symbol=ch;
@@ -267,13 +434,22 @@ function replaceTextToken(text,token,value){
 
 function localizedErrorTemplate(error,language){
   var messages=ERROR_TEXT[language]||ERROR_TEXT.en;
-  var text=messages[error.code]||error.code;
+  var text=messages[error.code]||localizedFromTable(NOTE_TEXT,error.code,language);
 
   text=replaceTextToken(text,"count",error.count);
   text=replaceTextToken(text,"left",error.left);
   text=replaceTextToken(text,"right",error.right);
-  text=replaceTextToken(text,"parserCode",error.parserCode);
-  text=replaceTextToken(text,"side",localizedSide(error.side,language));
+  text=replaceTextToken(text,"parserCode",localizedFromTable(SYNTAX_TEXT,error.parserCode,language));
+
+  /*
+   * Conditions are free English text; the Unicode isolate marks
+   * (LRI ... PDI) keep "Fe, 450°C" in order inside Hebrew / Arabic.
+   */
+  if(error.condition!==undefined)text=replaceTextToken(text,"condition","⁦"+error.condition+"⁩");
+  if(error.expectedCondition!==undefined)text=replaceTextToken(text,"expectedCondition","⁦"+error.expectedCondition+"⁩");
+  text=replaceTextToken(text,"expectedType",localizedFromTable(ANSWER_TYPE_TEXT,error.expected,language));
+  text=replaceTextToken(text,"actualType",localizedFromTable(ANSWER_TYPE_TEXT,error.actual,language));
+  text=replaceTextToken(text,"onSide",localizedOnSide(error.side,language));
   text=replaceTextToken(text,"actualState",localizedState(error.actual,language));
   text=replaceTextToken(text,"expectedState",localizedState(error.expected,language));
   text=replaceTextToken(text,"actualCharge",chargeLabel(error.actual));
@@ -287,7 +463,7 @@ function localizedErrorTemplate(error,language){
 function appendErrorMessage(parent,error,language,index){
   var text=localizedErrorTemplate(error,language);
   var row=node("div");
-  var tokens=["{species}","{atom}"];
+  var tokens=["{species}","{referenceSpecies}","{atom}"];
   var position,selectedToken,selectedPosition,i,before,value,formula;
 
   row.dir=language==="en"?"ltr":"rtl";
@@ -321,7 +497,9 @@ function appendErrorMessage(parent,error,language,index){
     before=text.substring(0,selectedPosition);
     if(before)row.appendChild(document.createTextNode(before));
 
-    value=selectedToken==="{species}"?error.species:error.atom;
+    value=selectedToken==="{species}"?error.species:
+      selectedToken==="{referenceSpecies}"?error.referenceSpecies:
+      error.atom;
     formula=node("span","\\("+formulaTextToLatex(value)+"\\)");
 
     apply(formula,{
@@ -340,10 +518,7 @@ function appendErrorMessage(parent,error,language,index){
 }
 
 
-  var COMMON = [
-    "H", "C", "N", "O", "Na", "Mg", "Al",
-    "Cl", "K", "Ca", "Fe", "Cu", "Zn", "Ag"
-  ];
+  var COMMON = ["H", "C", "N", "O", "Na", "Mg", "Al", "Cl", "K", "Ca", "Fe", "Cu", "Zn", "Ag"];
 
   for (var z = 0; z < SYMBOLS.length; z++) {
     SET[SYMBOLS[z]] = true;
@@ -418,6 +593,37 @@ function appendErrorMessage(parent,error,language,index){
       icon.appendChild(normal);
       icon.appendChild(sup);
       icon.appendChild(sub);
+
+      return icon;
+    }
+    /* Icon for the conditions button: a dashed box above an arrow. */
+    function conditionIcon(){
+      var icon=node("span"),box=node("span"),arrow=node("span","→");
+
+      apply(icon,{
+        display:"inline-flex",
+        flexDirection:"column",
+        alignItems:"center",
+        verticalAlign:"middle",
+        lineHeight:"1",
+        pointerEvents:"none"
+      });
+
+      apply(box,{
+        display:"block",
+        width:"16px",
+        height:"9px",
+        border:"1px dashed #555",
+        boxSizing:"border-box"
+      });
+
+      apply(arrow,{
+        display:"block",
+        fontSize:"16px"
+      });
+
+      icon.appendChild(box);
+      icon.appendChild(arrow);
 
       return icon;
     }
@@ -527,28 +733,15 @@ function makeChar(ch, script, pair, kind) {
       s = chars[i].ch;
       script = chars[i].script;
 
-      if (
-        isUpper(s) &&
-        i + 1 < chars.length &&
-        isLower(chars[i + 1].ch) &&
-        chars[i + 1].script === script
-      ) {
+      if (isUpper(s) && i + 1 < chars.length && isLower(chars[i + 1].ch) && chars[i + 1].script === script) {
         s += chars[i + 1].ch;
         i++;
       } else if (isDigit(s)) {
-        while (
-          i + 1 < chars.length &&
-          isDigit(chars[i + 1].ch) &&
-          chars[i + 1].script === script
-        ) {
+        while (i + 1 < chars.length && isDigit(chars[i + 1].ch) && chars[i + 1].script === script) {
           s += chars[++i].ch;
         }
       } else if (isLower(s)) {
-        while (
-          i + 1 < chars.length &&
-          isLower(chars[i + 1].ch) &&
-          chars[i + 1].script === script
-        ) {
+        while (i + 1 < chars.length && isLower(chars[i + 1].ch) && chars[i + 1].script === script) {
           s += chars[++i].ch;
         }
       }
@@ -578,6 +771,7 @@ function makeChar(ch, script, pair, kind) {
     var i = from;
     var items = [];
     var errors = [];
+    var notes = [];
 
     function group(stop) {
       var arr = [];
@@ -599,13 +793,24 @@ function makeChar(ch, script, pair, kind) {
           i++;
           children = group(")");
 
-          if (
-            i < to &&
-            tokens[i].script === "sub" &&
-            isDigits(tokens[i].text)
-          ) {
+          if (i < to && tokens[i].script === "sub" && isDigits(tokens[i].text)) {
             count = Number(tokens[i].text);
             groupCountRange = [tokens[i].start,tokens[i].end];
+
+            if (count === 0) {
+              errors.push({
+                code: "subscript-zero",
+                range: groupCountRange.slice()
+              });
+            }
+
+            if (count === 1) {
+              notes.push({
+                code: "redundant-subscript-one",
+                range: groupCountRange.slice()
+              });
+            }
+
             i++;
           }
 
@@ -614,19 +819,13 @@ function makeChar(ch, script, pair, kind) {
             children: children,
             count: count,
             countRange: groupCountRange,
-            range: [
-              st,
-              i ? tokens[i - 1].end : x.end
-            ]
+            range: [st, i ? tokens[i - 1].end : x.end]
           });
 
           continue;
         }
 
-        if (
-          isUpper(x.text.charAt(0)) &&
-          x.script === "normal"
-        ) {
+        if (isUpper(x.text.charAt(0)) && x.script === "normal") {
           var count2 = 1;
           var el = x.text;
           var st2 = x.start;
@@ -642,21 +841,26 @@ function makeChar(ch, script, pair, kind) {
             });
           }
 
-          if (
-            i < to &&
-            tokens[i].script === "sub" &&
-            isDigits(tokens[i].text)
-          ) {
+          if (i < to && tokens[i].script === "sub" && isDigits(tokens[i].text)) {
             count2 = Number(tokens[i].text);
             countRange2 = [tokens[i].start,tokens[i].end];
 
-            if (count2 === 1) {
+            if (count2 === 0) {
               errors.push({
-                code: "subscript-one",
-                range: [
-                  tokens[i].start,
-                  tokens[i].end
-                ]
+                code: "subscript-zero",
+                range: countRange2.slice()
+              });
+            }
+
+            /*
+             * Subscript 1 is accepted: it is redundant (IUPAC omits it)
+             * but not chemically wrong, and it is also the first digit
+             * while typing 10-19. It is reported as a note, not an error.
+             */
+            if (count2 === 1) {
+              notes.push({
+                code: "redundant-subscript-one",
+                range: countRange2.slice()
               });
             }
 
@@ -669,10 +873,7 @@ function makeChar(ch, script, pair, kind) {
             count: count2,
             symbolRange:[x.start,x.end],
             countRange:countRange2,
-            range: [
-              st2,
-              i ? tokens[i - 1].end : x.end
-            ]
+            range: [st2, i ? tokens[i - 1].end : x.end]
           });
 
           continue;
@@ -690,10 +891,7 @@ function makeChar(ch, script, pair, kind) {
       if (stop) {
         errors.push({
           code: "missing-close-parenthesis",
-          range: [
-            charsLength(tokens),
-            charsLength(tokens)
-          ]
+          range: [charsLength(tokens), charsLength(tokens)]
         });
       }
 
@@ -705,6 +903,7 @@ function makeChar(ch, script, pair, kind) {
     return {
       items: items,
       errors: errors,
+      notes: notes,
       next: i
     };
   }
@@ -720,15 +919,9 @@ function makeChar(ch, script, pair, kind) {
       it = items[i];
 
       if (it.type === "element") {
-        map[it.symbol] =
-          (map[it.symbol] || 0) +
-          it.count * mult;
+        map[it.symbol] = (map[it.symbol] || 0) + it.count * mult;
       } else {
-        composition(
-          it.children,
-          map,
-          mult * it.count
-        );
+        composition(it.children, map, mult * it.count);
       }
     }
 
@@ -741,16 +934,13 @@ function makeChar(ch, script, pair, kind) {
     var state = null;
     var charge = 0;
     var errors = [];
+    var notes = [];
     var formulaEnd = to;
     var coefficientRange = null;
     var stateRange = null;
     var chargeRange = null;
 
-    if (
-      i < to &&
-      tokens[i].script === "normal" &&
-      isDigits(tokens[i].text)
-    ) {
+    if (i < to && tokens[i].script === "normal" && isDigits(tokens[i].text)) {
       coefficient = Number(tokens[i].text);
       coefficientRange = [tokens[i].start,tokens[i].end];
       i++;
@@ -763,12 +953,9 @@ function makeChar(ch, script, pair, kind) {
       tokens[to - 2].script === "sub" &&
       (
         tokens[to - 2].text === "s" ||
-        tokens[to - 2].text === "l" ||
-        tokens[to - 2].text === "g" ||
-        tokens[to - 2].text === "aq"
+        tokens[to - 2].text === "l" || tokens[to - 2].text === "g" || tokens[to - 2].text === "aq"
       ) &&
-      tokens[to - 1].text === ")" &&
-      tokens[to - 1].script === "sub"
+      tokens[to - 1].text === ")" && tokens[to - 1].script === "sub"
     ) {
       state = tokens[to - 2].text;
       stateRange = [tokens[to-3].start,tokens[to-1].end];
@@ -779,49 +966,32 @@ function makeChar(ch, script, pair, kind) {
     var j = formulaEnd - 1;
     var chargeText = "";
 
-    while (
-      j >= i &&
-      tokens[j].script === "sup"
-    ) {
+    while (j >= i && tokens[j].script === "sup") {
       chargeStart = j;
-      chargeText =
-        tokens[j].text + chargeText;
+      chargeText = tokens[j].text + chargeText;
       j--;
     }
 
     if (chargeText) {
-      var sign =
-        chargeText.charAt(
-          chargeText.length - 1
-        );
+      var sign = chargeText.charAt(chargeText.length - 1);
 
-      var mag =
-        chargeText.substring(
-          0,
-          chargeText.length - 1
-        );
+      var mag = chargeText.substring(0, chargeText.length - 1);
 
-      if (
-        (
-          sign === "+" ||
-          sign === "−" ||
-          sign === "-"
-        ) &&
-        (
-          !mag ||
-          isDigits(mag)
-        )
-      ) {
-        charge =
-          (mag ? Number(mag) : 1) *
+      if ((sign === "+" || sign === "−" || sign === "-") && (!mag || isDigits(mag))) {
+        charge = (mag ? Number(mag) : 1) *
           (sign === "+" ? 1 : -1);
+
+        /* "1+" / "1−": correct but redundant, reported as a note. */
+        if (Number(mag) === 1) {
+          notes.push({
+            code: "redundant-charge-one",
+            range: [tokens[chargeStart].start, tokens[formulaEnd - 1].end]
+          });
+        }
       } else {
         errors.push({
           code: "invalid-charge",
-          range: [
-            tokens[chargeStart].start,
-            tokens[formulaEnd - 1].end
-          ]
+          range: [tokens[chargeStart].start, tokens[formulaEnd - 1].end]
         });
       }
 
@@ -830,31 +1000,54 @@ function makeChar(ch, script, pair, kind) {
       formulaEnd = chargeStart;
     }
 
-    var p =
-      parseFormulaTokens(
-        tokens,
-        i,
-        formulaEnd
-      );
+    var p = parseFormulaTokens(tokens, i, formulaEnd);
+
+    var speciesComposition = composition(p.items);
+    var k;
+
+    /*
+     * label:          the formula exactly as written (with charge), shown
+     *                 in messages so the student can find it in the answer.
+     * writtenFormula: the written order and brackets without charge and
+     *                 without redundant subscript 1; used to compare the
+     *                 written form (isomers / non-standard order).
+     */
+    var writtenLabel = "";
+    var writtenFormula = "";
+
+    for (k = i; k < formulaEnd; k++) {
+      writtenLabel += tokens[k].text;
+
+      if (!(tokens[k].script === "sub" && tokens[k].text === "1")) {
+        writtenFormula += tokens[k].text;
+      }
+    }
+
+    if (chargeText) {
+      writtenLabel += "^" + chargeText;
+    }
 
     errors = errors.concat(p.errors);
+    notes = notes.concat(p.notes);
+
+    for (k = 0; k < notes.length; k++) {
+      notes[k].species = writtenLabel;
+    }
 
     return {
       type: "species",
       coefficient: coefficient,
       formula: p.items,
-      composition: composition(p.items),
+      composition: speciesComposition,
+      label: writtenLabel,
+      writtenFormula: writtenFormula,
       charge: charge,
       state: state,
       coefficientRange:coefficientRange,
       formulaRange:i<formulaEnd?[tokens[i].start,tokens[formulaEnd-1].end]:null,
       chargeRange:chargeRange,
       stateRange:stateRange,
-      range: [
-        tokens[from].start,
-        tokens[to - 1].end
-      ],
-      errors: errors
+      range: [tokens[from].start, tokens[to - 1].end], errors: errors, notes: notes
     };
   }
 
@@ -866,22 +1059,14 @@ function makeChar(ch, script, pair, kind) {
     var left = [];
     var right = [];
     var errors = [];
+    var notes = [];
 
     for (i = 0; i < tokens.length; i++) {
-      if (
-        tokens[i].script === "normal" &&
-        (
-          tokens[i].text === "→" ||
-          tokens[i].text === "⇌"
-        )
-      ) {
+      if (tokens[i].script === "normal" && (tokens[i].text === "→" || tokens[i].text === "⇌")) {
         if (arrow >= 0) {
           errors.push({
             code: "multiple-arrows",
-            range: [
-              tokens[i].start,
-              tokens[i].end
-            ]
+            range: [tokens[i].start, tokens[i].end]
           });
         } else {
           arrow = i;
@@ -901,51 +1086,26 @@ function makeChar(ch, script, pair, kind) {
       var depth = 0;
 
       for (j = a; j <= b; j++) {
-        if (
-          j < b &&
-          tokens[j].text === "("
-        ) {
+        if (j < b && tokens[j].text === "(") {
           depth++;
         }
 
-        if (
-          j < b &&
-          tokens[j].text === ")"
-        ) {
+        if (j < b && tokens[j].text === ")") {
           depth--;
         }
 
-        if (
-          j === b ||
-          (
-            depth === 0 &&
-            tokens[j].text === "+" &&
-            tokens[j].script === "normal"
-          )
-        ) {
+        if (j === b || (depth === 0 && tokens[j].text === "+" && tokens[j].script === "normal")) {
           if (j === last) {
             errors.push({
               code: "missing-species",
-              range: [
-                j < b
-                  ? tokens[j].start
-                  : chars.length,
-                j < b
-                  ? tokens[j].end
-                  : chars.length
-              ]
+              range: [j < b ? tokens[j].start : chars.length, j < b ? tokens[j].end : chars.length]
             });
           } else {
-            var sp =
-              parseSpecies(
-                tokens,
-                last,
-                j
-              );
+            var sp = parseSpecies(tokens, last, j);
 
             target.push(sp);
-            errors =
-              errors.concat(sp.errors);
+            errors = errors.concat(sp.errors);
+            notes = notes.concat(sp.notes);
           }
 
           last = j + 1;
@@ -954,23 +1114,11 @@ function makeChar(ch, script, pair, kind) {
     }
 
     if (arrow < 0) {
-      parseSide(
-        0,
-        tokens.length,
-        left
-      );
+      parseSide(0, tokens.length, left);
     } else {
-      parseSide(
-        0,
-        arrow,
-        left
-      );
+      parseSide(0, arrow, left);
 
-      parseSide(
-        arrow + 1,
-        tokens.length,
-        right
-      );
+      parseSide(arrow + 1, tokens.length, right);
     }
 
     return {
@@ -988,57 +1136,141 @@ function makeChar(ch, script, pair, kind) {
           : {
               type: arrowType,
               range:[tokens[arrow].start,tokens[arrow].end],
-              conditionsAbove: null
+              condition: conditionInfo(chars[tokens[arrow].start].condition)
             },
 
       range:[0,chars.length],
       errors: errors,
+      notes: notes,          // style remarks, never affect validity
       valid: errors.length === 0
     };
   }
 // ANALYZER
-  function modelFromValue(value){
-  var chars=[],s=String(value||""),script="normal",explicit=s.indexOf("_{")>=0||s.indexOf("^{")>=0;
-  var i,ch,prev,stateId=1,j,len,insideMathRoman=0;
+var VALUE_TOKENS=[
+  {text:"\\rightleftharpoons",ch:"⇌"},
+  {text:"\\longrightarrow",ch:"→"},
+  {text:"\\mathrm{",ch:null},
+  {text:"\\cdot",ch:"·"},
+  {text:"<->",ch:"⇌"},
+  {text:"->",ch:"→"},
+  {text:"\\Delta",ch:"Δ"},
+  {text:"\\nu",ch:"ν"}
+];
 
-  for(i=0;i<s.length;i++){
-    if(s.substring(i,i+18)==="\\rightleftharpoons"){
-      chars.push(makeChar("⇌","normal"));
-      i+=17;
-      continue;
-    }
+function isArrowChar(ch){
+  return ch==="→"||ch==="⇌";
+}
 
-    if(s.substring(i,i+17)==="\\longrightarrow"){
-      chars.push(makeChar("→","normal"));
-      i+=16;
-      continue;
-    }
+/*
+  Reaction conditions above an arrow, written after the arrow in brackets:
+  "→[MnO_{2}]", "->[Δ]", "⇌[Fe, 450°C]". The content is free text
+  (English only) with optional _{ } / ^{ }; "hν" is kept as one symbol.
+*/
+function conditionFromValue(text){
+  var chars=modelFromValue(text),out=[],i,c;
 
-    if(s.substring(i,i+8)==="\\mathrm{"){
-      i+=7;
-      insideMathRoman=1;
-      continue;
-    }
+  for(i=0;i<chars.length;i++){
+    c=chars[i];
 
-    if(s.substring(i,i+5)==="\\cdot"){
-      chars.push(makeChar("·","normal"));
-      i+=4;
-      continue;
-    }
-
-    if(s.substring(i,i+3)==="<->"){
-      chars.push(makeChar("⇌","normal"));
-      i+=2;
-      continue;
-    }
-
-    if(s.substring(i,i+2)==="->"){
-      chars.push(makeChar("→","normal"));
+    if(c.ch==="h"&&i+1<chars.length&&chars[i+1].ch==="ν"){
+      out.push(makeChar("hν","normal",null,"symbol"));
       i++;
       continue;
     }
 
+    out.push(makeChar(c.ch,c.script==="sup"?"sup":c.script==="sub"&&c.kind!=="state"?"sub":"normal"));
+  }
+
+  return out;
+}
+
+/*
+  Condition of an arrow for analysis, or null when there is none
+  (or the placeholder is open but empty).
+  key: comparison key - spaces removed, comma-separated parts sorted,
+  so "Fe, 450°C" equals "450°C,Fe". Case is kept (Co vs CO).
+*/
+function conditionInfo(condition){
+  var text=conditionText(condition),parts,i;
+
+  if(!text.replace(/\s+/g,""))return null;
+
+  parts=text.split(",");
+
+  for(i=0;i<parts.length;i++)parts[i]=parts[i].replace(/\s+/g,"");
+
+  parts=parts.filter(function(p){return p!=="";}).sort();
+
+  return {
+    text:text.replace(/^\s+|\s+$/g,""),
+    key:parts.join(",")
+  };
+}
+
+/* Plain text of a condition, e.g. "MnO2" or "Fe, 450°C". */
+function conditionText(condition){
+  var s="",i;
+
+  for(i=0;i<(condition||[]).length;i++)s+=condition[i].ch;
+
+  return s;
+}
+
+function matchValueToken(s,i){
+  var k;
+
+  for(k=0;k<VALUE_TOKENS.length;k++){
+    if(s.substring(i,i+VALUE_TOKENS[k].text.length)===VALUE_TOKENS[k].text){
+      return VALUE_TOKENS[k];
+    }
+  }
+
+  return null;
+}
+
+  function modelFromValue(value){
+  var chars=[],s=String(value||""),script="normal",explicit=s.indexOf("_{")>=0||s.indexOf("^{")>=0;
+  var i,ch,prev,stateId=1,j,len,insideMathRoman=0,token;
+
+  /*
+   * If the arrow just added (its last character is at position k)
+   * is followed by "[...]", attach the condition to it.
+   * Returns the position of the last character consumed.
+   */
+  function readCondition(k){
+    var close,last=chars[chars.length-1];
+
+    if(!last||!isArrowChar(last.ch)||s.charAt(k+1)!=="[")return k;
+
+    close=s.indexOf("]",k+2);
+    if(close<0)return k;
+
+    last.condition=conditionFromValue(s.substring(k+2,close));
+    return close;
+  }
+
+  for(i=0;i<s.length;i++){
+    /*
+     * Multi-character tokens. Longer tokens must come before
+     * their prefixes ("<->" before "->").
+     */
+    token=matchValueToken(s,i);
+
+    if(token){
+      if(token.text==="\\mathrm{")insideMathRoman=1;
+      else chars.push(makeChar(token.ch,"normal"));
+      i+=token.text.length-1;
+      i=readCondition(i);
+      continue;
+    }
+
     ch=s.charAt(i);
+
+    if(isArrowChar(ch)){
+      chars.push(makeChar(ch,"normal"));
+      i=readCondition(i);
+      continue;
+    }
 
     if(ch==="_"&&s.charAt(i+1)==="{"){
       script="sub";
@@ -1076,19 +1308,10 @@ function makeChar(ch, script, pair, kind) {
   for(i=0;i<chars.length;i++){
     len=0;
 
-    if(
-      i+3<chars.length&&
-      chars[i].ch==="("&&
-      chars[i+1].ch==="a"&&
-      chars[i+2].ch==="q"&&
-      chars[i+3].ch===")"
-    ){
+    if(i+3<chars.length&&chars[i].ch==="("&&chars[i+1].ch==="a"&&chars[i+2].ch==="q"&&chars[i+3].ch===")"){
       len=4;
     }else if(
-      i+2<chars.length&&
-      chars[i].ch==="("&&
-      "slg".indexOf(chars[i+1].ch)>=0&&
-      chars[i+2].ch===")"
+      i+2<chars.length&&chars[i].ch==="("&&"slg".indexOf(chars[i+1].ch)>=0&&chars[i+2].ch===")"
     ){
       len=3;
     }
@@ -1141,12 +1364,50 @@ function stateKey(state){
   return state?"("+state+")":"";
 }
 
-function speciesFormulaKey(species){
+/*
+  A written formula shows structure (it is a condensed structural formula)
+  when it has brackets or repeats an element: C2H5OH, CH3OCH3, Ca(OH)2.
+  A plain molecular formula lists each element once (CO2, O2C, C2H6O)
+  and only gives atom counts, so its written order means nothing.
+*/
+function isStructuralFormula(writtenFormula){
+  var symbols,seen={},i;
+
+  if(!writtenFormula)return false;
+  if(writtenFormula.indexOf("(")>=0)return true;
+
+  symbols=writtenFormula.match(/[A-Z][a-z]?/g)||[];
+
+  for(i=0;i<symbols.length;i++){
+    if(seen[symbols[i]])return true;
+    seen[symbols[i]]=true;
+  }
+
+  return false;
+}
+
+/*
+  Identity of a substance.
+  Default: atom counts + charge, so H2O = OH2.
+  options.distinguishIsomers: a structural formula is identified by its
+  written form (order and brackets), so C2H5OH and CH3OCH3 differ.
+  Plain molecular formulas are still compared by atom counts (CO2 = O2C).
+*/
+function speciesFormulaKey(species,options){
+  if(options&&options.distinguishIsomers&&isStructuralFormula(species.writtenFormula)){
+    return "W:"+species.writtenFormula+chargeKey(species.charge);
+  }
+
   return compositionKey(species.composition)+chargeKey(species.charge);
 }
 
-function speciesKey(species,coefficient){
-  return coefficient+"*"+speciesFormulaKey(species)+stateKey(species.state);
+function speciesKey(species,coefficient,options){
+  return coefficient+"*"+speciesFormulaKey(species,options)+stateKey(species.state);
+}
+
+/* Name used in messages: the formula as written, or a composition-based fallback. */
+function speciesLabel(species){
+  return species.label||formulaLabel(species);
 }
 
 function gcd(a,b){
@@ -1162,16 +1423,61 @@ function gcd(a,b){
   return a||1;
 }
 
-function equationCoefficientDivisor(ast){
+/* GCD of all (merged) coefficients of an equation; 1 for a formula. */
+function equationCoefficientDivisor(type,left,right){
   var values=[],i,d=0;
 
-  if(ast.type!=="equation")return 1;
+  if(type!=="equation")return 1;
 
-  for(i=0;i<ast.reactants.length;i++)values.push(ast.reactants[i].coefficient);
-  for(i=0;i<ast.products.length;i++)values.push(ast.products[i].coefficient);
+  for(i=0;i<left.length;i++)values.push(left[i].coefficient);
+  for(i=0;i<right.length;i++)values.push(right[i].coefficient);
   for(i=0;i<values.length;i++)d=gcd(d,values[i]);
 
   return d||1;
+}
+
+/*
+  Merge identical substances on one side: H2O+H2O -> 2H2O.
+  Identical = same composition, charge and state, so H2O(l)+H2O(g)
+  stay separate. Substances are never merged across the arrow.
+  "occurrences" keeps the range of every copy for highlighting.
+*/
+function mergeSide(speciesList,options){
+  var merged=[],byKey={},i,s,key,m;
+
+  for(i=0;i<speciesList.length;i++){
+    s=speciesList[i];
+    key=speciesFormulaKey(s,options)+stateKey(s.state);
+
+    if(Object.prototype.hasOwnProperty.call(byKey,key)){
+      m=byKey[key];
+      m.coefficient+=s.coefficient;
+      m.atoms=m.atoms.concat(atomOccurrences(s.formula));
+      if(s.range)m.occurrences.push(s.range.slice());
+      continue;
+    }
+
+    m={
+      coefficient:s.coefficient,
+      composition:s.composition,
+      label:s.label,
+      writtenFormula:s.writtenFormula,
+      charge:s.charge,
+      state:s.state,
+      range:s.range,
+      coefficientRange:s.coefficientRange,
+      formulaRange:s.formulaRange,
+      chargeRange:s.chargeRange,
+      stateRange:s.stateRange,
+      atoms:atomOccurrences(s.formula),
+      occurrences:s.range?[s.range.slice()]:[]
+    };
+
+    byKey[key]=m;
+    merged.push(m);
+  }
+
+  return merged;
 }
 
 function atomOccurrences(items,mult,out){
@@ -1185,7 +1491,7 @@ function atomOccurrences(items,mult,out){
   return out;
 }
 
-function canonicalSide(speciesList,divisor){
+function canonicalSide(speciesList,divisor,options){
   var items=[],i,s,coefficient;
 
   for(i=0;i<speciesList.length;i++){
@@ -1194,7 +1500,10 @@ function canonicalSide(speciesList,divisor){
 
     items.push({
     coefficient:coefficient,
+    originalCoefficient:s.coefficient,
     composition:copy(s.composition),
+    label:s.label,
+    writtenFormula:s.writtenFormula,
     charge:s.charge,
     state:s.state,
     range:s.range?s.range.slice():null,
@@ -1202,10 +1511,11 @@ function canonicalSide(speciesList,divisor){
     formulaRange:s.formulaRange?s.formulaRange.slice():null,
     chargeRange:s.chargeRange?s.chargeRange.slice():null,
     stateRange:s.stateRange?s.stateRange.slice():null,
-    atoms:atomOccurrences(s.formula),
-    formulaKey:speciesFormulaKey(s),
+    atoms:s.atoms,
+    occurrences:s.occurrences,
+    formulaKey:speciesFormulaKey(s,options),
     atomSetKey:atomSetKey(s.composition),
-    key:speciesKey(s,coefficient)
+    key:speciesKey(s,coefficient,options)
   });
   }
 
@@ -1222,10 +1532,12 @@ function sideKey(side){
   return parts.join("+");
 }
 
-function canonicalizeAst(ast){
-  var divisor=equationCoefficientDivisor(ast);
-  var left=canonicalSide(ast.reactants,divisor);
-  var right=canonicalSide(ast.products,divisor);
+function canonicalizeAst(ast,options){
+  var mergedLeft=mergeSide(ast.reactants,options);
+  var mergedRight=mergeSide(ast.products,options);
+  var divisor=equationCoefficientDivisor(ast.type,mergedLeft,mergedRight);
+  var left=canonicalSide(mergedLeft,divisor,options);
+  var right=canonicalSide(mergedRight,divisor,options);
   var leftKey=sideKey(left);
   var rightKey=sideKey(right);
   var directKey,reverseKey,key,arrowSymbol;
@@ -1269,12 +1581,12 @@ function canonicalizeAst(ast){
   };
 }
 
-function canonicalizeValue(value){
+function canonicalizeValue(value,options){
   var ast=value&&value.type?value:analyzeValue(value);
 
   return {
     ast:ast,
-    canonical:canonicalizeAst(ast)
+    canonical:canonicalizeAst(ast,options)
   };
 }
 function addError(errors,code,data){
@@ -1429,7 +1741,7 @@ function compareStates(student,reference,side,errors){
       "missing-state",
       {
         side:side,
-        species:formulaLabel(reference),
+        species:speciesLabel(student),
         expected:reference.state,
         actual:null,
         studentRanges:oneTarget(student.formulaRange||student.range,"species"),
@@ -1446,7 +1758,7 @@ function compareStates(student,reference,side,errors){
       "unexpected-state",
       {
         side:side,
-        species:formulaLabel(reference),
+        species:speciesLabel(student),
         expected:null,
         actual:student.state,
         studentRanges:oneTarget(student.stateRange||student.range,"state"),
@@ -1462,7 +1774,7 @@ function compareStates(student,reference,side,errors){
     "wrong-state",
     {
       side:side,
-      species:formulaLabel(reference),
+      species:speciesLabel(student),
       expected:reference.state,
       actual:student.state,
       studentRanges:oneTarget(student.stateRange||student.range,"state"),
@@ -1495,7 +1807,7 @@ function compareAtomCounts(student,reference,side,errors){
         "wrong-atom-count",
         {
           side:side,
-          species:formulaLabel(reference),
+          species:speciesLabel(student),
           atom:atom,
           expected:expected,
           actual:actual,
@@ -1512,31 +1824,21 @@ function findSpeciesMatch(studentSide,referenceSpecies,used){
 
   /* First preference: same composition and same charge. */
   for(i=0;i<studentSide.length;i++){
-    if(
-      !used[i]&&
-      studentSide[i].formulaKey===referenceSpecies.formulaKey
-    ){
+    if(!used[i]&&studentSide[i].formulaKey===referenceSpecies.formulaKey){
       return i;
     }
   }
 
   /* Second preference: same composition, even if the charge is different. */
   for(i=0;i<studentSide.length;i++){
-    if(
-      !used[i]&&
-      compositionKey(studentSide[i].composition)===
-      compositionKey(referenceSpecies.composition)
-    ){
+    if(!used[i]&&compositionKey(studentSide[i].composition)===compositionKey(referenceSpecies.composition)){
       return i;
     }
   }
 
   /* Third preference: same collection of atoms, but possibly wrong counts. */
   for(i=0;i<studentSide.length;i++){
-    if(
-      !used[i]&&
-      studentSide[i].atomSetKey===referenceSpecies.atomSetKey
-    ){
+    if(!used[i]&&studentSide[i].atomSetKey===referenceSpecies.atomSetKey){
       return i;
     }
   }
@@ -1554,7 +1856,7 @@ function chargeLabel(charge){
   return magnitude===1?"−":magnitude+"−";
 }
 function compareCharges(student,reference,side,errors){
-  var species=formulaLabel(reference);
+  var species=speciesLabel(student);
 
   if(student.charge===reference.charge)return;
 
@@ -1607,7 +1909,7 @@ function compareCharges(student,reference,side,errors){
 }
 
 
-function compareSide(studentSide,referenceSide,side,errors){
+function compareSide(studentSide,referenceSide,side,errors,pairs){
   var used=[],i,index,student,reference;
 
   for(i=0;i<referenceSide.length;i++){
@@ -1620,7 +1922,7 @@ function compareSide(studentSide,referenceSide,side,errors){
         "missing-species",
         {
           side:side,
-          species:formulaLabel(reference),
+          species:speciesLabel(reference),
           expected:reference.coefficient,
           actual:0,
           studentRanges:[],
@@ -1638,20 +1940,7 @@ function compareSide(studentSide,referenceSide,side,errors){
     compareCharges(student,reference,side,errors);
     compareStates(student,reference,side,errors);
 
-    if(student.coefficient!==reference.coefficient){
-      addError(
-        errors,
-        "wrong-coefficient",
-        {
-          side:side,
-          species:formulaLabel(reference),
-          expected:reference.coefficient,
-          actual:student.coefficient,
-          studentRanges:oneTarget(student.coefficientRange||student.formulaRange||student.range,"coefficient"),
-          referenceRanges:oneTarget(reference.coefficientRange||reference.formulaRange||reference.range,"coefficient")
-        }
-      );
-    }
+    pairs.push({student:student,reference:reference,side:side});
   }
 
   for(i=0;i<studentSide.length;i++){
@@ -1661,7 +1950,7 @@ function compareSide(studentSide,referenceSide,side,errors){
         "unexpected-species",
         {
           side:side,
-          species:formulaLabel(studentSide[i]),
+          species:speciesLabel(studentSide[i]),
           expected:0,
           actual:studentSide[i].coefficient,
           studentRanges:oneTarget(studentSide[i].range,"species"),
@@ -1671,10 +1960,175 @@ function compareSide(studentSide,referenceSide,side,errors){
     }
   }
 }
+/*
+  Coefficients are judged for the whole equation:
+  if every matched species has the same reduced coefficient
+  (e.g. 4H2+2O2→4H2O vs 2H2+O2→2H2O), the answer is proportional
+  and accepted. Otherwise the coefficients the student actually
+  typed are compared, so the message shows the student's numbers
+  and points at the species that really differs.
+*/
+function compareCoefficients(pairs,errors){
+  var i,pair,proportional=true;
+
+  for(i=0;i<pairs.length;i++){
+    if(pairs[i].student.coefficient!==pairs[i].reference.coefficient){
+      proportional=false;
+      break;
+    }
+  }
+
+  if(proportional)return;
+
+  for(i=0;i<pairs.length;i++){
+    pair=pairs[i];
+
+    if(pair.student.originalCoefficient!==pair.reference.originalCoefficient){
+      addError(
+        errors,
+        "wrong-coefficient",
+        {
+          side:pair.side,
+          species:speciesLabel(pair.student),
+          expected:pair.reference.originalCoefficient,
+          actual:pair.student.originalCoefficient,
+          studentRanges:oneTarget(pair.student.coefficientRange||pair.student.formulaRange||pair.student.range,"coefficient"),
+          referenceRanges:oneTarget(pair.reference.coefficientRange||pair.reference.formulaRange||pair.reference.range,"coefficient")
+        }
+      );
+    }
+  }
+}
+/*
+  Matched substances with the same atoms and charge but a different
+  written form (order or brackets): H2O / OH2, C2H5OH / CH3OCH3.
+
+  Default: the answer is correct, a note shows the reference's form.
+
+  options.distinguishIsomers, decided by which side shows structure:
+    reference structural, student structural  -> error "wrong-structure"
+                                                  (different isomer)
+    reference structural, student molecular   -> error "missing-structure"
+                                                  (C2H6O does not say which isomer)
+    reference molecular                       -> note "different-form"
+                                                  (the reference does not specify an isomer, CO2 / O2C)
+*/
+function compareWrittenForms(pairs,errors,notes,options){
+  var i,pair,student,reference,code,isError;
+
+  for(i=0;i<pairs.length;i++){
+    pair=pairs[i];
+    student=pair.student;
+    reference=pair.reference;
+
+    if(
+      student.writtenFormula===undefined||
+      reference.writtenFormula===undefined||
+      student.writtenFormula===reference.writtenFormula||
+      compositionKey(student.composition)!==compositionKey(reference.composition)||student.charge!==reference.charge
+    ){
+      continue;
+    }
+
+    code="different-form";
+
+    if(options&&options.distinguishIsomers&&isStructuralFormula(reference.writtenFormula)){
+      code=isStructuralFormula(student.writtenFormula)?"wrong-structure":"missing-structure";
+    }
+
+    isError=code!=="different-form";
+
+    addError(
+      isError?errors:notes,
+      code,
+      {
+        side:pair.side,
+        species:speciesLabel(student),
+        referenceSpecies:speciesLabel(reference),
+        studentRanges:oneTarget(student.formulaRange||student.range,isError?"species":"note"),
+        referenceRanges:oneTarget(reference.formulaRange||reference.range,"species")
+      }
+    );
+  }
+}
+/*
+  Reaction conditions above the arrow (equations only).
+    reference has none, student has some -> note (not required)
+    reference has some, student has none -> error "missing-condition"
+    both, different                      -> error "wrong-condition"
+*/
+function compareConditions(studentAst,referenceAst,errors,notes){
+  var student,reference,studentRanges,referenceRanges;
+
+  if(studentAst.type!=="equation"||referenceAst.type!=="equation")return;
+
+  student=studentAst.arrow.condition;
+  reference=referenceAst.arrow.condition;
+  studentRanges=oneTarget(studentAst.arrow.range,"condition");
+  referenceRanges=oneTarget(referenceAst.arrow.range,"condition");
+
+  if(!reference){
+    if(student){
+      addError(notes,"condition-not-required",{
+        condition:student.text,
+        studentRanges:studentRanges,
+        referenceRanges:[]
+      });
+    }
+
+    return;
+  }
+
+  if(!student){
+    addError(errors,"missing-condition",{
+      expectedCondition:reference.text,
+      studentRanges:studentRanges,
+      referenceRanges:referenceRanges
+    });
+
+    return;
+  }
+
+  if(student.key!==reference.key){
+    addError(errors,"wrong-condition",{
+      condition:student.text,
+      expectedCondition:reference.text,
+      studentRanges:studentRanges,
+      referenceRanges:referenceRanges
+    });
+  }
+}
+function addRepeatedSpeciesNotes(notes,side,sideName,language){
+  var i,j,item,note,targets;
+
+  for(i=0;i<side.length;i++){
+    item=side[i];
+
+    if(!item.occurrences||item.occurrences.length<2)continue;
+
+    targets=[];
+
+    for(j=0;j<item.occurrences.length;j++){
+      targets.push(feedbackTarget(item.occurrences[j],"note"));
+    }
+
+    note={
+      code:"repeated-species",
+      side:sideName,
+      species:speciesLabel(item),
+      studentRanges:targets,
+      referenceRanges:[]
+    };
+
+    note.description=localizedErrorDescription(note,language);
+    notes.push(note);
+  }
+}
 function localizedErrorDescription(error,language){
   var text=localizedErrorTemplate(error,language);
 
   text=replaceTextToken(text,"species",error.species||"");
+  text=replaceTextToken(text,"referenceSpecies",error.referenceSpecies||"");
   text=replaceTextToken(text,"atom",error.atom||"");
 
   return text;
@@ -1682,6 +2136,17 @@ function localizedErrorDescription(error,language){
 function comparisonHighlights(result,answer){
   var highlights=[],errors=result&&result.errors?result.errors:[],field=answer==="reference"?"referenceRanges":"studentRanges",i,j,error,target,color;
   for(i=0;i<errors.length;i++){error=errors[i];color=answer==="reference"?"#cfe8ff":error.code==="unbalanced-atom"?"#ffe49c":"#ffb9b9";for(j=0;j<(error[field]||[]).length;j++){target=error[field][j];if(target&&target.end>target.start)highlights.push({start:target.start,end:target.end,color:color,code:error.code,part:target.part});}}
+
+  /* Notes: soft grey, student answer only. Errors come first, so they win on overlap. */
+  if(answer!=="reference"&&result&&result.notes){
+    for(i=0;i<result.notes.length;i++){
+      for(j=0;j<result.notes[i].studentRanges.length;j++){
+        target=result.notes[i].studentRanges[j];
+        if(target&&target.end>target.start)highlights.push({start:target.start,end:target.end,color:"#e2e6ea",code:result.notes[i].code,part:"note"});
+      }
+    }
+  }
+
   return highlights;
 }
 ChemicalKeyboard.prototype.setComparisonFeedback=function(result,answer,value){
@@ -1689,16 +2154,23 @@ ChemicalKeyboard.prototype.setComparisonFeedback=function(result,answer,value){
   this.setHighlights(comparisonHighlights(result,answer));
 };
 
-function compareChemicalAnswers(studentValue,referenceValue,language){
+/*
+  options (optional):
+    distinguishIsomers: true  - compare substances by their written form
+                                (order and brackets), for questions whose
+                                substances have isomers. Default false.
+*/
+function compareChemicalAnswers(studentValue,referenceValue,language,options){
   language=language==="he"||language==="ar"?language:"en";
+  options=options||{};
   var studentAst=studentValue&&studentValue.type?studentValue:analyzeValue(studentValue);
   var referenceAst=referenceValue&&referenceValue.type?referenceValue:analyzeValue(referenceValue);
-  var studentCanonical=canonicalizeAst(studentAst);
-  var referenceCanonical=canonicalizeAst(referenceAst);
+  var studentCanonical=canonicalizeAst(studentAst,options);
+  var referenceCanonical=canonicalizeAst(referenceAst,options);
   var studentAtoms=collectAtoms(studentAst);
   var referenceAtoms=collectAtoms(referenceAst);
   var orientation,studentLeftTotals,studentRightTotals,atoms,keys,i,atom;
-  var errors=[];
+  var errors=[],pairs=[],formNotes=[];
 
   syntaxErrors(studentAst,errors,"student");
   syntaxErrors(referenceAst,errors,"reference");
@@ -1716,11 +2188,7 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
     );
   }
 
-  if(
-    studentAst.type==="equation"&&
-    referenceAst.type==="equation"&&
-    studentCanonical.arrow!==referenceCanonical.arrow
-  ){
+  if(studentAst.type==="equation"&&referenceAst.type==="equation"&&studentCanonical.arrow!==referenceCanonical.arrow){
     addError(
       errors,
       "wrong-arrow",
@@ -1732,6 +2200,8 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
       }
     );
   }
+
+  compareConditions(studentAst,referenceAst,errors,formNotes);
 
   keys=sortedKeys(studentAtoms);
 
@@ -1810,21 +2280,44 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
     orientation.left,
     referenceCanonical.left,
     studentAst.type==="equation"?"left":"expression",
-    errors
+    errors,
+    pairs
   );
 
   if(referenceAst.type==="equation"){
-    compareSide(
-      orientation.right,
-      referenceCanonical.right,
-      "right",
-      errors
-    );
+    compareSide(orientation.right, referenceCanonical.right, "right", errors, pairs);
   }
+
+  compareCoefficients(pairs,errors);
+  compareWrittenForms(pairs,errors,formNotes,options);
   for(i=0;i<errors.length;i++){
     errors[i].description=localizedErrorDescription(errors[i],language);
   }
+
+  /* Notation notes on the student's answer; they never affect "correct". */
+  var notes=[];
+
+  for(i=0;i<(studentAst.notes||[]).length;i++){
+    notes.push({
+      code:studentAst.notes[i].code,
+      species:studentAst.notes[i].species,
+      studentRanges:oneTarget(studentAst.notes[i].range,"note"),
+      referenceRanges:[]
+    });
+    notes[i].description=localizedErrorDescription(notes[i],language);
+  }
+
+  /* Identical substances written more than once on one side (merged above). */
+  addRepeatedSpeciesNotes(notes,studentCanonical.left,studentAst.type==="equation"?"left":"expression",language);
+  addRepeatedSpeciesNotes(notes,studentCanonical.right,"right",language);
+
+  for(i=0;i<formNotes.length;i++){
+    formNotes[i].description=localizedErrorDescription(formNotes[i],language);
+    notes.push(formNotes[i]);
+  }
+
   return {
+    notes:notes,
     correct:errors.length===0,
     language:language,
     studentCanonical:studentCanonical,
@@ -1833,8 +2326,15 @@ function compareChemicalAnswers(studentValue,referenceValue,language){
     errors:errors
   };
 }
+/* Comparison options taken from the keyboard configuration. */
+ChemicalKeyboard.prototype.compareOptions=function(){
+  return {
+    distinguishIsomers:this.config.distinguishIsomers===true
+  };
+};
+
 ChemicalKeyboard.prototype.canonicalize=function(){
-  return canonicalizeAst(this.getAST());
+  return canonicalizeAst(this.getAST(),this.compareOptions());
 };
 
 ChemicalKeyboard.prototype.compare=function(referenceAnswer){
@@ -1857,7 +2357,7 @@ ChemicalKeyboard.prototype.compare=function(referenceAnswer){
     return missingResult;
   }
 
-  return compareChemicalAnswers(this.getAST(),reference,this.language);
+  return compareChemicalAnswers(this.getAST(),reference,this.language,this.compareOptions());
 };
 
 ChemicalKeyboard.prototype.setCorrectAnswer=function(value){
@@ -1869,25 +2369,20 @@ ChemicalKeyboard.prototype.setCorrectAnswer=function(value){
   function ChemicalKeyboard(config) {
     this.config = copy(config || {});
     this.correctAnswer=this.config.correctAnswer!==undefined?this.config.correctAnswer:null;
-    this.language =
-    this.config.language || "en";
-    this.mode =
-    this.config.mode || "edit";
+    this.language = this.config.language || "en";
+    this.mode = this.config.mode || "edit";
 
     this.chars = [];
     this.cursor = 0;
     this.script = "normal";
 
-    this.highlights =
-    this.config.highlights || [];
+    this.highlights = this.config.highlights || [];
     this.navigationScript=false;
+    this.cond = null;          // condition being edited (see REACTION CONDITIONS)
     this.groupId = 1;
 
-    this.host =
-      this.config.divId
-        ? document.getElementById(
-            this.config.divId
-          )
+    this.host = this.config.divId
+        ? document.getElementById(this.config.divId)
         : null;
 
     if (!this.host) {
@@ -1897,9 +2392,7 @@ ChemicalKeyboard.prototype.setCorrectAnswer=function(value){
 
     this.build();
 
-    this.setValue(
-      this.config.value || ""
-    );
+    this.setValue(this.config.value || "");
 
     if (this.mode === "edit") {
       this.display.tabIndex = 0;
@@ -2104,17 +2597,60 @@ makeDraggable(root,windowHeader);
     self.insertSign("−");
   },t.tipMinus);
 
-  btn(operatorsRow,"→",function(){
-    self.insertText("→","normal");
-  },t.tipForward);
-
-  btn(operatorsRow,"⇌",function(){
-    self.insertText("⇌","normal");
-  },t.tipEquilibrium);
-
   btn(operatorsRow,"·",function(){
     self.insertText("·","normal");
   },t.tipDot);
+
+  /* Comma: separates parts of the condition ("Fe, 450°C"); active only there. */
+  this.commaButton=btn(operatorsRow,",",function(){
+    if(self.cond)self.insertConditionChars([makeChar(",","normal")]);
+  },t.tipComma);
+
+  /*
+   * Arrows and reaction conditions (the information above the arrow)
+   */
+  var arrowsRow=node("div");
+
+  apply(arrowsRow,{
+    display:"flex",
+    flexWrap:"wrap",
+    gap:"6px",
+    marginBottom:"8px"
+  });
+
+  this.panel.appendChild(arrowsRow);
+
+  btn(arrowsRow,"→",function(){
+    self.insertText("→","normal");
+  },t.tipForward);
+
+  btn(arrowsRow,"⇌",function(){
+    self.insertText("⇌","normal");
+  },t.tipEquilibrium);
+
+  var infoButton=btn(arrowsRow,"",function(){
+    self.openCondition();
+  },t.tipInfo);
+
+  infoButton.appendChild(conditionIcon());
+  removeButtonFocus(infoButton);
+
+  btn(arrowsRow,"Δ",function(){
+    self.openCondition("Δ");
+  },t.tipHeat);
+
+  btn(arrowsRow,"hν",function(){
+    self.openCondition("hν");
+  },t.tipLight);
+
+  /* Temperature units. Kelvin has no degree sign (SI): 450 K. */
+  btn(arrowsRow,"°C",function(){
+    self.openCondition("°C");
+  },t.tipCelsius);
+
+  btn(arrowsRow,"K",function(){
+    self.openCondition(" K");
+  },t.tipKelvin);
 
   /*
    * States
@@ -2235,6 +2771,7 @@ makeDraggable(root,windowHeader);
   btn(navigationRow,"AC",function(){
     self.chars=[];
     self.cursor=0;
+    self.cond=null;
     self.script="normal";
     self.changed();
   },t.tipClear,{minWidth:"0",width:"100%",fontSize:"14px"});
@@ -2458,13 +2995,17 @@ ChemicalKeyboard.prototype.buildEmbeddedWindow=function(root){
   this.host.appendChild(root);
 };
 ChemicalKeyboard.prototype.buildPopupWindow=function(root,t){
-  var self=this,header,title,close;
+  /*
+   * Width fits the first panel row on one line:
+   * 8 buttons x 44px + 7 gaps x 6px = 394px, plus padding and border.
+   */
+  var self=this,header,title,close,width=435;
 
   apply(root,{
     position:"fixed",
-    left:(this.config.left!==undefined?this.config.left:Math.max(8,(window.innerWidth-430)/2))+"px",
+    left:(this.config.left!==undefined?this.config.left:Math.max(8,(window.innerWidth-width)/2))+"px",
     top:(this.config.top!==undefined?this.config.top:20)+"px",
-    width:"430px",
+    width:width+"px",
     maxWidth:"calc(100vw - 16px)",
     maxHeight:"calc(100vh - 16px)",
     padding:"38px 10px 10px",
@@ -2532,26 +3073,40 @@ ChemicalKeyboard.prototype.buildPopupWindow=function(root,t){
 };
 
 ChemicalKeyboard.prototype.setScript=function(s){
-    var modes=["normal","sub","sup"],i,button;
-
     this.script=s;
-
-    if(this.scriptButtons){
-      for(i=0;i<modes.length;i++){
-        button=this.scriptButtons[modes[i]];
-        button.style.background= modes[i]===s?"#cfe3f5":"#fff";
-        button.style.borderColor= modes[i]===s?"#3779ad":"#8aa";
-
-        button.style.background="#fff";
-        button.style.borderColor="#8aa";
-      }
-    }
-
     this.render();
   };
 
-  ChemicalKeyboard.prototype.inSpeciesStart =
-    function () {
+/*
+ * Mark the active script button (normal / sub / sup).
+ * Called from render(), because the script level also changes
+ * automatically (digit after an element, charge sign, arrows, click, DEL).
+ * The ring uses box-shadow so the button size does not change.
+ */
+ChemicalKeyboard.prototype.updateScriptButtons=function(){
+    var modes=["normal","sub","sup"],i,button,active;
+
+    if(!this.scriptButtons)return;
+
+    for(i=0;i<modes.length;i++){
+      button=this.scriptButtons[modes[i]];
+      active=modes[i]===this.script;
+
+      button.style.background=active?"#cfe3f5":"#fff";
+      button.style.borderColor=active?"#1769aa":"#8aa";
+      button.style.boxShadow=active?"0 0 0 2px #1769aa":"none";
+      button.setAttribute("aria-pressed",active?"true":"false");
+    }
+
+    /* The comma only belongs in the condition above the arrow. */
+    if(this.commaButton){
+      this.commaButton.disabled=!this.cond;
+      this.commaButton.style.opacity=this.cond?"1":".4";
+      this.commaButton.style.cursor=this.cond?"pointer":"default";
+    }
+  };
+
+  ChemicalKeyboard.prototype.inSpeciesStart = function () {
       var i = this.cursor - 1;
 
       if (i < 0) {
@@ -2560,25 +3115,113 @@ ChemicalKeyboard.prototype.setScript=function(s){
 
       var c = this.chars[i].ch;
 
-      return (
-        c === "+" ||
-        c === "→" ||
-        c === "⇌"
-      );
+      return (c === "+" || c === "→" || c === "⇌");
     };
 
+/* ============================================================
+   REACTION CONDITIONS (information above the arrow)
+
+   The condition is stored on the arrow character itself:
+   arrow.condition = null (none) or an array of chars (possibly empty
+   while the placeholder is open). While editing it, this.cond is
+   {arrow: index of the arrow in this.chars, pos: cursor inside it};
+   otherwise this.cond is null. Only one arrow is allowed, so the
+   condition can be added at any time.
+   ============================================================ */
+
+/* The arrow the condition belongs to: next to the cursor, else the first one. */
+ChemicalKeyboard.prototype.findArrowIndex=function(){
+  var i;
+
+  if(this.cursor>0&&isArrowChar(this.chars[this.cursor-1].ch))return this.cursor-1;
+  if(this.cursor<this.chars.length&&isArrowChar(this.chars[this.cursor].ch))return this.cursor;
+
+  for(i=0;i<this.chars.length;i++){
+    if(isArrowChar(this.chars[i].ch))return i;
+  }
+
+  return -1;
+};
+
+/*
+ * Open (or continue) the condition above the arrow and put the cursor in it.
+ * If the answer has no arrow yet, a "→" is inserted at the cursor first.
+ * symbol: optional symbol to insert at once (Δ, hν, °C, K).
+ */
+ChemicalKeyboard.prototype.openCondition=function(symbol){
+  var index,arrow;
+
+  if(this.mode!=="edit")return;
+
+  if(!this.cond){
+    index=this.findArrowIndex();
+
+    if(index<0){
+      this.script="normal";
+      this.insertText("→","normal");
+      index=this.cursor-1;
+    }
+
+    arrow=this.chars[index];
+    if(!arrow.condition)arrow.condition=[];
+
+    this.cond={arrow:index,pos:arrow.condition.length};
+    this.script="normal";
+  }
+
+  if(symbol){
+    this.insertConditionChars([makeChar(symbol,"normal",null,"symbol")]);
+    return;
+  }
+
+  this.changed();
+};
+
+ChemicalKeyboard.prototype.conditionChars=function(){
+  return this.chars[this.cond.arrow].condition;
+};
+
+ChemicalKeyboard.prototype.insertConditionChars=function(items){
+  var c=this.conditionChars();
+
+  c.splice.apply(c,[this.cond.pos,0].concat(items));
+  this.cond.pos+=items.length;
+  this.changed();
+};
+
+/* Leave the condition; the cursor goes before (side<0) or after the arrow. */
+ChemicalKeyboard.prototype.closeCondition=function(side){
+  if(!this.cond)return;
+
+  this.cursor=side<0?this.cond.arrow:this.cond.arrow+1;
+  this.cond=null;
+  this.script="normal";
+};
+
 ChemicalKeyboard.prototype.insertDigit=function(d){
-  var s=this.script,p;
+  var s=this.script,p,c;
+
+  if(this.cond){
+    c=this.conditionChars();
+
+    /* V2O5, H2O: a digit after a letter or ")" is a subscript. */
+    if(s==="normal"&&this.cond.pos>0){
+      p=c[this.cond.pos-1];
+
+      if(isUpper(p.ch)||isLower(p.ch)||p.ch===")"||p.script==="sub"&&isDigit(p.ch)){
+        s="sub";
+        this.script="sub";
+      }
+    }
+
+    this.insertText(d,s);
+    return;
+  }
 
   if(s==="normal"&&!this.inSpeciesStart()&&this.cursor>0){
     p=this.chars[this.cursor-1];
 
-    if(
-      isUpper(p.ch)||
-      isLower(p.ch)||
-      p.ch===")"||
-      p.script==="sub"&&isDigit(p.ch)
-    ){
+    if(isUpper(p.ch)||isLower(p.ch)||p.ch===")"||p.script==="sub"&&isDigit(p.ch)){
       s="sub";
       this.script="sub";
     }
@@ -2592,11 +3235,11 @@ ChemicalKeyboard.prototype.insertText=function(s,script){
 
   this.navigationScript=false;
 
-  if(
-    this.script==="sub"&&
-    s.length&&
-    isUpper(s.charAt(0))
-  ){
+  /*
+   * A capital letter starts a new element symbol,
+   * so it always returns to the normal level.
+   */
+  if((this.script==="sub"||this.script==="sup")&&s.length&&isUpper(s.charAt(0))){
     this.script="normal";
     script="normal";
   }
@@ -2607,20 +3250,30 @@ ChemicalKeyboard.prototype.insertText=function(s,script){
     a.push(makeChar(s.charAt(i),script));
   }
 
-  this.chars.splice.apply(
-    this.chars,
-    [this.cursor,0].concat(a)
-  );
+  /* Inside the condition: no arrows; everything else goes into the condition. */
+  if(this.cond){
+    if(isArrowChar(s))return;
+    this.insertConditionChars(a);
+    return;
+  }
+
+  this.chars.splice.apply(this.chars, [this.cursor,0].concat(a));
 
   this.cursor+=a.length;
   this.changed();
 };
-ChemicalKeyboard.prototype.insertSign =
-  function (sign) {
-    var mode =
-      this.script === "sup"
+ChemicalKeyboard.prototype.insertSign = function (sign) {
+    var mode = this.script === "sup"
         ? "sup"
         : "normal";
+
+    /*
+     * A "+" between substances ends a subscript: in N2+3H2 the 3
+     * after "+" is a coefficient, not a subscript.
+     */
+    if (mode === "normal") {
+      this.script = "normal";
+    }
 
     this.insertText(sign, mode);
 
@@ -2630,28 +3283,19 @@ ChemicalKeyboard.prototype.insertSign =
     }
   };
 
-ChemicalKeyboard.prototype.insertState =
-  function (state) {
+ChemicalKeyboard.prototype.insertState = function (state) {
+    if (this.cond) return;    // states do not belong in the condition
+
     var text = "(" + state + ")";
     var stateId = this.groupId++;
     var chars = [];
     var i;
 
     for (i = 0; i < text.length; i++) {
-      chars.push(
-        makeChar(
-          text.charAt(i),
-          "sub",
-          stateId,
-          "state"
-        )
-      );
+      chars.push(makeChar(text.charAt(i), "sub", stateId, "state"));
     }
 
-    this.chars.splice.apply(
-      this.chars,
-      [this.cursor, 0].concat(chars)
-    );
+    this.chars.splice.apply(this.chars, [this.cursor, 0].concat(chars));
 
     this.cursor += chars.length;
     this.script = "normal";
@@ -2659,65 +3303,84 @@ ChemicalKeyboard.prototype.insertState =
     this.changed();
   };
 
-  ChemicalKeyboard.prototype.insertPair =
-    function () {
+  ChemicalKeyboard.prototype.insertPair = function () {
       var p = this.groupId++;
+      var c;
 
-      this.chars.splice(
-        this.cursor,
-        0,
-        makeChar("(", "normal", p),
-        makeChar(")", "normal", p)
-      );
+      if (this.cond) {
+        c = this.conditionChars();
+        c.splice(this.cond.pos, 0, makeChar("(", "normal"), makeChar(")", "normal"));
+        this.cond.pos++;
+        this.changed();
+        return;
+      }
+
+      this.chars.splice(this.cursor, 0, makeChar("(", "normal", p), makeChar(")", "normal", p));
 
       this.cursor++;
       this.changed();
     };
 
 ChemicalKeyboard.prototype.move=function(d){
-  var pair,kind,near;
+  var pair,kind,near,c;
 
-  if(
-    d<0&&
-    this.cursor>0&&
-    (
-      this.chars[this.cursor-1].kind==="state"||
-      this.chars[this.cursor-1].kind==="element"
-    )
-  ){
+  /*
+   * Navigation order around an arrow with a condition:
+   * before the arrow -> inside the condition -> after the arrow.
+   */
+  if(this.cond){
+    c=this.conditionChars();
+
+    if(d<0){
+      if(this.cond.pos>0)this.cond.pos--;
+      else this.closeCondition(-1);
+    }else{
+      if(this.cond.pos<c.length)this.cond.pos++;
+      else this.closeCondition(1);
+    }
+
+    if(this.cond){
+      near=d<0?(this.cond.pos>0?c[this.cond.pos-1]:null):(this.cond.pos<c.length?c[this.cond.pos]:null);
+      this.script=near&&(near.script==="sub"||near.script==="sup")?near.script:"normal";
+    }
+
+    this.render();
+    return;
+  }
+
+  if(d>0&&this.cursor<this.chars.length&&this.chars[this.cursor].condition){
+    this.cond={arrow:this.cursor,pos:0};
+    this.script="normal";
+    this.render();
+    return;
+  }
+
+  if(d<0&&this.cursor>0&&this.chars[this.cursor-1].condition){
+    this.cond={arrow:this.cursor-1,pos:this.chars[this.cursor-1].condition.length};
+    this.script="normal";
+    this.render();
+    return;
+  }
+
+  if(d<0&&this.cursor>0&&(this.chars[this.cursor-1].kind==="state"||this.chars[this.cursor-1].kind==="element")){
     pair=this.chars[this.cursor-1].pair;
     kind=this.chars[this.cursor-1].kind;
 
-    while(
-      this.cursor>0&&
-      this.chars[this.cursor-1].kind===kind&&
-      this.chars[this.cursor-1].pair===pair
-    ){
+    while(this.cursor>0&&this.chars[this.cursor-1].kind===kind&&this.chars[this.cursor-1].pair===pair){
       this.cursor--;
     }
   }else if(
     d>0&&
-    this.cursor<this.chars.length&&
-    (
-      this.chars[this.cursor].kind==="state"||
-      this.chars[this.cursor].kind==="element"
-    )
+    this.cursor<this.chars.length&&(this.chars[this.cursor].kind==="state"||this.chars[this.cursor].kind==="element")
   ){
     pair=this.chars[this.cursor].pair;
     kind=this.chars[this.cursor].kind;
 
-    while(
-      this.cursor<this.chars.length&&
-      this.chars[this.cursor].kind===kind&&
-      this.chars[this.cursor].pair===pair
-    ){
+    while(this.cursor<this.chars.length&&this.chars[this.cursor].kind===kind&&this.chars[this.cursor].pair===pair){
       this.cursor++;
     }
   }else{
-    this.cursor=Math.max(
-      0,
-      Math.min(this.chars.length,this.cursor+d)
-    );
+    this.cursor=Math.max(0, Math.min(this.chars.length,this.cursor+d));
   }
 
   near=d<0 ? this.cursor>0?this.chars[this.cursor-1]:null
@@ -2735,7 +3398,29 @@ ChemicalKeyboard.prototype.move=function(d){
 };
 
 ChemicalKeyboard.prototype.del=function(){
-  var previous,pair,kind,start,end,removedScript,leftScript,rightScript,keepNavigationScript;
+  var previous,pair,kind,start,end,removedScript,leftScript,rightScript,keepNavigationScript,c;
+
+  /*
+   * Inside the condition: delete one character. When the condition
+   * becomes (or already is) empty, the placeholder is removed and
+   * the cursor goes after the arrow.
+   */
+  if(this.cond){
+    c=this.conditionChars();
+
+    if(this.cond.pos>0){
+      c.splice(this.cond.pos-1,1);
+      this.cond.pos--;
+    }
+
+    if(!c.length){
+      this.chars[this.cond.arrow].condition=null;
+      this.closeCondition(1);
+    }
+
+    this.changed();
+    return;
+  }
 
   if(this.cursor<=0){
     return;
@@ -2786,13 +3471,19 @@ ChemicalKeyboard.prototype.del=function(){
   this.changed();
 };
 
-ChemicalKeyboard.prototype.key =
-  function (e) {
+ChemicalKeyboard.prototype.key = function (e) {
     var k = e.key;
 
     if(k==="Enter"){
       e.preventDefault();
       e.stopPropagation();
+
+      /* Enter inside the condition: finish it, continue after the arrow. */
+      if(this.cond){
+        this.closeCondition(1);
+        this.render();
+      }
+
       this.display.focus();
       return;
     }
@@ -2802,12 +3493,7 @@ ChemicalKeyboard.prototype.key =
       return;
     }
 
-    if (
-      this.mode !== "edit" ||
-      e.ctrlKey ||
-      e.metaKey ||
-      e.altKey
-    ) {
+    if (this.mode !== "edit" || e.ctrlKey || e.metaKey || e.altKey) {
       return;
     }
 
@@ -2823,10 +3509,7 @@ ChemicalKeyboard.prototype.key =
       return;
     }
 
-    if (
-      k === "Backspace" ||
-      k === "Delete"
-    ) {
+    if (k === "Backspace" || k === "Delete") {
       e.preventDefault();
       this.del();
       return;
@@ -2838,6 +3521,19 @@ ChemicalKeyboard.prototype.key =
       return;
     }
     if (k.length !== 1) {
+      return;
+    }
+
+    /*
+     * Extra characters allowed only in the condition text:
+     * "Fe, 450°C", "200 atm", "conc. H2SO4".
+     */
+    if (this.cond && " ,.°()%".indexOf(k) >= 0) {
+      e.preventDefault();
+
+      if (k === "(" || k === ")") this.insertText(k, "normal");
+      else this.insertConditionChars([makeChar(k, "normal")]);
+
       return;
     }
 
@@ -2853,16 +3549,18 @@ ChemicalKeyboard.prototype.key =
       return;
     }
 
-    if (
-      isUpper(k) ||
-      isLower(k)
-    ) {
+    if (isUpper(k) || isLower(k)) {
       e.preventDefault();
 
-      this.insertText(
-        k,
-        this.script
-      );
+      /*
+       * Lowercase letters only belong to element symbols at the
+       * normal level. States (aq), (s)... are inserted by their buttons.
+       */
+      if (isLower(k) && this.script !== "normal") {
+        return;
+      }
+
+      this.insertText(k, this.script);
     }
   };
 
@@ -2877,8 +3575,7 @@ ChemicalKeyboard.prototype.key =
   }
 };
 
-  ChemicalKeyboard.prototype.isHighlighted =
-    function (i) {
+  ChemicalKeyboard.prototype.isHighlighted = function (i) {
       var j;
       var h;
 
@@ -2918,7 +3615,28 @@ ChemicalKeyboard.prototype.syncRenderedDisplay=function(){
   }
 };
 ChemicalKeyboard.prototype.setCursorFromClick=function(e){
-  var target=e.target,start,end,rect,after,script;
+  var target=e.target,start,end,rect,after,script,conditionArrow;
+
+  /* A click on the condition above an arrow puts the cursor at its end. */
+  conditionArrow=target;
+
+  while(conditionArrow&&conditionArrow!==this.display&&!conditionArrow.hasAttribute("data-condition-arrow")){
+    conditionArrow=conditionArrow.parentNode;
+  }
+
+  if(conditionArrow&&conditionArrow!==this.display){
+    start=Number(conditionArrow.getAttribute("data-condition-arrow"));
+
+    if(this.chars[start]&&this.chars[start].condition){
+      this.cond={arrow:start,pos:this.chars[start].condition.length};
+      this.script="normal";
+      this.render();
+      this.root.focus();
+      return;
+    }
+  }
+
+  this.cond=null;
 
   while(target&&target!==this.display&&!target.hasAttribute("data-cursor-start")){
     target=target.parentNode;
@@ -2949,7 +3667,8 @@ ChemicalKeyboard.prototype.setCursorFromClick=function(e){
 };
 
 ChemicalKeyboard.prototype.render=function(){
-  var self=this,i=0,j,k,c,sp,color,pair,wrapper,subLine,supLine,lower,upper,states,width,cursorDrawn=false;
+  /* While editing the condition, its caret is drawn by renderCondition only. */
+  var self=this,i=0,j,k,c,sp,color,pair,wrapper,subLine,supLine,lower,upper,states,width,cursorDrawn=!!this.cond;
   function makeClickable(element,index){
     var item=self.chars[index],start=index,end=index+1,pair,kind;
 
@@ -2957,19 +3676,11 @@ ChemicalKeyboard.prototype.render=function(){
       pair=item.pair;
       kind=item.kind;
 
-      while(
-        start>0&&
-        self.chars[start-1].kind===kind&&
-        self.chars[start-1].pair===pair
-      ){
+      while(start>0&&self.chars[start-1].kind===kind&&self.chars[start-1].pair===pair){
         start--;
       }
 
-      while(
-        end<self.chars.length&&
-        self.chars[end].kind===kind&&
-        self.chars[end].pair===pair
-      ){
+      while(end<self.chars.length&&self.chars[end].kind===kind&&self.chars[end].pair===pair){
         end++;
       }
     }
@@ -3005,12 +3716,7 @@ ChemicalKeyboard.prototype.render=function(){
   }
 
 function appendCharacter(parent,index,mode){
-  if(
-    self.mode==="edit"&&
-    self.cursor===index&&
-    !cursorDrawn&&
-    self.script===mode
-  ){
+  if(self.mode==="edit"&&self.cursor===index&&!cursorDrawn&&self.script===mode){
     addCaret(parent,mode);
   }
 
@@ -3037,12 +3743,7 @@ function appendCharacter(parent,index,mode){
       upper=[];
       states=[];
       j=i;
-      if(
-        self.mode==="edit"&&
-        self.cursor===i&&
-        !cursorDrawn&&
-        self.script==="normal"
-      ){
+      if(self.mode==="edit"&&self.cursor===i&&!cursorDrawn&&self.script==="normal"){
         addCaret(self.display,"normal");
       }
       while(j<this.chars.length){
@@ -3120,23 +3821,11 @@ function appendCharacter(parent,index,mode){
       for(k=0;k<upper.length;k++){
         appendCharacter(supLine,upper[k],"sup");
       }
-      if(
-        !cursorDrawn&&
-        self.mode==="edit"&&
-        self.script==="sub"&&
-        lower.length&&
-        self.cursor===lower[lower.length-1]+1
-      ){
+      if(!cursorDrawn&&self.mode==="edit"&&self.script==="sub"&&lower.length&&self.cursor===lower[lower.length-1]+1){
         addCaret(subLine,"sub");
       }
 
-      if(
-        !cursorDrawn&&
-        self.mode==="edit"&&
-        self.script==="sup"&&
-        upper.length&&
-        self.cursor===upper[upper.length-1]+1
-      ){
+      if(!cursorDrawn&&self.mode==="edit"&&self.script==="sup"&&upper.length&&self.cursor===upper[upper.length-1]+1){
         addCaret(supLine,"sup");
       }
       if(this.mode==="edit"&&this.cursor===j&&!cursorDrawn&&(this.script==="sub"||this.script==="sup")){
@@ -3162,6 +3851,32 @@ function appendCharacter(parent,index,mode){
     sp=node("span",c.ch);
     makeClickable(sp,i);
     color=this.isHighlighted(i);
+
+    /* Arrow with a condition (or an open placeholder): condition above the arrow. */
+    if(c.condition){
+      wrapper=node("span","");
+
+      apply(wrapper,{
+        display:"inline-flex",
+        flexDirection:"column",
+        alignItems:"center",
+        verticalAlign:"middle",
+        lineHeight:"1",
+        margin:"0 .15em"
+      });
+
+      apply(sp,{display:"block",lineHeight:"1"});
+
+      wrapper.appendChild(this.renderCondition(i,c.condition));
+      wrapper.appendChild(sp);
+
+      if(color)wrapper.style.backgroundColor=color;
+
+      this.display.appendChild(wrapper);
+      i++;
+      continue;
+    }
+
     if(color){
       sp.style.backgroundColor=color;
     }
@@ -3173,8 +3888,118 @@ function appendCharacter(parent,index,mode){
   if(this.mode==="edit"&&this.cursor===this.chars.length&&!cursorDrawn){
     addCaret(this.display,this.script);
   }
+  this.updateScriptButtons();
   this.syncRenderedDisplay();
 };
+
+/*
+ * The condition line above an arrow (small text). An empty condition
+ * is shown as a dashed placeholder box. Draws the caret when the
+ * condition is being edited.
+ */
+ChemicalKeyboard.prototype.renderCondition=function(index,condition){
+  var line=node("span",""),editing=this.mode==="edit"&&this.cond&&this.cond.arrow===index,k,ch;
+
+  function caret(){
+    var caretSpan=node("span","");
+
+    caretSpan.setAttribute("data-chemical-caret","1");
+
+    apply(caretSpan,{
+      display:"inline-block",
+      width:"2px",
+      height:"1em",
+      background:"#1769aa",
+      verticalAlign:"-.12em"
+    });
+
+    line.appendChild(caretSpan);
+  }
+
+  line.setAttribute("data-condition-arrow",index);
+
+  apply(line,{
+    display:"block",
+    minWidth:"1.6em",
+    minHeight:"1.1em",
+    padding:"0 2px",
+    fontSize:"45%",
+    lineHeight:"1.1",
+    textAlign:"center",
+    whiteSpace:"nowrap",
+    boxSizing:"border-box",
+    cursor:this.mode==="edit"?"text":"default",
+    border:condition.length?"1px solid transparent":"1px dashed #1769aa",
+    borderRadius:"3px",
+    background:editing?"#eef5fc":"transparent"
+  });
+
+  for(k=0;k<condition.length;k++){
+    if(editing&&this.cond.pos===k)caret();
+
+    ch=node("span",condition[k].ch);
+
+    if(condition[k].script==="sub"){
+      apply(ch,{fontSize:"75%",verticalAlign:"sub"});
+    }else if(condition[k].script==="sup"){
+      apply(ch,{fontSize:"75%",verticalAlign:"super"});
+    }
+
+    line.appendChild(ch);
+  }
+
+  if(editing&&this.cond.pos===condition.length)caret();
+
+  return line;
+};
+
+/* LaTeX of a condition: words in \mathrm, sub/sup groups, Δ, hν, °. */
+function conditionToLatex(condition){
+  var out="",i,c,run,script;
+
+  for(i=0;i<condition.length;i++){
+    c=condition[i];
+
+    if(c.script==="sub"||c.script==="sup"){
+      script=c.script;
+      run="";
+
+      while(i<condition.length&&condition[i].script===script){
+        run+=esc(condition[i].ch);
+        i++;
+      }
+
+      i--;
+      out+=(script==="sub"?"_{":"^{")+run+"}";
+      continue;
+    }
+
+    /* Consecutive letters form one upright word: \mathrm{MnO}, \mathrm{atm}. */
+    if(isUpper(c.ch)||isLower(c.ch)){
+      run="";
+
+      while(i<condition.length&&condition[i].script==="normal"&&(isUpper(condition[i].ch)||isLower(condition[i].ch))){
+        run+=condition[i].ch;
+        i++;
+      }
+
+      i--;
+      out+="\\mathrm{"+run+"}";
+      continue;
+    }
+
+    if(c.ch==="Δ")out+="\\Delta ";
+    else if(c.ch==="°C")out+="^{\\circ}\\mathrm{C}";
+    else if(c.ch===" K")out+="\\ \\mathrm{K}";
+    else if(c.ch==="hν")out+="h\\nu ";
+    else if(c.ch==="ν")out+="\\nu ";
+    else if(c.ch==="°")out+="^{\\circ}";
+    else if(c.ch===" ")out+="\\ ";
+    else out+=esc(c.ch);
+  }
+
+  return out;
+}
 
 ChemicalKeyboard.prototype.toLatex=function(){
   var out="",i,c,pair,stateText,subText,supText,j;
@@ -3245,7 +4070,12 @@ ChemicalKeyboard.prototype.toLatex=function(){
       continue;
     }
 
-    if(c.ch==="→"){
+    /* Arrow with a condition: \xrightarrow stretches under the text. */
+    if(c.ch==="→"&&c.condition&&c.condition.length){
+      out+="\\xrightarrow{"+conditionToLatex(c.condition)+"}";
+    }else if(c.ch==="⇌"&&c.condition&&c.condition.length){
+      out+="\\overset{"+conditionToLatex(c.condition)+"}{\\rightleftharpoons}";
+    }else if(c.ch==="→"){
       out+="\\longrightarrow ";
     }else if(c.ch==="⇌"){
       out+="\\rightleftharpoons ";
@@ -3259,36 +4089,31 @@ ChemicalKeyboard.prototype.toLatex=function(){
   return out;
 };
 
-  ChemicalKeyboard.prototype.getValue =
-    function () {
+  ChemicalKeyboard.prototype.getValue = function () {
       var s = "";
       var i;
 
-      for (
-        i = 0;
-        i < this.chars.length;
-        i++
-      ) {
+      for (i = 0; i < this.chars.length; i++) {
         s += this.chars[i].ch;
+
+        /* Condition after its arrow, in the "→[...]" value form. */
+        if (this.chars[i].condition && this.chars[i].condition.length) {
+          s += "[" + conditionText(this.chars[i].condition) + "]";
+        }
       }
 
       return s;
     };
 
-  ChemicalKeyboard.prototype.getModel =
-    function () {
-      return JSON.parse(
-        JSON.stringify(this.chars)
-      );
+  ChemicalKeyboard.prototype.getModel = function () {
+      return JSON.parse(JSON.stringify(this.chars));
     };
 
-  ChemicalKeyboard.prototype.getAST =
-    function () {
+  ChemicalKeyboard.prototype.getAST = function () {
       return analyze(this.chars);
     };
 
-  ChemicalKeyboard.prototype.result =
-    function () {
+  ChemicalKeyboard.prototype.result = function () {
       return {
         value: this.getValue(),
         latex: this.toLatex(),
@@ -3296,8 +4121,7 @@ ChemicalKeyboard.prototype.toLatex=function(){
         ast: this.getAST()
       };
     };
-ChemicalKeyboard.prototype.markStates =
-    function () {
+ChemicalKeyboard.prototype.markStates = function () {
       var i;
       var len;
       var stateId;
@@ -3309,16 +4133,12 @@ ChemicalKeyboard.prototype.markStates =
         if (
           i + 3 < this.chars.length &&
           this.chars[i].ch === "(" &&
-          this.chars[i + 1].ch === "a" &&
-          this.chars[i + 2].ch === "q" &&
-          this.chars[i + 3].ch === ")"
+          this.chars[i + 1].ch === "a" && this.chars[i + 2].ch === "q" && this.chars[i + 3].ch === ")"
         ) {
           len = 4;
         } else if ( i + 2 < this.chars.length && this.chars[i].ch === "(" &&
           (
-            this.chars[i + 1].ch === "s" ||
-            this.chars[i + 1].ch === "l" ||
-            this.chars[i + 1].ch === "g"
+            this.chars[i + 1].ch === "s" || this.chars[i + 1].ch === "l" || this.chars[i + 1].ch === "g"
           ) &&
           this.chars[i + 2].ch === ")"
         ) {
@@ -3364,64 +4184,19 @@ ChemicalKeyboard.prototype.markStates =
         }
       }
     };
-  ChemicalKeyboard.prototype.setValue =
-    function (v) {
-      var i;
-      var script = "normal";
-      var ch;
-      var s = String(v);
-      var explicit = false;
-      var prev;
+  /*
+   * v: a model (array, e.g. from getModel) or a text value.
+   * Text is read by modelFromValue - the same parser used by compare() -
+   * so the display and the comparison always agree on character positions.
+   */
+  ChemicalKeyboard.prototype.setValue = function (v) {
+      this.cond = null;
 
-      this.chars = [];
+      this.chars = Array.isArray(v)
+        ? JSON.parse(JSON.stringify(v))
+        : modelFromValue(v);
 
-      if (Array.isArray(v)) {
-        this.chars =
-          JSON.parse(
-            JSON.stringify(v)
-          );
-      } else {
-        explicit = s.indexOf("_{") >= 0 || s.indexOf("^{") >= 0;
-
-        for ( i = 0; i < s.length; i++ ) {
-          ch = s.charAt(i);
-
-          if ( ch === "_" && s.charAt(i + 1) === "{" ) {
-            script = "sub";
-            i++;
-            continue;
-          }
-
-          if ( ch === "^" && s.charAt(i + 1) === "{" ) {
-            script = "sup";
-            i++;
-            continue;
-          }
-
-          if (ch === "}") {
-            script = "normal";
-            continue;
-          }
-
-          if ( !explicit && isDigit(ch) && script === "normal" && this.chars.length ) {
-            prev = this.chars[ this.chars.length - 1 ];
-
-            if ( isUpper(prev.ch) || isLower(prev.ch) || prev.ch === ")" ) {
-              script = "sub";
-            }
-          }
-
-          if ( !explicit && script === "sub" && !isDigit(ch) ) {
-            script = "normal";
-          }
-
-          this.chars.push(
-            makeChar(ch, script)
-          );
-        }
-      }
-
-      this.markStates();
+      this.markStates();     // re-number state ids from this.groupId
       this.markElements();
       this.cursor=this.chars.length;
       this.render();
@@ -3430,8 +4205,7 @@ ChemicalKeyboard.prototype.markStates =
       }
     };
 
-ChemicalKeyboard.prototype.setMode =
-  function (m) {
+ChemicalKeyboard.prototype.setMode = function (m) {
     this.mode = m;
 
     this.panel.style.display = m === "edit" ? "block" : "none";
@@ -3443,8 +4217,7 @@ ChemicalKeyboard.prototype.setMode =
     this.render();
   };
 
-  ChemicalKeyboard.prototype.setHighlights =
-    function (h) {
+  ChemicalKeyboard.prototype.setHighlights = function (h) {
       this.highlights = h || [];
       this.render();
     };
@@ -3490,13 +4263,10 @@ ChemicalKeyboard.prototype.makeCloseButton=function(panel){
   return b;
 };
 
-ChemicalKeyboard.prototype.closeElementWindows =
-  function () {
-    this.elementPanel.style.display =
-      "none";
+ChemicalKeyboard.prototype.closeElementWindows = function () {
+    this.elementPanel.style.display = "none";
 
-    this.atomPanel.style.display =
-      "none";
+    this.atomPanel.style.display = "none";
   };
 
   ChemicalKeyboard.prototype.makePopupHeader=function(panel,title){
@@ -3533,13 +4303,8 @@ ChemicalKeyboard.prototype.openElements=function(){
     this.elementPanel.textContent="";
     this.makePopupHeader(this.elementPanel,t.elements);
 
-    for (
-      i = 0;
-      i < SYMBOLS.length;
-      i++
-    ) {
-      letter =
-        SYMBOLS[i].charAt(0);
+    for (i = 0; i < SYMBOLS.length; i++) {
+      letter = SYMBOLS[i].charAt(0);
 
       if (!seen[letter]) {
         seen[letter] = true;
@@ -3556,20 +4321,14 @@ ChemicalKeyboard.prototype.openElements=function(){
     apply(grid, {
       display: "grid",
       gridTemplateColumns:
-        "repeat(" +
-        columns +
-        ", minmax(34px, 1fr))",
-      gridTemplateRows:
+        "repeat(" + columns + ", minmax(34px, 1fr))", gridTemplateRows:
         "repeat(4, 38px)",
       gap: "5px"
     });
 
     for ( i = 0; i < letters.length; i++ ) {
       (function (initial) {
-        b = node(
-          "button",
-          initial
-        );
+        b = node("button", initial);
 
         b.type = "button";
 
@@ -3587,9 +4346,7 @@ ChemicalKeyboard.prototype.openElements=function(){
         b.addEventListener(
           "click",
           function () {
-            self.showElementLetter(
-              initial
-            );
+            self.showElementLetter(initial);
           }
         );
 
@@ -3618,8 +4375,7 @@ ChemicalKeyboard.prototype.hide=function(){
   this.root.style.display="none";
 };
 
-ChemicalKeyboard.prototype.showElementLetter =
-  function (letter) {
+ChemicalKeyboard.prototype.showElementLetter = function (letter) {
     var self = this;
 
     var idx = this.language === "he" ? 1 : this.language === "ar" ? 2 : 0;
@@ -3656,10 +4412,7 @@ ChemicalKeyboard.prototype.showElementLetter =
         n = s;
       }
 
-      b = node(
-        "button",
-        s + " — " + n
-      );
+      b = node("button", s + " — " + n);
 
       b.type = "button";
 
@@ -3679,13 +4432,9 @@ ChemicalKeyboard.prototype.showElementLetter =
         button.addEventListener(
           "click",
           function () {
-            self.insertText(
-              sym,
-              "normal"
-            );
+            self.insertText(sym, "normal");
 
-            self.atomPanel.style.display =
-              "none";
+            self.atomPanel.style.display = "none";
 
             self.display.focus();
           }
@@ -3713,25 +4462,31 @@ function renderComparisonResult(result,language,summary,details){
   if(result.correct){
     summary.textContent=messages.correct;
     summary.style.color="#18742a";
-    details.textContent=messages.equivalent;
-    return;
+    details.appendChild(node("div",messages.equivalent,{marginBottom:"8px"}));
+  }else{
+    summary.textContent=replaceTextToken(messages.issues, "count", result.errors.length);
+
+    summary.style.color="#a12622";
+
+    for(i=0;i<result.errors.length;i++){
+      appendErrorMessage(details, result.errors[i], language, i+1);
+    }
   }
 
-  summary.textContent=replaceTextToken(
-    messages.issues,
-    "count",
-    result.errors.length
-  );
+  /*
+   * Notes are listed separately, in a neutral colour,
+   * for both correct and incorrect answers.
+   */
+  if(result.notes&&result.notes.length){
+    var notesBlock=node("div",null,{marginTop:"10px",color:"#555"});
 
-  summary.style.color="#a12622";
+    notesBlock.appendChild(node("div",localizedFromTable(NOTE_TEXT,"notes-heading",language),{fontWeight:"bold",marginBottom:"4px"}));
 
-  for(i=0;i<result.errors.length;i++){
-    appendErrorMessage(
-      details,
-      result.errors[i],
-      language,
-      i+1
-    );
+    for(i=0;i<result.notes.length;i++){
+      appendErrorMessage(notesBlock, result.notes[i], language, i+1);
+    }
+
+    details.appendChild(notesBlock);
   }
 
   if(window.MathJax&&MathJax.startup&&MathJax.startup.promise){

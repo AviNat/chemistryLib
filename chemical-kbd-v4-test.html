@@ -13,9 +13,10 @@ window.MathJax={tex:{inlineMath:[["\\(","\\)"]]},svg:{fontCache:"global"}};
 <h1>מקלדת לנוסחאות ולמשוואות כימיות — גרסת בדיקה</h1>
 <h2>1. מצב עריכה</h2>
 <div id="editor"></div>
-<button type="button" id="loadWater">טען H₂O</button><br>
+<button type="button" id="loadWater">טען 2H₂O</button><br>
 <button type="button" id="loadIronEquation">Iron oxide example</button>
-<button type="button" id="loadIonEquation">Ionic example</button><br>
+<button type="button" id="loadIonEquation">Ionic example</button>
+<button type="button" id="loadIsomerEquation">Isomer example (distinguishIsomers)</button><br>
 <button type="button" id="submitAnswer">Submit and check</button>
 <div id="checkSummary"></div>
 <div id="checkDetails"></div>
@@ -56,14 +57,27 @@ function clearFeedback(){
   document.getElementById("checkDetails").textContent="";
   document.getElementById("comparisonFeedback").style.display="none";
 }
-function loadExample(equation){
+// studentValue: optional starting answer (default: the reference itself)
+// distinguishIsomers: compare substances by written form (default off)
+function loadExample(equation,studentValue,distinguishIsomers){
+  editor.config.distinguishIsomers=distinguishIsomers===true;
   editor.setCorrectAnswer(equation);
-  editor.setValue(equation);
+  editor.setValue(studentValue!==undefined?studentValue:equation);
   clearFeedback();
 }
 document.getElementById("loadIronEquation").addEventListener("click",function(){loadExample("2Fe_{2}O_{3}(s)→4FeO(s)+O_{2}(g)");});
 document.getElementById("loadIonEquation").addEventListener("click",function(){loadExample("Ag^{+}(aq)+Cl^{-}(aq)→AgCl(s)");});
-document.getElementById("loadWater").addEventListener("click",function(){loadExample("H_{2}O");});
+document.getElementById("loadWater").addEventListener("click",function(){loadExample("2H_{2}O");});
+// Combustion of ethanol (C2H5OH). The editor starts with its isomer,
+// dimethyl ether (CH3OCH3): same atoms, different substance.
+// Submit -> "wrong-structure" error. Change it to C2H5OH -> correct.
+document.getElementById("loadIsomerEquation").addEventListener("click",function(){
+  loadExample(
+    "C_{2}H_{5}OH+3O_{2}→2CO_{2}+3H_{2}O",
+    "CH_{3}OCH_{3}+3O_{2}→2CO_{2}+3H_{2}O",
+    true
+  );
+});
 document.getElementById("submitAnswer").addEventListener("click",function(){
   var result=editor.compare(),language=editor.language;
   studentFeedback.setComparisonFeedback(result,"student",editor.getModel());

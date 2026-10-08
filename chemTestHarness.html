@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chemical keyboard tests</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 16px; color: #222; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    #summary { font-size: 16px; margin: 8px 0 12px; }
+    #summary .pass { color: #1a7f37; font-weight: bold; }
+    #summary .fail { color: #c62828; font-weight: bold; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+    .toolbar button { padding: 4px 10px; cursor: pointer; }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; }
+    th, td { border: 1px solid #ccc; padding: 4px 6px; vertical-align: middle; text-align: left; }
+    th { background: #f2f2f2; position: sticky; top: 0; }
+    tr.group td { background: #e8eef7; font-weight: bold; }
+    tr.failed td { background: #fdecea; }
+    td.status { font-weight: bold; text-align: center; white-space: nowrap; }
+    tr.passed td.status { color: #1a7f37; }
+    tr.failed td.status { color: #c62828; }
+    td.code { font-family: Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+    td.math { font-size: 16px; min-width: 140px; }
+    body.only-failed tr.passed { display: none; }
+    #copyArea { width: 100%; height: 120px; font-family: Consolas, monospace; display: none; margin-top: 8px; }
+    #host { position: absolute; left: -10000px; top: 0; width: 600px; }
+</style>
+</head>
+<body>
+
+<h1>Chemical keyboard tests</h1>
+<div>
+    Each test types keys through the keyboard's own functions, reads a value back with <code>setValue</code>,
+    or compares and grades two answers with <code>ChemicalGrammar.compare</code>, and checks the result against a reference.
+    The rendered column and the error descriptions (hover over the actual result) help check a reference by eye.
+    Test cases and the key notation are in <code>chemTests.js</code>.
+</div>
+
+<div id="summary">Running…</div>
+
+<div class="toolbar">
+    <label><input type="checkbox" id="onlyFailed"> Show failed tests only</label>
+    <button type="button" id="rerun">Run again</button>
+    <button type="button" id="copyActual">Copy actual results of failed tests</button>
+</div>
+<textarea id="copyArea" readonly></textarea>
+
+<table>
+    <thead>
+        <tr><th>#</th><th>Test</th><th>Input</th><th>Rendered</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+    </thead>
+    <tbody id="results"></tbody>
+</table>
+
+<div id="host"></div>
+
+<script src="chemical-keyboard-v4.js"></script>
+<script src="chemTests.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    let results = [];
+
+    function cell(row, text, className) {
+        let td = document.createElement("td");
+        td.textContent = text;
+        if (className) td.className = className;
+        row.appendChild(td);
+        return td;
+    }
+
+    function render() {
+        let body = document.getElementById("results");
+        let passed = results.filter(function (r) { return r.pass; }).length;
+        let failed = results.length - passed;
+        let lastGroup = null;
+
+        body.innerHTML = "";
+
+        results.forEach(function (r, index) {
+            let row;
+
+            if (r.testCase.group !== lastGroup) {
+                lastGroup = r.testCase.group;
+                row = document.createElement("tr");
+                row.className = "group";
+                cell(row, lastGroup).colSpan = 7;
+                body.appendChild(row);
+            }
+
+            row = document.createElement("tr");
+            row.className = r.pass ? "passed" : "failed";
+            cell(row, String(index + 1));
+            cell(row, r.testCase.name);
+            cell(row, ChemTests.caseInput(r.testCase), "code");
+            cell(row, r.latex ? "\\(" + r.latex + "\\)" : "", "math");
+            cell(row, r.expect, "code");
+            let actual = cell(row, r.error ? "ERROR: " + r.error : r.actual, "code");
+            if (r.details) actual.title = r.details;
+            cell(row, r.pass ? "PASS" : "FAIL", "status");
+            body.appendChild(row);
+        });
+
+        document.getElementById("summary").innerHTML =
+            "<span class='pass'>" + passed + " passed</span>, " +
+            "<span class='" + (failed ? "fail" : "pass") + "'>" + failed + " failed</span> of " + results.length +
+            " tests";
+
+        typeset();
+    }
+
+    function typeset() {
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetClear && MathJax.typesetClear([document.getElementById("results")]);
+            MathJax.typesetPromise([document.getElementById("results")]);
+        }
+    }
+
+    function runTests() {
+        results = ChemTests.run(window.ChemicalKeyboard, document.getElementById("host"));
+        render();
+    }
+
+    /*
+     * The tests run before MathJax is loaded, so the keyboards do not typeset;
+     * MathJax is loaded afterwards only to render the results.
+     */
+    function loadMathJax() {
+        window.MathJax = {
+            tex: { inlineMath: [["\\(", "\\)"]] },
+            startup: { typeset: false, ready: function () { MathJax.startup.defaultReady(); typeset(); } }
+        };
+        let script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js";
+        document.head.appendChild(script);
+    }
+
+    document.getElementById("onlyFailed").onchange = function () {
+        document.body.classList.toggle("only-failed", this.checked);
+    };
+
+    document.getElementById("rerun").onclick = runTests;
+
+    /* Paste these lines over the matching cases in chemTests.js after checking them */
+    document.getElementById("copyActual").onclick = function () {
+        let area = document.getElementById("copyArea");
+        let lines = results.filter(function (r) { return !r.pass && !r.error && r.kind !== "value"; }).map(function (r) {
+            return "    name: " + JSON.stringify(r.testCase.name) + ", expect: " + JSON.stringify(r.actual);
+        });
+
+        area.value = lines.length ? lines.join("\n") : "(no failed tests)";
+        area.style.display = "block";
+        area.select();
+
+        if (navigator.clipboard) navigator.clipboard.writeText(area.value).catch(function () {});
+    };
+
+    runTests();
+    loadMathJax();
+})();
+</script>
+</body>
+</html>

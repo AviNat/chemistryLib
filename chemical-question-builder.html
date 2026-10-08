@@ -1,0 +1,1394 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chemical Question Builder</title>
+<!--
+  Teacher tool: builds a Moodle question with the chemical keyboard (chemical-keyboard-v4.js).
+  The teacher sets the student language, the element keys, the reference answer, an optional
+  initial answer and the grading rubric (RUBRIC-DESIGN.md). The output is a snippet to paste into
+  the Moodle question text; it is saved as a .txt file and can be opened here again.
+
+  The saved file is the snippet itself. The configuration is in it once, as JSON in
+  <script type="application/json" id="chemkbd-...-config">; opening a file reads only that block.
+  The student-side code in the snippet is chemkbdRun (below), copied with toString(), so the
+  "Try it as a student" section runs exactly the code that Moodle will run.
+-->
+<script>
+window.MathJax={tex:{inlineMath:[["\\(","\\)"]]},svg:{fontCache:"global"}};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root{
+  --bg:#f4f6f9; --card:#fff; --text:#1d2733; --muted:#5b6876; --line:#d5dce4;
+  --accent:#1f5f99; --accent-soft:#e3eef8; --ok:#1a7f37; --warn:#9a5b00; --bad:#b42318;
+  --chip:#eef3f8; --picked:#1f5f99; --picked-text:#fff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Arial,sans-serif}
+header{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:10px 16px}
+header h1{font-size:18px;margin:0;flex:1 1 auto}
+header .file{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#fileName{color:var(--muted);font-size:13px}
+#dirtyMark{color:var(--warn);font-size:13px}
+main{max-width:1000px;margin:0 auto;padding:16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+section h2{font-size:16px;margin:0 0 10px}
+.hint{color:var(--muted);font-size:13px;margin:4px 0 10px}
+.row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:8px 0}
+label.field{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted)}
+label.check{display:flex;gap:8px;align-items:flex-start;margin:6px 0}
+input[type=text],input[type=url],select{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--text)}
+input[type=number]{font:inherit;width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:6px}
+#libraryUrl{width:min(560px,90vw);direction:ltr}
+button{font:inherit;padding:5px 12px;border:1px solid #9fb0c2;border-radius:6px;background:#fff;color:var(--text);cursor:pointer}
+button:hover{background:var(--accent-soft)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{background:#174c7b}
+.periodic{direction:ltr;display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:3px;max-width:760px;margin:6px 0}
+.periodic button{padding:4px 0;font-size:13px;min-width:0;border-radius:4px}
+.periodic button.picked{background:var(--picked);border-color:var(--picked);color:var(--picked-text)}
+.periodic .gap{grid-column:1/-1;height:6px}
+.chips{direction:ltr;display:flex;flex-wrap:wrap;gap:6px;min-height:34px;padding:6px;border:1px dashed var(--line);border-radius:8px}
+.chips .chip{padding:4px 10px;background:var(--chip);border:1px solid #b9c7d6;border-radius:14px;cursor:grab}
+.chips .chip.dragging{opacity:.4}
+.chips .empty{color:var(--muted);font-size:13px;align-self:center}
+.chips.inline{display:inline-flex;min-height:0;padding:0;border:0;vertical-align:middle}
+.chip.on-panel,.chip.full-list{padding:2px 9px;border-radius:12px;font-size:14px;cursor:default;direction:ltr;display:inline-block}
+.chip.on-panel{background:#dcf1e1;border:1px solid #7cc08f;color:#14532d}
+.chip.full-list{background:#fff4dc;border:1px dashed #d19a2a;color:#7a4b00}
+.ref-elements{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 4px;font-weight:bold}
+.ref-elements button{font-weight:normal}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-bottom:8px}
+.legend .chip{font-size:11px;padding:0 6px}
+.periodic button.in-reference{outline:2px dashed #d19a2a;outline-offset:1px}
+.periodic button.in-reference.picked{outline:2px solid #7cc08f}
+.disabled{opacity:.45;pointer-events:none}
+.kbd-host{max-width:820px}
+.status{margin-top:8px;font-size:14px}
+.status.ok{color:var(--ok)} .status.bad{color:var(--bad)} .status.info{color:var(--muted)}
+.rubric-scroll{overflow-x:auto}
+table.rubric{border-collapse:collapse;width:100%;min-width:620px}
+table.rubric th,table.rubric td{border:1px solid var(--line);padding:7px 10px;text-align:start;vertical-align:middle}
+table.rubric th{font-size:13px;color:var(--muted);font-weight:bold;background:#eef3f8}
+table.rubric tbody tr:nth-child(even) td{background:#f8fafc}
+table.rubric td.category{font-weight:bold}
+table.rubric tr.off td.category{color:var(--muted);font-weight:normal}
+table.rubric td.value{white-space:nowrap;text-align:center}
+table.rubric .pct{display:inline-flex;align-items:center;gap:4px;unicode-bidi:isolate}
+table.rubric .pct input{width:72px;text-align:right}
+table.rubric .na{color:#a5b0bc}
+#issues ul{margin:6px 0 0;padding-inline-start:20px}
+#issues.ok{color:var(--ok)}
+#issues li{color:var(--bad)}
+#issues li.info{color:var(--muted)}
+#output{width:100%;height:220px;font:12px/1.4 Consolas,monospace;direction:ltr;text-align:left;border:1px solid var(--line);border-radius:6px;padding:8px;background:#fafbfc}
+#tryHost{max-width:820px}
+@media (max-width:640px){
+  .periodic button{font-size:10px;padding:3px 0}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 data-t="appTitle"></h1>
+  <label class="field"><span data-t="teacherLanguage"></span>
+    <select id="teacherLanguage">
+      <option value="en">English</option>
+      <option value="he">עברית</option>
+      <option value="ar">العربية</option>
+    </select>
+  </label>
+  <div class="file">
+    <button type="button" id="newBtn" data-t="new"></button>
+    <button type="button" id="openBtn" data-t="open"></button>
+    <button type="button" id="saveBtn" class="primary" data-t="save"></button>
+    <button type="button" id="saveAsBtn" data-t="saveAs"></button>
+    <span id="fileName"></span>
+    <span id="dirtyMark"></span>
+    <input type="file" id="fileInput" accept=".txt,.html,.json,text/plain" hidden>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <h2 data-t="secSettings"></h2>
+  <div class="row">
+    <label class="field"><span data-t="studentLanguage"></span>
+      <select id="studentLanguage">
+        <option value="he">עברית</option>
+        <option value="ar">العربية</option>
+        <option value="en">English</option>
+      </select>
+    </label>
+    <label class="field"><span data-t="questionId"></span>
+      <input type="text" id="questionId" size="16" dir="ltr">
+    </label>
+  </div>
+  <div class="hint" data-t="studentLanguageHint"></div>
+  <div class="hint" data-t="questionIdHint"></div>
+  <label class="field"><span data-t="libraryUrl"></span>
+    <input type="url" id="libraryUrl" placeholder="https://.../chemical-keyboard-v4.js">
+  </label>
+  <label class="check"><input type="checkbox" id="distinguishIsomers"><span data-t="distinguishIsomers"></span></label>
+  <label class="check"><input type="checkbox" id="checkButton"><span data-t="checkButton"></span></label>
+  <label class="check"><input type="checkbox" id="answerField"><span data-t="answerField"></span></label>
+</section>
+
+<section>
+  <h2 data-t="secReference"></h2>
+  <div class="hint" data-t="keyboardHint"></div>
+  <div id="referenceHost" class="kbd-host"></div>
+  <div id="referenceStatus" class="status"></div>
+  <div class="row"><button type="button" id="checkReference" data-t="checkReference"></button></div>
+  <div id="referenceCheck" class="status"></div>
+  <div id="referenceCheckView" class="kbd-host"></div>
+</section>
+
+<section>
+  <h2 data-t="secElements"></h2>
+  <div class="row" role="radiogroup">
+    <label class="check"><input type="radio" name="elementsMode" value="default"><span data-t="elementsDefault"></span></label>
+    <label class="check"><input type="radio" name="elementsMode" value="custom"><span data-t="elementsCustom"></span></label>
+    <label class="check"><input type="radio" name="elementsMode" value="none"><span data-t="elementsNone"></span></label>
+  </div>
+  <div class="hint" data-t="elementsHint"></div>
+  <div class="ref-elements">
+    <span data-t="refElementsTitle"></span>
+    <span class="chips inline" id="refElements"></span>
+    <button type="button" id="addFromReference" data-t="addFromReference"></button>
+  </div>
+  <div class="legend">
+    <span><span class="chip on-panel">X</span> <span data-t="legendOnPanel"></span></span>
+    <span><span class="chip full-list">X</span> <span data-t="legendFullList"></span></span>
+  </div>
+  <div id="customElements">
+    <div class="row">
+      <button type="button" id="startFromDefault" data-t="startFromDefault"></button>
+      <button type="button" id="clearElements" data-t="clearElements"></button>
+    </div>
+    <div class="periodic" id="periodic"></div>
+    <div class="hint"><span data-t="elementsOrder"></span> <span data-t="dragHint"></span></div>
+    <div class="chips" id="chips"></div>
+  </div>
+</section>
+
+<section>
+  <h2 data-t="secInitial"></h2>
+  <div class="hint" data-t="initialHint"></div>
+  <div class="row">
+    <button type="button" id="copyFromReference" data-t="copyFromReference"></button>
+    <button type="button" id="clearInitial" data-t="clearAnswer"></button>
+  </div>
+  <div id="initialHost" class="kbd-host"></div>
+</section>
+
+<section>
+  <h2 data-t="secRubric"></h2>
+  <label class="check"><input type="checkbox" id="useRubric"><span data-t="useRubric"></span></label>
+  <div class="hint" data-t="rubricHint"></div>
+  <div id="rubricBody">
+    <div class="rubric-scroll"><table class="rubric">
+      <thead><tr><th data-t="colCategory"></th><th data-t="colRule"></th><th data-t="colPenalty"></th><th data-t="colMax"></th><th data-t="colAllMissing"></th></tr></thead>
+      <tbody id="rubricRows"></tbody>
+    </table></div>
+    <div class="row"><button type="button" id="resetRubric" data-t="resetRubric"></button></div>
+  </div>
+</section>
+
+<section>
+  <h2 data-t="secTry"></h2>
+  <div class="hint" data-t="tryHint"></div>
+  <div class="row"><button type="button" id="restartTry" data-t="restartTry"></button></div>
+  <div id="tryHost"></div>
+</section>
+
+<section>
+  <h2 data-t="secOutput"></h2>
+  <div class="hint" data-t="outputHint"></div>
+  <div id="issues" class="status"></div>
+  <div class="row"><button type="button" id="copyOutput" data-t="copy"></button><span id="copyStatus" class="hint"></span></div>
+  <textarea id="output" readonly spellcheck="false"></textarea>
+</section>
+
+</main>
+
+<script src="chemical-keyboard-v4.js"></script>
+<script>
+/* ================================================================
+   Student-side code. It is copied into every snippet with toString(),
+   so it must stay self-contained ES5 (it runs inside Moodle).
+   host: an element with an id; cfg: the question configuration.
+   Returns { keyboard, feedback: [student, reference] } (feedback may be empty).
+   ================================================================ */
+function chemkbdRun(host,cfg){
+  var lang=cfg.language==="he"||cfg.language==="ar"?cfg.language:"en";
+  var CHECK={en:"Check",he:"בדיקה",ar:"تحقق"};
+  var base=host.id;
+  var options,input=null,keyboard,que,button,summary,details,section,studentTitle,studentDiv,referenceTitle,referenceDiv,feedback=[];
+
+  function make(tag,suffix,css){
+    var e=document.createElement(tag);
+    if(suffix)e.id=base+"-"+suffix;
+    if(css)e.style.cssText=css;
+    return e;
+  }
+
+  host.textContent="";
+  host.dir=lang==="en"?"ltr":"rtl";
+
+  var keyboardDiv=make("div","keyboard");
+  host.appendChild(keyboardDiv);
+
+  options={
+    divId:keyboardDiv.id,
+    language:lang,
+    mode:"edit",
+    correctAnswer:cfg.correctAnswer||"",
+    value:cfg.value||""
+  };
+  if(cfg.elementsMode==="none")options.elements=[];
+  else if(cfg.elementsMode==="custom")options.elements=(cfg.elements||[]).slice();
+  if(cfg.rubric)options.rubric=cfg.rubric;
+  if(cfg.distinguishIsomers)options.distinguishIsomers=true;
+
+  /*
+   * The keyboard writes the student's answer into the question's own answer box (hidden).
+   * It is stored as the keyboard model (JSON): getValue() text loses subscripts and
+   * charges (2H2O reads back as ₂H₂O), the model reads back exactly.
+   */
+  if(cfg.answerField){
+    que=host.closest?host.closest(".que"):null;
+    input=que?que.querySelector("input[type=text],textarea"):null;
+    if(input){
+      input.style.display="none";
+      if(input.value){
+        try{options.value=JSON.parse(input.value);}catch(e){options.value=input.value;}
+      }
+      options.onChange=function(r){input.value=r.model.length?JSON.stringify(r.model):"";};
+    }
+  }
+
+  keyboard=new ChemicalKeyboard(options);
+
+  if(cfg.checkButton){
+    button=make("button","check","margin-top:8px;padding:5px 14px;font-size:16px;cursor:pointer");
+    button.type="button";
+    button.textContent=CHECK[lang];
+    summary=make("div","summary","margin-top:8px;font-weight:bold");
+    details=make("div","details");
+    section=make("div","feedback","display:none;margin-top:12px");
+    studentTitle=make("div",null,"font-weight:bold;margin:8px 0 4px");
+    studentDiv=make("div","student");
+    referenceTitle=make("div",null,"font-weight:bold;margin:8px 0 4px");
+    referenceDiv=make("div","reference");
+
+    section.appendChild(studentTitle);
+    section.appendChild(studentDiv);
+    section.appendChild(referenceTitle);
+    section.appendChild(referenceDiv);
+    host.appendChild(button);
+    host.appendChild(summary);
+    host.appendChild(details);
+    host.appendChild(section);
+
+    feedback.push(new ChemicalKeyboard({divId:studentDiv.id,language:lang,mode:"readonly-errors",value:""}));
+    feedback.push(new ChemicalKeyboard({divId:referenceDiv.id,language:lang,mode:"readonly-errors",value:""}));
+
+    button.addEventListener("click",function(){
+      var result=keyboard.compare();
+      feedback[0].setComparisonFeedback(result,"student",keyboard.getModel());
+      feedback[1].setComparisonFeedback(result,"reference",keyboard.correctAnswer);
+      studentTitle.textContent=ChemicalGrammar.feedbackText(lang,"studentAnswer");
+      referenceTitle.textContent=ChemicalGrammar.feedbackText(lang,"referenceAnswer");
+      section.style.display="block";
+      ChemicalGrammar.renderComparison(result,lang,summary,details);
+    });
+  }
+
+  return {keyboard:keyboard,feedback:feedback};
+}
+</script>
+<script>
+(function(){
+"use strict";
+
+/* ================================================================
+   Teacher interface texts
+   ================================================================ */
+const TEXT={
+  en:{
+    appTitle:"Chemical keyboard question builder",
+    teacherLanguage:"Interface language",
+    new:"New", open:"Open…", save:"Save", saveAs:"Save as…",
+    untitled:"Untitled", unsaved:"● Unsaved changes",
+    confirmDiscard:"Discard the unsaved changes?",
+    openError:"This file was not created by this tool, or it is damaged.",
+    secSettings:"Question settings",
+    studentLanguage:"Student language",
+    studentLanguageHint:"The student language is used for the keyboard tooltips, the element names and the feedback. The keyboards on this page use it too, so you see what the student will see.",
+    questionId:"Question id",
+    questionIdHint:"Letters, digits, - and _ only. Each question shown on the same Moodle page needs a different id.",
+    libraryUrl:"Keyboard library address (the local file by default)",
+    distinguishIsomers:"Treat isomers as different substances (compare by the written structural formula)",
+    checkButton:"Show the student a Check button with feedback",
+    answerField:"Copy the student's answer into the question's answer box, and hide that box",
+    secElements:"Element keys on the panel",
+    elementsDefault:"Default set", elementsCustom:"Custom", elementsNone:"None (the student uses the full list)",
+    elementsHint:"Every element can always be reached through the keyboard's full alphabetical list, so the panel may be empty.",
+    addFromReference:"Add the elements of the reference answer",
+    startFromDefault:"Start from the default set",
+    clearElements:"Clear",
+    elementsOrder:"Panel order (click an element to remove it).",
+    dragHint:"Drag to change the order.",
+    noElements:"No elements selected.",
+    secReference:"Reference answer",
+    keyboardHint:"Click the box to open the keyboard.",
+    referenceEmpty:"Enter the reference answer.",
+    referenceOk:"The reference answer is valid.",
+    checkReference:"Check the reference answer",
+    referenceBalanced:"The equation is valid and balanced.",
+    referenceFormulaOk:"The formula is valid.",
+    referenceProblemsTitle:"Problems in the reference answer:",
+    refElementsTitle:"Elements in the reference answer:",
+    refElementsNone:"none yet",
+    legendOnPanel:"on the panel",
+    legendFullList:"not on the panel: the student reaches it through the full list",
+    secInitial:"Initial student answer",
+    initialHint:"Optional. The student starts from this answer and completes it. Leave it empty to start from an empty box.",
+    copyFromReference:"Copy from the reference answer",
+    clearAnswer:"Clear",
+    secRubric:"Grading rubric",
+    useRubric:"Grade with a rubric",
+    rubricHint:"Penalties are percent of the question's score; the score never goes below 0. Errors in a category with no penalty are still shown as feedback. A syntax error always gives 0.",
+    colCategory:"Category", colRule:"Counted",
+    colPenalty:"Penalty", colMax:"Maximum", colAllMissing:"If no substance has a state",
+    ruleNone:"No penalty", ruleOnce:"Once", ruleEach:"Per error",
+    noLimit:"none",
+    resetRubric:"Restore the sample values",
+    cat:{
+      answerType:"Wrong answer type (e.g. a formula instead of an equation)",
+      unknownElement:"Unknown element",
+      substances:"Wrong, missing or extra substance",
+      coefficients:"Wrong coefficient",
+      scaledCoefficients:"All coefficients a multiple of the reference",
+      balance:"Unbalanced atom (not caused by another error)",
+      states:"States of matter",
+      charges:"Charges",
+      arrow:"Arrow",
+      conditions:"Reaction conditions",
+      notation:"Notation (e.g. a redundant 1)"
+    },
+    secTry:"Try it as a student",
+    tryHint:"This is the student's view, in the student language. What you type here is not saved.",
+    restartTry:"Restart",
+    secOutput:"Moodle code",
+    outputHint:"Paste this into the Moodle question text, in the editor's HTML (source code) view. Save the file too, so you can open and change the question later.",
+    copy:"Copy", copied:"Copied.",
+    issuesTitle:"Before pasting into Moodle:",
+    ready:"Ready to paste into Moodle.",
+    issueId:"The question id may contain only letters, digits, - and _.",
+    issueUrl:"Enter the keyboard library URL.",
+    issueReference:"The reference answer has errors.",
+    issueNoPenalty:"Grading is on but no category has a penalty, so every answer that can be analyzed scores 100."
+  },
+  he:{
+    appTitle:"בניית שאלה עם מקלדת כימית",
+    teacherLanguage:"שפת הממשק",
+    new:"חדש", open:"פתיחה…", save:"שמירה", saveAs:"שמירה בשם…",
+    untitled:"ללא שם", unsaved:"● יש שינויים שלא נשמרו",
+    confirmDiscard:"לבטל את השינויים שלא נשמרו?",
+    openError:"הקובץ לא נוצר בכלי הזה, או שהוא פגום.",
+    secSettings:"הגדרות השאלה",
+    studentLanguage:"שפת התלמיד",
+    studentLanguageHint:"שפת התלמיד משמשת לתיאורי המקשים, לשמות היסודות ולמשוב. גם המקלדות בעמוד הזה משתמשות בה, כך שרואים בדיוק את מה שהתלמיד יראה.",
+    questionId:"מזהה השאלה",
+    questionIdHint:"אותיות, ספרות, ‎-‎ ו־_ בלבד. כל שאלה שמוצגת באותו עמוד ב־Moodle צריכה מזהה אחר.",
+    libraryUrl:"כתובת ספריית המקלדת (כברירת מחדל, הקובץ המקומי)",
+    distinguishIsomers:"להתייחס לאיזומרים כחומרים שונים (השוואה לפי נוסחת המבנה הכתובה)",
+    checkButton:"להציג לתלמיד כפתור בדיקה עם משוב",
+    answerField:"להעתיק את תשובת התלמיד לתיבת התשובה של השאלה, ולהסתיר את התיבה",
+    secElements:"מקשי היסודות בלוח",
+    elementsDefault:"ברירת המחדל", elementsCustom:"בחירה אישית", elementsNone:"ללא (התלמיד משתמש ברשימה המלאה)",
+    elementsHint:"כל יסוד זמין תמיד דרך הרשימה המלאה של המקלדת, הממוינת לפי האלף־בית, ולכן הלוח יכול להיות ריק.",
+    addFromReference:"הוספת היסודות שבתשובת הייחוס",
+    startFromDefault:"התחלה מברירת המחדל",
+    clearElements:"ניקוי",
+    elementsOrder:"הסדר בלוח (לחיצה על יסוד מסירה אותו).",
+    dragHint:"גרירה משנה את הסדר.",
+    noElements:"לא נבחרו יסודות.",
+    secReference:"תשובת הייחוס",
+    keyboardHint:"לחיצה על התיבה פותחת את המקלדת.",
+    referenceEmpty:"יש להזין את תשובת הייחוס.",
+    referenceOk:"תשובת הייחוס תקינה.",
+    checkReference:"בדיקת תשובת הייחוס",
+    referenceBalanced:"המשוואה תקינה ומאוזנת.",
+    referenceFormulaOk:"הנוסחה תקינה.",
+    referenceProblemsTitle:"בעיות בתשובת הייחוס:",
+    refElementsTitle:"היסודות בתשובת הייחוס:",
+    refElementsNone:"עדיין אין",
+    legendOnPanel:"בלוח",
+    legendFullList:"לא בלוח: התלמיד יגיע אליו דרך הרשימה המלאה",
+    secInitial:"תשובה התחלתית לתלמיד",
+    initialHint:"לא חובה. התלמיד מתחיל מהתשובה הזו ומשלים אותה. אפשר להשאיר ריק כדי שהתלמיד יתחיל מתיבה ריקה.",
+    copyFromReference:"העתקה מתשובת הייחוס",
+    clearAnswer:"ניקוי",
+    secRubric:"מחוון",
+    useRubric:"מתן ציון לפי מחוון",
+    rubricHint:"ההורדות הן באחוזים מציון השאלה; הציון אינו יורד מתחת ל־0. שגיאות בקטגוריה ללא הורדה עדיין מוצגות במשוב. שגיאת תחביר נותנת תמיד 0.",
+    colCategory:"קטגוריה", colRule:"אופן הספירה",
+    colPenalty:"הורדה", colMax:"מקסימום", colAllMissing:"אם לאף חומר אין מצב צבירה",
+    ruleNone:"ללא הורדה", ruleOnce:"פעם אחת", ruleEach:"לכל שגיאה",
+    noLimit:"אין",
+    resetRubric:"שחזור ערכי הדוגמה",
+    cat:{
+      answerType:"סוג תשובה שגוי (למשל נוסחה במקום משוואה)",
+      unknownElement:"יסוד לא מוכר",
+      substances:"חומר שגוי, חסר או מיותר",
+      coefficients:"מקדם שגוי",
+      scaledCoefficients:"כל המקדמים כפולה של מקדמי הייחוס",
+      balance:"אטום לא מאוזן (שלא נובע משגיאה אחרת)",
+      states:"מצבי צבירה",
+      charges:"מטענים",
+      arrow:"חץ",
+      conditions:"תנאי התגובה",
+      notation:"כתיב (למשל 1 מיותר)"
+    },
+    secTry:"ניסיון כתלמיד",
+    tryHint:"זה מה שהתלמיד רואה, בשפת התלמיד. מה שמוקלד כאן לא נשמר.",
+    restartTry:"התחלה מחדש",
+    secOutput:"קוד ל־Moodle",
+    outputHint:"יש להדביק את הקוד בטקסט השאלה ב־Moodle, בתצוגת ה־HTML (קוד המקור) של העורך. כדאי גם לשמור את הקובץ, כדי לפתוח ולשנות את השאלה בהמשך.",
+    copy:"העתקה", copied:"הועתק.",
+    issuesTitle:"לפני ההדבקה ב־Moodle:",
+    ready:"מוכן להדבקה ב־Moodle.",
+    issueId:"מזהה השאלה יכול להכיל רק אותיות, ספרות, ‎-‎ ו־_.",
+    issueUrl:"יש להזין את כתובת ספריית המקלדת.",
+    issueReference:"בתשובת הייחוס יש שגיאות.",
+    issueNoPenalty:"מתן הציון פעיל, אבל לאף קטגוריה אין הורדה, ולכן כל תשובה שאפשר לנתח תקבל 100."
+  },
+  ar:{
+    appTitle:"إنشاء سؤال بلوحة مفاتيح كيميائية",
+    teacherLanguage:"لغة الواجهة",
+    new:"جديد", open:"فتح…", save:"حفظ", saveAs:"حفظ باسم…",
+    untitled:"بدون عنوان", unsaved:"● توجد تغييرات غير محفوظة",
+    confirmDiscard:"تجاهل التغييرات غير المحفوظة؟",
+    openError:"هذا الملف لم يُنشأ بهذه الأداة، أو أنه تالف.",
+    secSettings:"إعدادات السؤال",
+    studentLanguage:"لغة الطالب",
+    studentLanguageHint:"تُستخدم لغة الطالب لتلميحات المفاتيح وأسماء العناصر والتغذية الراجعة. تستخدمها لوحات المفاتيح في هذه الصفحة أيضًا، فترى ما سيراه الطالب.",
+    questionId:"معرّف السؤال",
+    questionIdHint:"أحرف وأرقام و- و_ فقط. يحتاج كل سؤال يُعرض في صفحة Moodle نفسها إلى معرّف مختلف.",
+    libraryUrl:"عنوان مكتبة لوحة المفاتيح (الملف المحلي افتراضيًا)",
+    distinguishIsomers:"اعتبار المتصاوغات مواد مختلفة (المقارنة حسب الصيغة البنائية المكتوبة)",
+    checkButton:"عرض زر تحقق مع تغذية راجعة للطالب",
+    answerField:"نسخ إجابة الطالب إلى مربع الإجابة في السؤال، وإخفاء هذا المربع",
+    secElements:"مفاتيح العناصر في اللوحة",
+    elementsDefault:"المجموعة الافتراضية", elementsCustom:"اختيار مخصص", elementsNone:"بدون (يستخدم الطالب القائمة الكاملة)",
+    elementsHint:"يمكن دائمًا الوصول إلى كل عنصر من خلال القائمة الكاملة المرتبة أبجديًا في لوحة المفاتيح، لذا يمكن أن تكون اللوحة فارغة.",
+    addFromReference:"إضافة عناصر الإجابة المرجعية",
+    startFromDefault:"البدء من المجموعة الافتراضية",
+    clearElements:"مسح",
+    elementsOrder:"الترتيب في اللوحة (انقر على عنصر لإزالته).",
+    dragHint:"اسحب لتغيير الترتيب.",
+    noElements:"لم يتم اختيار عناصر.",
+    secReference:"الإجابة المرجعية",
+    keyboardHint:"انقر على المربع لفتح لوحة المفاتيح.",
+    referenceEmpty:"أدخل الإجابة المرجعية.",
+    referenceOk:"الإجابة المرجعية صحيحة.",
+    checkReference:"فحص الإجابة المرجعية",
+    referenceBalanced:"المعادلة صحيحة وموزونة.",
+    referenceFormulaOk:"الصيغة صحيحة.",
+    referenceProblemsTitle:"مشكلات في الإجابة المرجعية:",
+    refElementsTitle:"العناصر في الإجابة المرجعية:",
+    refElementsNone:"لا توجد بعد",
+    legendOnPanel:"في اللوحة",
+    legendFullList:"ليس في اللوحة: يصل إليه الطالب من خلال القائمة الكاملة",
+    secInitial:"الإجابة الأولية للطالب",
+    initialHint:"اختياري. يبدأ الطالب من هذه الإجابة ويكملها. اتركها فارغة ليبدأ الطالب من مربع فارغ.",
+    copyFromReference:"النسخ من الإجابة المرجعية",
+    clearAnswer:"مسح",
+    secRubric:"سلم التقدير",
+    useRubric:"التقدير وفق سلم التقدير",
+    rubricHint:"الخصومات نسبة مئوية من درجة السؤال، والدرجة لا تقل عن 0. الأخطاء في فئة بلا خصم تظهر في التغذية الراجعة. خطأ الصياغة يعطي دائمًا 0.",
+    colCategory:"الفئة", colRule:"طريقة الاحتساب",
+    colPenalty:"الخصم", colMax:"الحد الأقصى", colAllMissing:"إذا لم تُذكر حالة أي مادة",
+    ruleNone:"بدون خصم", ruleOnce:"مرة واحدة", ruleEach:"لكل خطأ",
+    noLimit:"لا يوجد",
+    resetRubric:"استعادة القيم النموذجية",
+    cat:{
+      answerType:"نوع إجابة خاطئ (مثل صيغة بدل معادلة)",
+      unknownElement:"عنصر غير معروف",
+      substances:"مادة خاطئة أو ناقصة أو زائدة",
+      coefficients:"معامل خاطئ",
+      scaledCoefficients:"جميع المعاملات مضاعف لمعاملات الإجابة المرجعية",
+      balance:"ذرة غير موزونة (لا تنتج عن خطأ آخر)",
+      states:"حالات المادة",
+      charges:"الشحنات",
+      arrow:"السهم",
+      conditions:"ظروف التفاعل",
+      notation:"الكتابة (مثل 1 زائد)"
+    },
+    secTry:"التجربة كطالب",
+    tryHint:"هذا ما يراه الطالب، بلغة الطالب. ما تكتبه هنا لا يُحفظ.",
+    restartTry:"البدء من جديد",
+    secOutput:"رمز Moodle",
+    outputHint:"الصق هذا الرمز في نص السؤال في Moodle، في عرض HTML (الشيفرة المصدرية) للمحرر. احفظ الملف أيضًا لتتمكن من فتح السؤال وتعديله لاحقًا.",
+    copy:"نسخ", copied:"تم النسخ.",
+    issuesTitle:"قبل اللصق في Moodle:",
+    ready:"جاهز للصق في Moodle.",
+    issueId:"يمكن أن يحتوي معرّف السؤال على أحرف وأرقام و- و_ فقط.",
+    issueUrl:"أدخل عنوان مكتبة لوحة المفاتيح.",
+    issueReference:"في الإجابة المرجعية أخطاء.",
+    issueNoPenalty:"التقدير مفعّل لكن لا توجد فئة عليها خصم، لذا تحصل كل إجابة يمكن تحليلها على 100."
+  }
+};
+
+/* Mirrors COMMON in chemical-keyboard-v4.js (the panel when config.elements is not given). */
+const DEFAULT_ELEMENTS=["H","C","N","O","Na","Mg","Al","Cl","K","Ca","Fe","Cu","Zn","Ag"];
+const ALL_ELEMENTS=ChemicalGrammar.elements;   // in atomic-number order
+
+/* Rubric categories the teacher can set ("syntax" is fixed by the system: 0). */
+const RUBRIC_CATEGORIES=["answerType","unknownElement","substances","coefficients","scaledCoefficients",
+  "balance","states","charges","arrow","conditions","notation"];
+const PER_ERROR_ONLY_EXTRA={states:true};   // states also has allMissing
+
+/* The sample rubric of chemical-kbd-v4-test.html */
+const SAMPLE_RUBRIC={
+  answerType:100,
+  unknownElement:50,
+  substances:25,
+  coefficients:{each:10,max:20},
+  scaledCoefficients:15,
+  states:{each:5,max:15,allMissing:20},
+  charges:{each:10,max:20},
+  arrow:10,
+  conditions:5
+};
+
+/* For now the library is used from the local folder of this tool; later it moves to GitHub. */
+const DEFAULT_LIBRARY_URL=new URL("chemical-keyboard-v4.js",location.href).href;
+
+const FILE_TOOL="chemkbd-question-builder";
+const FILE_VERSION=1;
+
+/* ================================================================
+   State
+   ================================================================ */
+let teacherLanguage=loadPreference("teacherLanguage","en");
+let state=newState();
+let dirty=false;
+let fileName=null;
+let fileHandle=null;     // File System Access API handle, when the browser has it
+let building=false;      // true while keyboards are (re)built: their onChange is not an edit
+
+let referenceKeyboard=null;
+let initialKeyboard=null;
+let tryRun=null;
+
+function newState(){
+  return {
+    questionId:"q1",
+    libraryUrl:DEFAULT_LIBRARY_URL,
+    language:"he",
+    distinguishIsomers:false,
+    checkButton:true,
+    answerField:false,
+    elementsMode:"default",
+    elements:[],
+    correctAnswer:"",
+    value:"",
+    rubricEnabled:true,
+    rubric:rubricRulesFrom(SAMPLE_RUBRIC)
+  };
+}
+
+function loadPreference(key,fallback){
+  try{ return localStorage.getItem("chemkbdBuilder."+key)||fallback; }catch(e){ return fallback; }
+}
+function savePreference(key,value){
+  try{ localStorage.setItem("chemkbdBuilder."+key,value); }catch(e){}
+}
+
+const $=id=>document.getElementById(id);
+const t=key=>(TEXT[teacherLanguage]||TEXT.en)[key];
+
+/* ================================================================
+   Rubric: editor rows <-> library format
+   rule in the editor: { mode: "none" | "once" | "each", value, max, allMissing }
+   ================================================================ */
+function rubricRulesFrom(rubric){
+  const rules={};
+  RUBRIC_CATEGORIES.forEach(category=>{
+    const r=rubric?rubric[category]:undefined;
+    if(typeof r==="number") rules[category]={mode:"once",value:r,max:"",allMissing:""};
+    else if(r&&typeof r==="object") rules[category]={
+      mode:"each",
+      value:Number(r.each)||0,
+      max:r.max!==undefined?r.max:"",
+      allMissing:r.allMissing!==undefined?r.allMissing:""
+    };
+    else rules[category]={mode:"none",value:10,max:"",allMissing:""};
+  });
+  return rules;
+}
+
+function rubricForLibrary(){
+  if(!state.rubricEnabled) return null;
+  const rubric={};
+  RUBRIC_CATEGORIES.forEach(category=>{
+    const rule=state.rubric[category];
+    if(rule.mode==="once") rubric[category]=clampPercent(rule.value);
+    else if(rule.mode==="each"){
+      const r={each:clampPercent(rule.value)};
+      if(rule.max!==""&&rule.max!==null) r.max=clampPercent(rule.max);
+      if(PER_ERROR_ONLY_EXTRA[category]&&rule.allMissing!==""&&rule.allMissing!==null) r.allMissing=clampPercent(rule.allMissing);
+      rubric[category]=r;
+    }
+  });
+  return rubric;
+}
+
+function clampPercent(v){
+  const n=Number(v);
+  if(!isFinite(n)) return 0;
+  return Math.max(0,Math.min(100,n));
+}
+
+/* ================================================================
+   Configuration: what goes into the file / snippet
+   ================================================================ */
+function questionConfig(){
+  const cfg={
+    tool:FILE_TOOL,
+    formatVersion:FILE_VERSION,
+    questionId:state.questionId,
+    libraryUrl:state.libraryUrl,
+    language:state.language,
+    elementsMode:state.elementsMode,
+    correctAnswer:state.correctAnswer,
+    value:state.value,
+    checkButton:state.checkButton,
+    answerField:state.answerField
+  };
+  if(state.elementsMode==="custom") cfg.elements=state.elements.slice();
+  if(state.distinguishIsomers) cfg.distinguishIsomers=true;
+  const rubric=rubricForLibrary();
+  if(rubric) cfg.rubric=rubric;
+  return cfg;
+}
+
+function applyConfig(cfg){
+  const s=newState();
+  if(typeof cfg.questionId==="string") s.questionId=cfg.questionId;
+  if(typeof cfg.libraryUrl==="string"&&cfg.libraryUrl) s.libraryUrl=cfg.libraryUrl;
+  if(["he","ar","en"].indexOf(cfg.language)>=0) s.language=cfg.language;
+  if(["default","custom","none"].indexOf(cfg.elementsMode)>=0) s.elementsMode=cfg.elementsMode;
+  if(Array.isArray(cfg.elements)) s.elements=cfg.elements.filter(e=>ALL_ELEMENTS.indexOf(e)>=0);
+  s.correctAnswer=typeof cfg.correctAnswer==="string"?cfg.correctAnswer:"";
+  s.value=typeof cfg.value==="string"?cfg.value:"";
+  s.distinguishIsomers=cfg.distinguishIsomers===true;
+  s.checkButton=cfg.checkButton!==false;
+  s.answerField=cfg.answerField===true;
+  s.rubricEnabled=!!cfg.rubric;
+  s.rubric=rubricRulesFrom(cfg.rubric||SAMPLE_RUBRIC);
+  state=s;
+}
+
+function configId(){ return "chemkbd-"+state.questionId; }
+
+function snippet(){
+  const id=configId();
+  const json=JSON.stringify(questionConfig(),null,1).replace(/</g,"\\u003c");
+  return [
+    "<!-- Chemical keyboard question \""+state.questionId+"\". Created with the chemical keyboard question builder:",
+    "     to change it, open the saved file in the builder. Do not edit by hand. -->",
+    "<div id=\""+id+"\"></div>",
+    "<script type=\"application/json\" id=\""+id+"-config\">"+json+"<\/script>",
+    "<script>",
+    "(function(){",
+    "var HOST_ID="+JSON.stringify(id)+",LIBRARY_URL="+JSON.stringify(state.libraryUrl)+";",
+    chemkbdRun.toString(),
+    "function start(){",
+    "  var host=document.getElementById(HOST_ID);",
+    "  chemkbdRun(host,JSON.parse(document.getElementById(HOST_ID+\"-config\").textContent));",
+    "}",
+    "/* the library is loaded once for all the keyboard questions on the page */",
+    "if(window.ChemicalKeyboard){start();return;}",
+    "var queue=window.__chemkbdQueue=window.__chemkbdQueue||[];",
+    "queue.push(start);",
+    "if(window.__chemkbdLoading)return;",
+    "window.__chemkbdLoading=true;",
+    "var script=document.createElement(\"script\");",
+    "script.src=LIBRARY_URL;",
+    "script.onload=function(){while(queue.length)queue.shift()();};",
+    "document.head.appendChild(script);",
+    "})();",
+    "<\/script>"
+  ].join("\n");
+}
+
+/* Reads the configuration back from a saved snippet (or a plain JSON file). */
+function parseFile(text){
+  let json=null;
+  const match=/<script[^>]*type=["']application\/json["'][^>]*>([\s\S]*?)<\/script>/i.exec(text);
+  if(match) json=match[1];
+  else if(/^\s*\{/.test(text)) json=text;
+  if(!json) throw new Error("no configuration");
+  const cfg=JSON.parse(json);
+  if(!cfg||cfg.tool!==FILE_TOOL) throw new Error("not a builder file");
+  return cfg;
+}
+
+/* ================================================================
+   Keyboards
+   ================================================================ */
+function removeKeyboard(keyboard){
+  if(!keyboard) return;
+  [keyboard.root,keyboard.elementPanel,keyboard.atomPanel].forEach(el=>{
+    if(el&&el.parentNode) el.parentNode.removeChild(el);
+  });
+}
+
+function keyboardElements(){
+  if(state.elementsMode==="none") return [];
+  if(state.elementsMode==="custom") return state.elements.slice();
+  return undefined;
+}
+
+/* Only one keyboard window open at a time: opening one closes the others. */
+function openKeyboards(){
+  return [referenceKeyboard,initialKeyboard,tryRun&&tryRun.keyboard].filter(Boolean);
+}
+function oneWindowAtATime(keyboard){
+  const show=keyboard.show;
+  keyboard.show=function(){
+    openKeyboards().forEach(other=>{ if(other!==keyboard) other.hide(); });
+    return show.apply(keyboard,arguments);
+  };
+}
+
+/*
+ * Keyboard model -> the value text that setValue reads (H_{2}O, SO_{4}^{2-}, NaCl(aq), →[Δ]).
+ * getValue() cannot be used: it drops the sub/sup levels (2H_{2}O comes back as ₂H₂O).
+ * Same as showChars in chemTests.js, whose setValue cases check the round trip.
+ */
+function modelToValue(chars){
+  let out="";
+  let i=0;
+  while(i<chars.length){
+    const c=chars[i];
+    if(c.kind==="state"){ out+=c.ch; i+=1; continue; }
+    if(c.script==="sub"||c.script==="sup"){
+      const script=c.script;
+      let run="";
+      while(i<chars.length&&chars[i].script===script&&chars[i].kind!=="state"){ run+=chars[i].ch; i+=1; }
+      out+=(script==="sub"?"_{":"^{")+run+"}";
+      continue;
+    }
+    out+=c.ch;
+    if(c.condition&&c.condition.length) out+="["+modelToValue(c.condition)+"]";
+    i+=1;
+  }
+  return out;
+}
+
+function makeEditor(hostId,value,onValue){
+  const options={divId:hostId,language:state.language,mode:"edit",value:value,
+    onChange:r=>{ if(!building) onValue(modelToValue(r.model)); }};
+  const elements=keyboardElements();
+  if(elements) options.elements=elements;
+  const keyboard=new ChemicalKeyboard(options);
+  oneWindowAtATime(keyboard);
+  return keyboard;
+}
+
+function buildKeyboards(){
+  building=true;
+  removeKeyboard(referenceKeyboard);
+  removeKeyboard(initialKeyboard);
+  referenceKeyboard=makeEditor("referenceHost",state.correctAnswer,v=>{
+    state.correctAnswer=v; clearReferenceCheck(); changed({try:"sync"});
+  });
+  initialKeyboard=makeEditor("initialHost",state.value,v=>{
+    state.value=v; changed(); buildTry();   // the student starts from the initial answer
+  });
+  building=false;
+  buildTry();
+}
+
+function buildTry(){
+  if(tryRun){
+    removeKeyboard(tryRun.keyboard);
+    tryRun.feedback.forEach(removeKeyboard);
+  }
+  const cfg=questionConfig();
+  cfg.checkButton=true;      // the teacher always gets the check button here
+  cfg.answerField=false;
+  building=true;
+  tryRun=chemkbdRun($("tryHost"),cfg);
+  building=false;
+  oneWindowAtATime(tryRun.keyboard);
+}
+
+/* Reference answer / rubric / isomers changed: the "try" keyboard checks against the new values. */
+function syncTry(){
+  if(!tryRun) return;
+  const keyboard=tryRun.keyboard;
+  keyboard.setCorrectAnswer(state.correctAnswer);
+  keyboard.setRubric(rubricForLibrary());
+  keyboard.config.distinguishIsomers=state.distinguishIsomers;
+}
+
+/* ================================================================
+   Elements panel editor
+   ================================================================ */
+function elementPosition(z){   // [row, column]; rows 9 and 10 are the f-block
+  if(z===1) return [1,1];
+  if(z===2) return [1,18];
+  if(z<=10) return [2,z<=4?z-2:z+8];
+  if(z<=18) return [3,z<=12?z-10:z];
+  if(z<=36) return [4,z-18];
+  if(z<=54) return [5,z-36];
+  if(z<=56) return [6,z-54];
+  if(z<=71) return [9,z-54];
+  if(z<=86) return [6,z-68];
+  if(z<=88) return [7,z-86];
+  if(z<=103) return [10,z-86];
+  return [7,z-100];
+}
+
+function buildPeriodicTable(){
+  const grid=$("periodic");
+  grid.textContent="";
+  ALL_ELEMENTS.forEach((symbol,i)=>{
+    const pos=elementPosition(i+1);
+    const b=document.createElement("button");
+    b.type="button";
+    b.textContent=symbol;
+    b.title=symbol+" ("+(i+1)+")";
+    b.dataset.symbol=symbol;
+    b.style.gridRow=String(pos[0]);
+    b.style.gridColumn=String(pos[1]);
+    b.addEventListener("click",()=>toggleElement(symbol));
+    grid.appendChild(b);
+  });
+  const gap=document.createElement("div");
+  gap.className="gap";
+  gap.style.gridRow="8";
+  grid.appendChild(gap);
+}
+
+function toggleElement(symbol){
+  const i=state.elements.indexOf(symbol);
+  if(i>=0) state.elements.splice(i,1);
+  else state.elements.push(symbol);
+  elementsChanged();
+}
+
+function addElements(list){
+  list.forEach(e=>{ if(state.elements.indexOf(e)<0) state.elements.push(e); });
+}
+
+function elementsChanged(){
+  renderElements();
+  buildKeyboards();
+  changed();
+}
+
+function renderElements(){
+  document.querySelectorAll("input[name=elementsMode]").forEach(r=>{ r.checked=r.value===state.elementsMode; });
+  $("customElements").classList.toggle("disabled",state.elementsMode!=="custom");
+
+  document.querySelectorAll("#periodic button").forEach(b=>{
+    b.classList.toggle("picked",state.elements.indexOf(b.dataset.symbol)>=0);
+  });
+  renderReferenceElements();
+
+  const chips=$("chips");
+  chips.textContent="";
+  if(!state.elements.length){
+    const empty=document.createElement("span");
+    empty.className="empty";
+    empty.textContent=t("noElements");
+    chips.appendChild(empty);
+    return;
+  }
+  state.elements.forEach((symbol,index)=>{
+    const chip=document.createElement("span");
+    chip.className="chip";
+    chip.textContent=symbol;
+    chip.draggable=true;
+    chip.addEventListener("click",()=>toggleElement(symbol));
+    chip.addEventListener("dragstart",e=>{
+      chip.classList.add("dragging");
+      e.dataTransfer.setData("text/plain",String(index));
+      e.dataTransfer.effectAllowed="move";
+    });
+    chip.addEventListener("dragend",()=>chip.classList.remove("dragging"));
+    chip.addEventListener("dragover",e=>{ e.preventDefault(); e.dataTransfer.dropEffect="move"; });
+    chip.addEventListener("drop",e=>{
+      e.preventDefault();
+      const from=Number(e.dataTransfer.getData("text/plain"));
+      if(!isFinite(from)||from===index) return;
+      const moved=state.elements.splice(from,1)[0];
+      state.elements.splice(index,0,moved);
+      elementsChanged();
+    });
+    chips.appendChild(chip);
+  });
+}
+
+/* Element symbols in an answer (reaction conditions in [...] and states are skipped). */
+function elementsIn(value){
+  const text=(value||"").replace(/\[[^\]]*\]/g," ").replace(/\((s|l|g|aq)\)/g," ");
+  const found=[];
+  const re=/[A-Z][a-z]?/g;
+  let m;
+  while((m=re.exec(text))){
+    let symbol=m[0];
+    if(ALL_ELEMENTS.indexOf(symbol)<0&&symbol.length===2){
+      symbol=symbol[0];
+      re.lastIndex-=1;
+    }
+    if(ALL_ELEMENTS.indexOf(symbol)>=0&&found.indexOf(symbol)<0) found.push(symbol);
+  }
+  return found;
+}
+
+function panelElements(){
+  if(state.elementsMode==="default") return DEFAULT_ELEMENTS;
+  if(state.elementsMode==="custom") return state.elements;
+  return null;      // none: the student always uses the full list, nothing to report
+}
+
+/* ================================================================
+   Rubric editor
+   ================================================================ */
+function renderRubric(){
+  $("useRubric").checked=state.rubricEnabled;
+  $("rubricBody").classList.toggle("disabled",!state.rubricEnabled);
+
+  /*
+   * One row per category, one column per value: how it is counted | penalty | maximum | no states at all.
+   * A value that does not apply to the chosen way of counting shows "—"; "no states at all" exists only for states.
+   */
+  const body=$("rubricRows");
+  body.textContent="";
+  RUBRIC_CATEGORIES.forEach(category=>{
+    const rule=state.rubric[category];
+    const tr=document.createElement("tr");
+    if(rule.mode==="none") tr.className="off";
+
+    const name=document.createElement("td");
+    name.className="category";
+    name.textContent=t("cat")[category];
+    tr.appendChild(name);
+
+    const modeCell=document.createElement("td");
+    const mode=document.createElement("select");
+    [["none","ruleNone"],["once","ruleOnce"],["each","ruleEach"]].forEach(([value,key])=>{
+      const o=document.createElement("option");
+      o.value=value;
+      o.textContent=t(key);
+      mode.appendChild(o);
+    });
+    mode.value=rule.mode;
+    mode.addEventListener("change",()=>{ rule.mode=mode.value; renderRubric(); rubricChanged(); });
+    modeCell.appendChild(mode);
+    tr.appendChild(modeCell);
+
+    tr.appendChild(valueCell(rule.mode!=="none"?percentInput(rule,"value",false):null));
+    tr.appendChild(valueCell(rule.mode==="each"?percentInput(rule,"max",true,t("noLimit")):null));
+    tr.appendChild(valueCell(
+      rule.mode==="each"&&PER_ERROR_ONLY_EXTRA[category]?percentInput(rule,"allMissing",true,t("noLimit")):null,
+      !PER_ERROR_ONLY_EXTRA[category]));
+
+    body.appendChild(tr);
+  });
+}
+
+/* A table cell with a value, "—" when it does not apply now, or nothing when it never applies to the category. */
+function valueCell(content,never){
+  const td=document.createElement("td");
+  td.className="value";
+  if(content) td.appendChild(content);
+  else if(!never){
+    const na=document.createElement("span");
+    na.className="na";
+    na.textContent="—";
+    td.appendChild(na);
+  }
+  return td;
+}
+
+/* The number and its "%" in a left-to-right box, so the "%" is on the right in every language. */
+function percentInput(rule,key,optional,placeholder){
+  const box=document.createElement("span");
+  box.className="pct";
+  box.dir="ltr";
+  const input=document.createElement("input");
+  input.type="number";
+  input.min="0";
+  input.max="100";
+  input.step="1";
+  if(placeholder) input.placeholder=placeholder;
+  input.value=rule[key];
+  input.addEventListener("input",()=>{
+    rule[key]=input.value===""&&optional?"":clampPercent(input.value);
+    rubricChanged();
+  });
+  box.appendChild(input);
+  box.appendChild(document.createTextNode("%"));
+  return box;
+}
+
+function rubricChanged(){ changed({try:"sync"}); }
+
+/* ================================================================
+   Checks, output, file state
+   ================================================================ */
+function renderReferenceStatus(){
+  const status=$("referenceStatus");
+  status.textContent="";
+  status.className="status";
+
+  if(!state.correctAnswer){
+    status.textContent=t("referenceEmpty");
+    status.classList.add("bad");
+    return;
+  }
+
+  const problems=referenceProblems();
+  if(problems.length){
+    status.classList.add("bad");
+    const ul=document.createElement("ul");
+    problems.forEach(p=>{ const li=document.createElement("li"); li.textContent=p; ul.appendChild(li); });
+    status.appendChild(document.createTextNode(t("issueReference")));
+    status.appendChild(ul);
+    return;
+  }
+
+  status.classList.add("ok");
+  status.appendChild(document.createTextNode(t("referenceOk")));
+}
+
+/*
+ * "Check the reference answer": the full check of the reference on its own - syntax, unknown
+ * elements and, for an equation, the balance of each atom. The reference is compared with itself,
+ * so the only errors left are those of the answer itself; the problem parts are marked on a
+ * read-only copy, as in the student's feedback.
+ */
+const REFERENCE_CHECK_CODES=["syntax-error","unknown-element","unbalanced-atom"];
+
+function checkReference(){
+  const box=$("referenceCheck");
+  const view=$("referenceCheckView");
+  clearReferenceCheck();
+
+  if(!state.correctAnswer){
+    box.className="status bad";
+    box.textContent=t("referenceEmpty");
+    return;
+  }
+
+  const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,teacherLanguage,
+    {distinguishIsomers:state.distinguishIsomers});
+  const problems=result.errors.filter(e=>REFERENCE_CHECK_CODES.indexOf(e.code)>=0);
+  const texts=[];
+  problems.forEach(e=>{ if(texts.indexOf(e.description)<0) texts.push(e.description); });
+
+  if(!texts.length){
+    box.className="status ok";
+    box.textContent=t(/[→⇌]/.test(state.correctAnswer)?"referenceBalanced":"referenceFormulaOk");
+    return;
+  }
+
+  box.className="status bad";
+  box.appendChild(document.createTextNode(t("referenceProblemsTitle")));
+  const ul=document.createElement("ul");
+  texts.forEach(text=>{ const li=document.createElement("li"); li.textContent=text; ul.appendChild(li); });
+  box.appendChild(ul);
+
+  const marked=new ChemicalKeyboard({divId:"referenceCheckView",language:state.language,mode:"readonly-errors",value:""});
+  marked.setComparisonFeedback(Object.assign({},result,{errors:problems}),"student",referenceKeyboard.getModel());
+  view.style.display="";
+}
+
+/* The check shows one version of the reference; it is cleared when the reference changes. */
+function clearReferenceCheck(){
+  $("referenceCheck").textContent="";
+  $("referenceCheck").className="status";
+  $("referenceCheckView").textContent="";
+}
+
+/*
+ * The elements of the reference answer, each marked "on the panel" or "only in the full list"
+ * (as a chip, and on the periodic table). Follows the reference answer as it is typed.
+ */
+function renderReferenceElements(){
+  const used=elementsIn(state.correctAnswer);
+  const onPanel=panelElements()||[];
+  const box=$("refElements");
+
+  box.textContent="";
+  if(!used.length){
+    const none=document.createElement("span");
+    none.className="empty";
+    none.textContent=t("refElementsNone");
+    box.appendChild(none);
+  }
+  used.forEach(symbol=>{
+    const chip=document.createElement("span");
+    chip.className="chip "+(onPanel.indexOf(symbol)>=0?"on-panel":"full-list");
+    chip.textContent=symbol;
+    chip.title=t(onPanel.indexOf(symbol)>=0?"legendOnPanel":"legendFullList");
+    box.appendChild(chip);
+  });
+
+  $("addFromReference").disabled=!used.some(symbol=>onPanel.indexOf(symbol)<0);
+
+  document.querySelectorAll("#periodic button").forEach(b=>{
+    b.classList.toggle("in-reference",used.indexOf(b.dataset.symbol)>=0);
+  });
+}
+
+/* Syntax errors and unknown elements of the reference answer, in the teacher's language. */
+function referenceProblems(){
+  if(!state.correctAnswer) return [];
+  const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,teacherLanguage,{});
+  const texts=[];
+  result.errors.forEach(e=>{
+    if((e.code==="syntax-error"||e.code==="unknown-element")&&texts.indexOf(e.description)<0) texts.push(e.description);
+  });
+  return texts;
+}
+
+function renderIssues(){
+  const issues=[];
+  if(!/^[A-Za-z0-9_-]+$/.test(state.questionId)) issues.push(t("issueId"));
+  if(!state.libraryUrl.trim()) issues.push(t("issueUrl"));
+  if(!state.correctAnswer) issues.push(t("referenceEmpty"));
+  else if(referenceProblems().length) issues.push(t("issueReference"));
+  const info=[];
+  if(state.rubricEnabled&&RUBRIC_CATEGORIES.every(c=>state.rubric[c].mode==="none")) info.push(t("issueNoPenalty"));
+
+  const box=$("issues");
+  box.textContent="";
+  box.className="status";
+  if(!issues.length&&!info.length){
+    box.classList.add("ok");
+    box.textContent=t("ready");
+    return;
+  }
+  if(issues.length) box.appendChild(document.createTextNode(t("issuesTitle")));
+  const ul=document.createElement("ul");
+  issues.forEach(text=>{ const li=document.createElement("li"); li.textContent=text; ul.appendChild(li); });
+  info.forEach(text=>{ const li=document.createElement("li"); li.className="info"; li.textContent=text; ul.appendChild(li); });
+  box.appendChild(ul);
+}
+
+function renderOutput(){
+  $("output").value=snippet();
+  $("copyStatus").textContent="";
+}
+
+function renderFileState(){
+  $("fileName").textContent=fileName||t("untitled");
+  $("dirtyMark").textContent=dirty?t("unsaved"):"";
+}
+
+function changed(options){
+  dirty=true;
+  if(options&&options.try==="sync") syncTry();
+  renderReferenceStatus();
+  renderReferenceElements();
+  renderIssues();
+  renderOutput();
+  renderFileState();
+}
+
+/* ================================================================
+   Whole page
+   ================================================================ */
+function renderTexts(){
+  document.documentElement.lang=teacherLanguage;
+  document.documentElement.dir=teacherLanguage==="en"?"ltr":"rtl";
+  document.title=t("appTitle");
+  document.querySelectorAll("[data-t]").forEach(el=>{ el.textContent=t(el.dataset.t); });
+  $("teacherLanguage").value=teacherLanguage;
+}
+
+function renderSettings(){
+  $("studentLanguage").value=state.language;
+  $("questionId").value=state.questionId;
+  $("libraryUrl").value=state.libraryUrl;
+  $("distinguishIsomers").checked=state.distinguishIsomers;
+  $("checkButton").checked=state.checkButton;
+  $("answerField").checked=state.answerField;
+}
+
+function renderAll(){
+  clearReferenceCheck();    // its texts are in the teacher's language; press the button again
+  renderTexts();
+  renderSettings();
+  renderElements();
+  renderRubric();
+  renderReferenceStatus();
+  renderIssues();
+  renderOutput();
+  renderFileState();
+}
+
+function loadState(cfg,name,handle){
+  if(cfg) applyConfig(cfg); else state=newState();
+  fileName=name||null;
+  fileHandle=handle||null;
+  dirty=false;
+  buildKeyboards();
+  renderAll();
+}
+
+/* ================================================================
+   Files
+   ================================================================ */
+function confirmDiscard(){
+  return !dirty||window.confirm(t("confirmDiscard"));
+}
+
+function openText(text,name,handle){
+  let cfg;
+  try{ cfg=parseFile(text); }
+  catch(e){ window.alert(t("openError")); return; }
+  loadState(cfg,name,handle);
+}
+
+async function openFile(){
+  if(!confirmDiscard()) return;
+  if(window.showOpenFilePicker){
+    try{
+      const [handle]=await window.showOpenFilePicker({types:[{description:"Text",accept:{"text/plain":[".txt"]}}]});
+      const file=await handle.getFile();
+      openText(await file.text(),file.name,handle);
+    }catch(e){ if(e.name!=="AbortError") window.alert(t("openError")); }
+    return;
+  }
+  $("fileInput").value="";
+  $("fileInput").click();
+}
+
+async function saveFile(saveAs){
+  const text=snippet();
+  const suggested=fileName||(state.questionId||"question")+".txt";
+
+  if(window.showSaveFilePicker){
+    try{
+      let handle=saveAs?null:fileHandle;
+      if(!handle) handle=await window.showSaveFilePicker({suggestedName:suggested,types:[{description:"Text",accept:{"text/plain":[".txt"]}}]});
+      const writable=await handle.createWritable();
+      await writable.write(text);
+      await writable.close();
+      fileHandle=handle;
+      fileName=handle.name;
+      dirty=false;
+      renderFileState();
+    }catch(e){ if(e.name!=="AbortError") window.alert(e.message); }
+    return;
+  }
+
+  /* No file system access: download the file. */
+  const blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=suggested;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  fileName=suggested;
+  dirty=false;
+  renderFileState();
+}
+
+/* ================================================================
+   Events
+   ================================================================ */
+$("teacherLanguage").addEventListener("change",e=>{
+  teacherLanguage=e.target.value;
+  savePreference("teacherLanguage",teacherLanguage);
+  renderAll();
+});
+
+$("studentLanguage").addEventListener("change",e=>{
+  state.language=e.target.value;
+  buildKeyboards();
+  changed();
+});
+$("questionId").addEventListener("input",e=>{ state.questionId=e.target.value.trim(); changed(); });
+$("libraryUrl").addEventListener("input",e=>{ state.libraryUrl=e.target.value.trim(); changed(); });
+$("distinguishIsomers").addEventListener("change",e=>{ state.distinguishIsomers=e.target.checked; changed({try:"sync"}); });
+$("checkButton").addEventListener("change",e=>{ state.checkButton=e.target.checked; changed(); });
+$("answerField").addEventListener("change",e=>{ state.answerField=e.target.checked; changed(); });
+
+document.querySelectorAll("input[name=elementsMode]").forEach(radio=>{
+  radio.addEventListener("change",()=>{
+    if(!radio.checked) return;
+    state.elementsMode=radio.value;
+    if(state.elementsMode==="custom"&&!state.elements.length) state.elements=DEFAULT_ELEMENTS.slice();
+    elementsChanged();
+  });
+});
+/* From the default set or "none" this switches to a custom panel: the current panel plus the missing elements. */
+$("addFromReference").addEventListener("click",()=>{
+  if(state.elementsMode!=="custom") state.elements=(panelElements()||[]).slice();
+  state.elementsMode="custom";
+  addElements(elementsIn(state.correctAnswer));
+  elementsChanged();
+});
+$("startFromDefault").addEventListener("click",()=>{ state.elements=DEFAULT_ELEMENTS.slice(); elementsChanged(); });
+$("clearElements").addEventListener("click",()=>{ state.elements=[]; elementsChanged(); });
+
+$("copyFromReference").addEventListener("click",()=>{ initialKeyboard.setValue(state.correctAnswer); });
+$("clearInitial").addEventListener("click",()=>{ initialKeyboard.setValue(""); });
+
+$("useRubric").addEventListener("change",e=>{ state.rubricEnabled=e.target.checked; renderRubric(); rubricChanged(); });
+$("resetRubric").addEventListener("click",()=>{ state.rubric=rubricRulesFrom(SAMPLE_RUBRIC); renderRubric(); rubricChanged(); });
+
+$("restartTry").addEventListener("click",buildTry);
+$("checkReference").addEventListener("click",checkReference);
+
+$("copyOutput").addEventListener("click",()=>{
+  const area=$("output");
+  area.select();
+  const done=()=>{ $("copyStatus").textContent=t("copied"); };
+  if(navigator.clipboard) navigator.clipboard.writeText(area.value).then(done,()=>{ document.execCommand("copy"); done(); });
+  else { document.execCommand("copy"); done(); }
+});
+
+$("newBtn").addEventListener("click",()=>{ if(confirmDiscard()) loadState(null); });
+$("openBtn").addEventListener("click",openFile);
+$("saveBtn").addEventListener("click",()=>saveFile(false));
+$("saveAsBtn").addEventListener("click",()=>saveFile(true));
+$("fileInput").addEventListener("change",e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  file.text().then(text=>openText(text,file.name,null));
+});
+
+window.addEventListener("beforeunload",e=>{
+  if(dirty){ e.preventDefault(); e.returnValue=""; }
+});
+
+/* ================================================================
+   Start
+   ================================================================ */
+buildPeriodicTable();
+loadState(null);
+})();
+</script>
+</body>
+</html>

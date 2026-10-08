@@ -161,6 +161,7 @@ var ERROR_TEXT={
     "missing-species":"{species} is required{onSide} but is missing.",
     "unexpected-species":"The reference answer does not contain {species}{onSide}.",
     "wrong-coefficient":"The coefficient of {species} is {actual}, but the reference coefficient is {expected}.",
+    "scaled-coefficients":"The equation is balanced, but all the coefficients are {factor} times the reference coefficients.",
     "wrong-arrow":"The equation uses the wrong reaction arrow.",
     "wrong-structure":"{species} has the same atoms as {referenceSpecies} but a different structure; they are different substances (isomers).",
     "missing-condition":"The reaction conditions above the arrow are missing; the reference answer specifies {expectedCondition}.",
@@ -191,6 +192,7 @@ var ERROR_TEXT={
     "missing-species":"החומר {species} צריך להופיע{onSide}, אך הוא חסר.",
     "unexpected-species":"תשובת הייחוס אינה מכילה את {species}{onSide}.",
     "wrong-coefficient":"המקדם של {species} הוא {actual}, אך המקדם בתשובת הייחוס הוא {expected}.",
+    "scaled-coefficients":"המשוואה מאוזנת, אך כל המקדמים גדולים פי {factor} מהמקדמים בתשובת הייחוס.",
     "wrong-arrow":"במשוואה נעשה שימוש בחץ תגובה שגוי.",
     "wrong-structure":"ל־{species} יש אותם אטומים כמו ל־{referenceSpecies}, אך מבנה שונה; אלה חומרים שונים (איזומרים).",
     "missing-condition":"חסרים תנאי התגובה מעל החץ; בתשובת הייחוס מופיע: {expectedCondition}.",
@@ -221,6 +223,7 @@ var ERROR_TEXT={
     "missing-species":"يجب أن تظهر المادة {species}{onSide}، لكنها مفقودة.",
     "unexpected-species":"لا تحتوي الإجابة المرجعية على {species}{onSide}.",
     "wrong-coefficient":"معامل {species} هو {actual}، لكن المعامل المرجعي هو {expected}.",
+    "scaled-coefficients":"المعادلة موزونة، لكن جميع المعاملات أكبر بـ {factor} مرات من معاملات الإجابة المرجعية.",
     "wrong-arrow":"تم استخدام سهم تفاعل غير صحيح.",
     "wrong-structure":"تحتوي {species} على نفس ذرات {referenceSpecies} لكن ببنية مختلفة؛ إنهما مادتان مختلفتان (متصاوغات).",
     "missing-condition":"شروط التفاعل فوق السهم مفقودة؛ تحدد الإجابة المرجعية: {expectedCondition}.",
@@ -311,6 +314,27 @@ var NOTE_TEXT={
     he:"ב־{species} המספר 1 במטען מיותר ויש להשמיט אותו.",
     ar:"في {species}، الرقم 1 في الشحنة زائد ويجب حذفه."
   }
+};
+
+/* Grading feedback (rubric): score, penalty lines and their categories. */
+var GRADE_TEXT={
+  score:{en:"Score: {score}%",he:"ציון: {score}%",ar:"الدرجة: {score}%"},
+  noPenalty:{en:"No penalty",he:"ללא הורדת נקודות",ar:"بدون خصم"},
+  notCounted:{en:"Not counted (caused by the error above)",he:"לא נספר (נובע מהשגיאה שמעליה)",ar:"لا يُحتسب (ناتج عن الخطأ أعلاه)"},
+  capped:{en:"maximum",he:"מקסימום",ar:"الحد الأقصى"},
+  allMissing:{en:"no states at all",he:"אין מצבי צבירה כלל",ar:"لا توجد حالات للمادة إطلاقًا"},
+  syntax:{en:"Syntax error",he:"שגיאת תחביר",ar:"خطأ في الصياغة"},
+  answerType:{en:"Answer type",he:"סוג התשובה",ar:"نوع الإجابة"},
+  unknownElement:{en:"Unknown element",he:"יסוד לא מוכר",ar:"عنصر غير معروف"},
+  substances:{en:"Substances",he:"חומרים",ar:"المواد"},
+  coefficients:{en:"Coefficients",he:"מקדמים",ar:"المعاملات"},
+  scaledCoefficients:{en:"Multiplied coefficients",he:"מקדמים מוכפלים",ar:"معاملات مضاعفة"},
+  balance:{en:"Balance",he:"איזון",ar:"الموازنة"},
+  states:{en:"States",he:"מצבי צבירה",ar:"حالات المادة"},
+  charges:{en:"Charges",he:"מטענים",ar:"الشحنات"},
+  arrow:{en:"Reaction arrow",he:"חץ התגובה",ar:"سهم التفاعل"},
+  conditions:{en:"Reaction conditions",he:"תנאי התגובה",ar:"شروط التفاعل"},
+  notation:{en:"Notation",he:"כתיב",ar:"طريقة الكتابة"}
 };
 
 /* Answer types, used by "wrong-answer-type" as {expectedType} / {actualType}. */
@@ -473,6 +497,7 @@ function localizedErrorTemplate(error,language){
   text=replaceTextToken(text,"expectedCharge",chargeLabel(error.expected));
   text=replaceTextToken(text,"actual",error.actual);
   text=replaceTextToken(text,"expected",error.expected);
+  text=replaceTextToken(text,"factor",error.factor);
 
   return text;
 }
@@ -1707,6 +1732,20 @@ function addError(errors,code,data){
   errors.push(error);
 }
 
+/*
+  Tags list[from..] with the substance they are about, for grading (see
+  gradeComparison): speciesKey identifies the substance on its side,
+  speciesAtoms lists its atoms (a wrong coefficient unbalances exactly these).
+*/
+function stampSpecies(list,from,species,side){
+  var i;
+
+  for(i=from;i<list.length;i++){
+    list[i].speciesKey=side+":"+speciesLabel(species);
+    list[i].speciesAtoms=sortedKeys(species.composition);
+  }
+}
+
 function stateName(state){
   if(state==="s")return "solid (s)";
   if(state==="l")return "liquid (l)";
@@ -2014,11 +2053,12 @@ function compareCharges(student,reference,side,errors){
 
 
 function compareSide(studentSide,referenceSide,side,errors,pairs){
-  var used=[],i,index,student,reference;
+  var used=[],i,index,student,reference,from;
 
   for(i=0;i<referenceSide.length;i++){
     reference=referenceSide[i];
     index=findSpeciesMatch(studentSide,reference,used);
+    from=errors.length;
 
     if(index<0){
       addError(
@@ -2033,6 +2073,7 @@ function compareSide(studentSide,referenceSide,side,errors,pairs){
           referenceRanges:oneTarget(reference.range,"species")
         }
       );
+      stampSpecies(errors,from,reference,side);
 
       continue;
     }
@@ -2043,12 +2084,14 @@ function compareSide(studentSide,referenceSide,side,errors,pairs){
     compareAtomCounts(student,reference,side,errors);
     compareCharges(student,reference,side,errors);
     compareStates(student,reference,side,errors);
+    stampSpecies(errors,from,student,side);
 
     pairs.push({student:student,reference:reference,side:side});
   }
 
   for(i=0;i<studentSide.length;i++){
     if(!used[i]){
+      from=errors.length;
       addError(
         errors,
         "unexpected-species",
@@ -2061,19 +2104,22 @@ function compareSide(studentSide,referenceSide,side,errors,pairs){
           referenceRanges:[]
         }
       );
+      stampSpecies(errors,from,studentSide[i],side);
     }
   }
 }
 /*
   Coefficients are judged for the whole equation:
   if every matched species has the same reduced coefficient
-  (e.g. 4H2+2O2→4H2O vs 2H2+O2→2H2O), the answer is proportional
-  and accepted. Otherwise the coefficients the student actually
+  (e.g. 4H2+2O2→4H2O vs 2H2+O2→2H2O), the answer is proportional.
+  When all typed coefficients are the same whole-number multiple of the
+  reference, that is one error, "scaled-coefficients" (balanced, but not
+  the reference amounts). Otherwise the coefficients the student actually
   typed are compared, so the message shows the student's numbers
   and points at the species that really differs.
 */
 function compareCoefficients(pairs,errors){
-  var i,pair,proportional=true;
+  var i,pair,proportional=true,factor=null,ratio,from;
 
   for(i=0;i<pairs.length;i++){
     if(pairs[i].student.coefficient!==pairs[i].reference.coefficient){
@@ -2082,10 +2128,34 @@ function compareCoefficients(pairs,errors){
     }
   }
 
-  if(proportional)return;
+  if(proportional){
+    for(i=0;i<pairs.length;i++){
+      ratio=pairs[i].student.originalCoefficient/pairs[i].reference.originalCoefficient;
+
+      if(factor===null)factor=ratio;
+      else if(ratio!==factor){
+        factor=null;
+        break;
+      }
+    }
+
+    if(factor===null||factor===1)return;
+
+    /* a fraction of the reference amounts is judged as wrong coefficients (below) */
+    if(Math.floor(factor)===factor){
+      addError(errors,"scaled-coefficients",{
+        factor:factor,
+        studentRanges:pairs.map(function(p){return feedbackTarget(p.student.coefficientRange||p.student.formulaRange||p.student.range,"coefficient");}).filter(Boolean),
+        referenceRanges:pairs.map(function(p){return feedbackTarget(p.reference.coefficientRange||p.reference.formulaRange||p.reference.range,"coefficient");}).filter(Boolean)
+      });
+
+      return;
+    }
+  }
 
   for(i=0;i<pairs.length;i++){
     pair=pairs[i];
+    from=errors.length;
 
     if(pair.student.originalCoefficient!==pair.reference.originalCoefficient){
       addError(
@@ -2100,6 +2170,7 @@ function compareCoefficients(pairs,errors){
           referenceRanges:oneTarget(pair.reference.coefficientRange||pair.reference.formulaRange||pair.reference.range,"coefficient")
         }
       );
+      stampSpecies(errors,from,pair.student,pair.side);
     }
   }
 }
@@ -2171,6 +2242,7 @@ function compareWrittenForms(pairs,errors,notes,options){
           :oneTarget(reference.formulaRange||reference.range,"species")
       }
     );
+    if(isError)stampSpecies(errors,errors.length-1,student,pair.side);
   }
 }
 
@@ -2468,7 +2540,7 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
     notes.push(formNotes[i]);
   }
 
-  return {
+  var result={
     notes:notes,
     correct:errors.length===0,
     language:language,
@@ -2477,12 +2549,229 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
     reversed:orientation.reversed,
     errors:errors
   };
+
+  if(options.rubric)gradeComparison(result,options.rubric);
+
+  return result;
 }
+
+/* ============================================================
+   GRADING WITH A TEACHER RUBRIC (design: RUBRIC-DESIGN.md)
+
+   rubric: { category: rule, ..., codes: { "error-code": rule } }
+     rule = 10                                  10% once
+          = { each: 5, max: 15 }                5% per error, at most 15%
+          = { each: 5, max: 15, allMissing: 20 } (states) 20% when no substance has a state
+   A category not in the rubric costs nothing. A syntax error gives 0.
+
+   One mistake = one penalty: an error caused by another counted error is
+   not counted (SUPPRESSION_RULES). Errors and notes get an id; each error
+   gets category, counted and (when not counted) suppressedBy = the id of
+   the error that caused it. result.score = { total, penalties: [{ category,
+   penalty, errorIds, capped }] } - a penalty is listed once for all its errors.
+   ============================================================ */
+var RUBRIC_CATEGORIES=["syntax","answerType","unknownElement","substances","coefficients","scaledCoefficients",
+  "balance","states","charges","arrow","conditions","notation"];
+
+var RUBRIC_CATEGORY_OF={
+  "syntax-error":"syntax",
+  "wrong-answer-type":"answerType",
+  "unknown-element":"unknownElement",
+  "missing-species":"substances","unexpected-species":"substances","wrong-atom-count":"substances",
+  "wrong-structure":"substances","missing-structure":"substances","wrong-dot-parts":"substances",
+  "unexpected-atom":"substances","missing-atom":"substances",
+  "wrong-coefficient":"coefficients",
+  "scaled-coefficients":"scaledCoefficients",
+  "unbalanced-atom":"balance",
+  "missing-state":"states","wrong-state":"states","unexpected-state":"states",
+  "missing-charge":"charges","wrong-charge":"charges","unexpected-charge":"charges",
+  "wrong-arrow":"arrow",
+  "missing-condition":"conditions","wrong-condition":"conditions",
+  "redundant-subscript-one":"notation","redundant-charge-one":"notation","repeated-species":"notation",
+  "different-form":"notation","missing-dot":"notation","condition-not-required":"notation"
+};
+
+/* errors that say a student substance itself is wrong */
+var WRONG_SPECIES_CODES=["wrong-atom-count","wrong-structure","missing-structure","wrong-dot-parts"];
+
+/*
+  Applied in order. An error with one of "codes" is not counted when an
+  earlier-applied, counted error with one of "by" matches it:
+    match "atom":         the error's atom is one of the other error's substance atoms
+    match "species":      both are about the same substance on the same side
+    match "containsAtom": the error's substance contains the other error's atom
+*/
+var SUPPRESSION_RULES=[
+  /* one wrong substance = one error, even when several of its atom counts differ */
+  {codes:["wrong-atom-count"],by:["wrong-atom-count"],match:"species"},
+  /* a wrong substance: its coefficient, state and charge are not judged */
+  {codes:["wrong-coefficient","missing-state","wrong-state","unexpected-state","missing-charge","wrong-charge","unexpected-charge"],
+    by:WRONG_SPECIES_CODES,match:"species"},
+  /* atoms missing, extra or unbalanced because of a missing, extra or wrong substance */
+  {codes:["missing-atom","unexpected-atom","unbalanced-atom"],
+    by:["missing-species","unexpected-species","unknown-element"].concat(WRONG_SPECIES_CODES),match:"atom"},
+  /* one wrong coefficient unbalances all the atoms of its substance: one error */
+  {codes:["unbalanced-atom"],by:["wrong-coefficient"],match:"atom"},
+  /* an extra substance that contains an unknown element (Q2 typed for O2) */
+  {codes:["unexpected-species"],by:["unknown-element"],match:"containsAtom"}
+];
+
+function suppressionMatches(error,other,match){
+  if(match==="species")return !!error.speciesKey&&error.speciesKey===other.speciesKey;
+  if(match==="containsAtom")return !!error.speciesAtoms&&error.speciesAtoms.indexOf(other.atom)>=0;
+
+  if(!error.atom)return false;
+  if(other.speciesAtoms)return other.speciesAtoms.indexOf(error.atom)>=0;
+  return other.atom===error.atom;
+}
+
+function normalizeRubricRule(rule){
+  if(typeof rule==="number")return {each:rule,max:rule};
+  if(!rule||typeof rule!=="object")return null;
+
+  return {
+    each:Number(rule.each)||0,
+    max:rule.max!==undefined?Number(rule.max):Infinity,
+    allMissing:rule.allMissing!==undefined?Number(rule.allMissing):undefined
+  };
+}
+
+function gradeComparison(result,rubric){
+  var items=result.errors.concat(result.notes||[]),graded=[],fatal=null,lines={},order=[],penalties=[];
+  var codes=rubric.codes||{},total=100,i,j,r,item,rule,other,key,line,penalty,allStatesMissing;
+
+  for(i=0;i<items.length;i++){
+    items[i].id=i+1;
+    items[i].category=RUBRIC_CATEGORY_OF[items[i].code]||null;
+    items[i].counted=true;
+    delete items[i].suppressedBy;
+
+    /* errors in the reference answer are the teacher's, not graded */
+    if(items[i].answer==="reference"){
+      items[i].counted=false;
+      continue;
+    }
+
+    graded.push(items[i]);
+  }
+
+  /* a syntax error (score 0) or a wrong answer type stops the grading: nothing else counts */
+  for(i=0;i<graded.length&&!fatal;i++)if(graded[i].code==="syntax-error")fatal=graded[i];
+  for(i=0;i<graded.length&&!fatal;i++)if(graded[i].code==="wrong-answer-type")fatal=graded[i];
+
+  if(fatal){
+    for(i=0;i<graded.length;i++){
+      if(graded[i]!==fatal&&!(fatal.code==="syntax-error"&&graded[i].code==="syntax-error")){
+        graded[i].counted=false;
+        graded[i].suppressedBy=fatal.id;
+      }
+    }
+  }else{
+    for(r=0;r<SUPPRESSION_RULES.length;r++){
+      rule=SUPPRESSION_RULES[r];
+
+      for(i=0;i<graded.length;i++){
+        item=graded[i];
+        if(!item.counted||rule.codes.indexOf(item.code)<0)continue;
+
+        for(j=0;j<graded.length;j++){
+          other=graded[j];
+
+          if(other===item||!other.counted||rule.by.indexOf(other.code)<0)continue;
+          /* among errors of the same code, only an earlier one hides a later one */
+          if(other.code===item.code&&j>i)continue;
+
+          if(suppressionMatches(item,other,rule.match)){
+            item.counted=false;
+            item.suppressedBy=other.id;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  /* penalty lines: one per rubric category (or per code with its own rule) */
+  for(i=0;i<graded.length;i++){
+    item=graded[i];
+    if(!item.counted||!item.category)continue;
+
+    key=codes[item.code]!==undefined?item.code:item.category;
+
+    if(!lines[key]){
+      lines[key]={category:key,errorIds:[],count:0};
+      order.push(key);
+    }
+
+    lines[key].errorIds.push(item.id);
+    lines[key].count++;
+  }
+
+  allStatesMissing=!studentHasAnyState(result.studentCanonical);
+
+  for(i=0;i<order.length;i++){
+    line=lines[order[i]];
+
+    if(line.category==="syntax"){
+      penalties.push({category:"syntax",penalty:100,errorIds:line.errorIds,capped:false});
+      continue;
+    }
+
+    rule=normalizeRubricRule(codes[line.category]!==undefined?codes[line.category]:rubric[line.category]);
+    if(!rule)continue;
+
+    if(line.category==="states"&&rule.allMissing!==undefined&&allStatesMissing){
+      penalties.push({category:"states",penalty:rule.allMissing,errorIds:line.errorIds,capped:false,allMissing:true});
+      continue;
+    }
+
+    penalty=rule.each*line.count;
+    penalties.push({category:line.category,penalty:Math.min(penalty,rule.max),errorIds:line.errorIds,capped:penalty>rule.max});
+  }
+
+  penalties.sort(function(a,b){return rubricCategoryRank(a.category)-rubricCategoryRank(b.category);});
+
+  for(i=0;i<penalties.length;i++)total-=penalties[i].penalty;
+
+  result.score={
+    total:Math.max(0,Math.round(total*100)/100),
+    penalties:penalties.filter(function(p){return p.penalty>0;})
+  };
+
+  return result;
+}
+
+function rubricCategoryRank(category){
+  var index=RUBRIC_CATEGORIES.indexOf(category);
+  return index<0?RUBRIC_CATEGORIES.length:index;
+}
+
+/* true when at least one substance in the student's answer has a state */
+function studentHasAnyState(canonical){
+  var sides,a,i;
+
+  if(!canonical)return false;
+
+  sides=[canonical.left||[],canonical.right||[]];
+
+  for(a=0;a<sides.length;a++){
+    for(i=0;i<sides[a].length;i++)if(sides[a][i].state)return true;
+  }
+
+  return false;
+}
+
 /* Comparison options taken from the keyboard configuration. */
 ChemicalKeyboard.prototype.compareOptions=function(){
   return {
-    distinguishIsomers:this.config.distinguishIsomers===true
+    distinguishIsomers:this.config.distinguishIsomers===true,
+    rubric:this.config.rubric||null
   };
+};
+
+/* The grading rubric (see gradeComparison); null = no grading. */
+ChemicalKeyboard.prototype.setRubric=function(rubric){
+  this.config.rubric=rubric||null;
 };
 
 ChemicalKeyboard.prototype.canonicalize=function(){
@@ -4580,6 +4869,85 @@ ChemicalKeyboard.prototype.showElementLetter = function (letter) {
 
     this.atomPanel.style.display = "block";
   };
+/* true when the error or note is covered by a penalty line of the score */
+function isPenalized(result,item){
+  var i;
+
+  for(i=0;i<result.score.penalties.length;i++){
+    if(result.score.penalties[i].errorIds.indexOf(item.id)>=0)return true;
+  }
+
+  return false;
+}
+
+/*
+  Graded feedback: the score, then one block per penalty line - the penalty
+  is written once, with all the errors it covers under it. An error that is
+  not counted is shown, greyed, under the error that caused it. Counted
+  errors whose category is not in the rubric are listed under "No penalty".
+*/
+function renderGradedResult(result,language,summary,details){
+  var messages=ERROR_TEXT[language]||ERROR_TEXT.en;
+  var items=result.errors.concat(result.notes||[]),byId={},shown={},number=1,i,j,penalty,block,heading,label,rest;
+
+  for(i=0;i<items.length;i++)byId[items[i].id]=items[i];
+
+  summary.textContent=replaceTextToken(localizedFromTable(GRADE_TEXT,"score",language),"score",result.score.total);
+  summary.style.color=result.score.total===100?"#18742a":"#a12622";
+
+  if(result.correct&&!result.score.penalties.length){
+    details.appendChild(node("div",messages.equivalent,{marginBottom:"8px"}));
+    return;
+  }
+
+  function appendWithConsequences(parent,item){
+    var k,caused;
+
+    shown[item.id]=true;
+    appendErrorMessage(parent,item,language,number++);
+
+    for(k=0;k<items.length;k++){
+      if(items[k].suppressedBy!==item.id||shown[items[k].id])continue;
+
+      caused=node("div",null,{color:"#777",marginInlineStart:"24px"});
+      caused.appendChild(node("div",localizedFromTable(GRADE_TEXT,"notCounted",language),{fontStyle:"italic"}));
+      appendWithConsequences(caused,items[k]);
+      parent.appendChild(caused);
+    }
+  }
+
+  function appendBlock(title){
+    var section=node("div",null,{marginBottom:"10px"});
+
+    section.appendChild(node("div",title,{fontWeight:"bold",marginBottom:"4px"}));
+    details.appendChild(section);
+    return section;
+  }
+
+  for(i=0;i<result.score.penalties.length;i++){
+    penalty=result.score.penalties[i];
+    label=GRADE_TEXT[penalty.category]
+      ?localizedFromTable(GRADE_TEXT,penalty.category,language)
+      :penalty.category;
+
+    if(penalty.allMissing)label+=" ("+localizedFromTable(GRADE_TEXT,"allMissing",language)+")";
+    else if(penalty.capped)label+=" ("+localizedFromTable(GRADE_TEXT,"capped",language)+")";
+
+    heading="⁦−"+penalty.penalty+"%⁩ · "+label;
+    block=appendBlock(heading);
+
+    for(j=0;j<penalty.errorIds.length;j++)appendWithConsequences(block,byId[penalty.errorIds[j]]);
+  }
+
+  /* errors without a penalty: category not in the rubric, or errors in the reference answer */
+  rest=result.errors.filter(function(e){return !shown[e.id]&&!e.suppressedBy;});
+
+  if(rest.length){
+    block=appendBlock(localizedFromTable(GRADE_TEXT,"noPenalty",language));
+    for(i=0;i<rest.length;i++)appendWithConsequences(block,rest[i]);
+  }
+}
+
 function renderComparisonResult(result,language,summary,details){
   var messages=ERROR_TEXT[language]||ERROR_TEXT.en;
   var i;
@@ -4593,7 +4961,9 @@ function renderComparisonResult(result,language,summary,details){
   summary.textContent="";
   details.textContent="";
 
-  if(result.correct){
+  if(result.score){
+    renderGradedResult(result,language,summary,details);
+  }else if(result.correct){
     summary.textContent=messages.correct;
     summary.style.color="#18742a";
     details.appendChild(node("div",messages.equivalent,{marginBottom:"8px"}));
@@ -4609,15 +4979,18 @@ function renderComparisonResult(result,language,summary,details){
 
   /*
    * Notes are listed separately, in a neutral colour,
-   * for both correct and incorrect answers.
+   * for both correct and incorrect answers (a note that costs points in
+   * the rubric is listed with its penalty instead).
    */
-  if(result.notes&&result.notes.length){
+  var notes=(result.notes||[]).filter(function(n){return !(result.score&&(isPenalized(result,n)||n.suppressedBy));});
+
+  if(notes.length){
     var notesBlock=node("div",null,{marginTop:"10px",color:"#555"});
 
     notesBlock.appendChild(node("div",localizedFromTable(NOTE_TEXT,"notes-heading",language),{fontWeight:"bold",marginBottom:"4px"}));
 
-    for(i=0;i<result.notes.length;i++){
-      appendErrorMessage(notesBlock, result.notes[i], language, i+1);
+    for(i=0;i<notes.length;i++){
+      appendErrorMessage(notesBlock, notes[i], language, i+1);
     }
 
     details.appendChild(notesBlock);
@@ -4642,6 +5015,7 @@ function feedbackText(language,key){
   analyzeValue:analyzeValue,
   canonicalize:canonicalizeValue,
   compare:compareChemicalAnswers,
+  grade:gradeComparison,
   feedbackHighlights:comparisonHighlights,
   feedbackText:feedbackText,
   renderComparison:renderComparisonResult,

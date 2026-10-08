@@ -140,4 +140,29 @@ score: {
   to enter a fraction coefficient anyway.)
 - A penalty that covers several errors is written once (`score.penalties`, see 6).
 
-No open questions remain; next step is implementation.
+## 9. Implemented in `chemical-keyboard-v4.js` (2026-10-06)
+
+- `config.rubric` / `setRubric(rubric)`; `ChemicalGrammar.compare(student, reference, language, { rubric })`;
+  `ChemicalGrammar.grade(result, rubric)` grades an existing comparison result.
+- `gradeComparison` with the tables `RUBRIC_CATEGORY_OF` and `SUPPRESSION_RULES` (rules as data, applied in order):
+  1. several `wrong-atom-count` of one substance → one error
+  2. a wrong substance hides its coefficient, state and charge errors
+  3. missing / extra / wrong substance or unknown element hides the `missing-atom`, `unexpected-atom`, `unbalanced-atom` of its atoms
+  4. a `wrong-coefficient` hides `unbalanced-atom` of its substance's atoms
+  5. an unknown element hides the extra substance that contains it
+- Errors are tagged with `speciesKey` / `speciesAtoms` (`stampSpecies`) so the rules can match them.
+- New error `scaled-coefficients` (with `{factor}`) in `compareCoefficients`. **Behaviour change:** before, proportional
+  coefficients were accepted as correct; now they are an error (also without a rubric).
+- Feedback: `renderComparisonResult` shows the score and one block per penalty line (penalty written once, its errors
+  under it); errors not counted are shown greyed under the error that caused them; errors whose category is not in the
+  rubric are listed under "No penalty". Texts in `GRADE_TEXT` (en/he/ar).
+- Highlighting (`comparisonHighlights`) is unchanged: it still marks all errors, counted or not.
+- The test page `chemical-kbd-v4-test.html` has a sample rubric and a "Scaled coefficients" example.
+
+### Decisions after implementation
+- `scaled-coefficients` is an error with or without a rubric: error analysis is the same either way; the rubric
+  only decides what it costs.
+- A substance replaced by a different one (e.g. `Q₂` typed for `O₂`, or `C` for `Ca`) is counted as the missing
+  substance **and** the replacement's error (only an extra substance caused by an unknown element is hidden).
+  This is intentional: the case can't be told apart from a student who doesn't know the substances, and since the
+  system is for practice, it's treated as a major mistake. "Missing X + extra Y" is **not** merged into one error.

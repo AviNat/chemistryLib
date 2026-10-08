@@ -35,12 +35,49 @@ built on the **current** library functionality only.
 - Paste into the Moodle question text in the editor's HTML view. The question id must be unique per page.
 - Save uses the File System Access API when available (save back to the same file), otherwise a download.
 
-## Answer box (option)
-- The keyboard writes the student's answer into the first text input / textarea of the enclosing `.que`, hides it,
-  and restores the keyboard from it when the page is shown again.
-- Stored as the keyboard **model** JSON (`getModel()`), because `getValue()` text is lossy:
-  `2H₂O` reads back as `₂H₂O`, `SO₄²⁻` as `SO₄₂-`. A lossless text form (`_{}`/`^{}`) in the library would allow a
-  readable stored answer; not available yet.
+## Connection to STACK (decided 2026-10-08)
+- Config `stack: { scoreInput: "ans1", answerInput: "ans2" }` (both optional), set in the builder's settings.
+- On **every change** of the student's answer the keyboard writes, and hides both inputs:
+  - `scoreInput`: the score **0 to 1** (rubric score / 100; without a rubric 1 = correct, 0 = not). The PRT gives it as the mark.
+  - `answerInput`: `answer || score% | feedback | feedback…`: the answer in the value notation
+    (`2H_{2}(g)+O_{2}(g)→2H_{2}O(l)`), then the feedback the student got (counted errors and notes, in the student
+    language; quotes and backslashes removed), for Moodle's response history. The keyboard reads back the part
+    before ` || ` when the page is shown again.
+  - The builder shows the **model answers** to copy into the STACK inputs: `1` for the score input, and for the answer
+    input the quoted string it holds for a correct answer (`"<reference> || 100%"`, or the "correct" text in the student
+    language without a rubric), built by `stackModelAnswer` in the same format as `feedbackLine` in `chemkbdRun`.
+  - Defaults in the builder: `ans1` and `ans2`. The config always contains `stack`, so an emptied field stays empty.
+- **Review page** (after submission; Moodle renders the inputs `readonly`, which is how it is detected): the keyboard
+  always shows the saved answer read-only. Three builder options (`cfg.review`, all on by default; set them to match
+  the quiz review options for marks and right answer):
+  - `grade`: the score line (or correct / number of issues without a rubric)
+  - `reference`: the reference answer, marked; when off, the student's answer is **not marked** either (the marking
+    gives the answer away)
+  - `details`: the detailed evaluation (rubric penalty lines / list of errors)
+- `ans2` does not need a PRT: it is saved and restored without one (confirmed in Moodle 2026-10-08).
+- Inputs are left `readonly` (as Moodle renders them), never set to `disabled`: a disabled field is not sent with the
+  form ("Try again" in interactive mode would lose the answer).
+- **While answering** (attempt page, also when it starts from a saved answer): no feedback is shown by itself. The
+  marked copy of the student's answer and the reference answer appear **only on the review page**, read-only.
+- The keyboard's own button ("Check the writing", when on) checks **only the writing**: syntax errors and symbols that
+  are not elements (the answer compared with itself; unbalanced atoms left out). No grade, nothing compared with the
+  reference: a private, free, unlimited check would let students try until 100% and bypass Moodle's penalties; grading
+  feedback during the attempt is Moodle's own Check (interactive / adaptive behaviour). Trial, to see if it has merit.
+- Option **condition keys** (`conditions`, default true; library `config.conditions`): when off, the keyboard has no
+  reaction-condition (process) keys - the arrow with the condition placeholder, Δ, hν, °C, K. The builder's keyboards
+  follow it, and it warns when the reference answer has a condition while the keys are off.
+- The debug log messages were removed (2026-10-08). Still reported in the console: a STACK input not found, the code
+  pasted twice / duplicate question id, a failure, the library not loading. The code version is in the snippet's
+  first comment.
+- The snippet starts the keyboard only after the page is fully read (`DOMContentLoaded`): the `[[input:…]]` boxes come
+  after the code in the question text, and when the library is already loaded (cached) the keyboard otherwise started
+  before they existed - the answer was not restored and no feedback was shown (found 2026-10-08 in Moodle).
+  A STACK input named in the config but not found is reported in the browser console.
+  - An empty answer empties both, so STACK sees an unanswered question.
+- Inputs are found inside the enclosing `.que` by the end of their name (STACK names them `q<usage>:<slot>_ans1`), and
+  get `input` + `change` events so STACK notices the new value.
+- The score is computed in the browser, so a determined student could change it (acceptable for practice).
+- The earlier placeholder "copy the answer into the first answer box" (model JSON) is removed.
 
 ## Decided (2026-10-08)
 - The snippet goes into a Moodle **STACK** question. The connection mechanism will be designed later by the user;
@@ -55,6 +92,6 @@ built on the **current** library functionality only.
 - The reference answer will not be visible in the Moodle question (not a concern for the snippet).
 
 ## Open
-- The STACK connection mechanism (where the answer and the score go).
+- Verify in the real STACK: score field of the PRT taking `ans1`, hidden inputs with validation off.
 - Planned library features that the tool will need: optional process keys (other panel groups configurable),
   molecule keys on the elements panel (e.g. H₂O), more than one correct answer.

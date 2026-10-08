@@ -2806,6 +2806,10 @@ ChemicalKeyboard.prototype.setCorrectAnswer=function(value){
 };
 
 //  CONSTRUCTOR
+/*
+ * config.conditions: true (default) shows the reaction-condition (process) keys - the arrow with the
+ * condition placeholder, Δ, hν, °C, K; false leaves them out.
+ */
 
   function ChemicalKeyboard(config) {
     this.config = copy(config || {});
@@ -3017,29 +3021,35 @@ ChemicalKeyboard.prototype.build=function(){
     self.insertText("⇌","normal");
   },t.tipEquilibrium);
 
-  var infoButton=btn(arrowsRow,"",function(){
-    self.openCondition();
-  },t.tipInfo);
+  /*
+   * Reaction-condition (process) keys: the arrow with the condition placeholder, Δ, hν, °C, K.
+   * config.conditions === false leaves them out (only the plain arrows remain).
+   */
+  if(this.config.conditions!==false){
+    var infoButton=btn(arrowsRow,"",function(){
+      self.openCondition();
+    },t.tipInfo);
 
-  infoButton.appendChild(conditionIcon());
-  removeButtonFocus(infoButton);
+    infoButton.appendChild(conditionIcon());
+    removeButtonFocus(infoButton);
 
-  btn(arrowsRow,"Δ",function(){
-    self.openCondition("Δ");
-  },t.tipHeat);
+    btn(arrowsRow,"Δ",function(){
+      self.openCondition("Δ");
+    },t.tipHeat);
 
-  btn(arrowsRow,"hν",function(){
-    self.openCondition("hν");
-  },t.tipLight);
+    btn(arrowsRow,"hν",function(){
+      self.openCondition("hν");
+    },t.tipLight);
 
-  /* Temperature units. Kelvin has no degree sign (SI): 450 K. */
-  btn(arrowsRow,"°C",function(){
-    self.openCondition("°C");
-  },t.tipCelsius);
+    /* Temperature units. Kelvin has no degree sign (SI): 450 K. */
+    btn(arrowsRow,"°C",function(){
+      self.openCondition("°C");
+    },t.tipCelsius);
 
-  btn(arrowsRow,"K",function(){
-    self.openCondition(" K");
-  },t.tipKelvin);
+    btn(arrowsRow,"K",function(){
+      self.openCondition(" K");
+    },t.tipKelvin);
+  }
 
   /*
    * States

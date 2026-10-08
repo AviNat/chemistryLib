@@ -1,4 +1,4 @@
-<!doctype html>
+  <!doctype html>
 <html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
@@ -36,6 +36,10 @@ header .file{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 main{max-width:1000px;margin:0 auto;padding:16px}
 section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
 section h2{font-size:16px;margin:0 0 10px}
+section h3.sub{font-size:14px;margin:16px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
+.model-row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:6px 0}
+.model-row .label{font-size:13px;color:var(--muted);min-width:170px}
+.model-row input{flex:1 1 360px;font:13px Consolas,monospace;direction:ltr;text-align:left;background:#fafbfc}
 .hint{color:var(--muted);font-size:13px;margin:4px 0 10px}
 .row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:8px 0}
 label.field{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted)}
@@ -136,8 +140,24 @@ table.rubric .na{color:#a5b0bc}
   </label>
   <div class="hint" id="librarySource"></div>
   <label class="check"><input type="checkbox" id="distinguishIsomers"><span data-t="distinguishIsomers"></span></label>
+  <label class="check"><input type="checkbox" id="conditions"><span data-t="conditions"></span></label>
   <label class="check"><input type="checkbox" id="checkButton"><span data-t="checkButton"></span></label>
-  <label class="check"><input type="checkbox" id="answerField"><span data-t="answerField"></span></label>
+  <h3 class="sub" data-t="reviewTitle"></h3>
+  <div class="hint" data-t="reviewHint"></div>
+  <label class="check"><input type="checkbox" id="reviewGrade"><span data-t="reviewGrade"></span></label>
+  <label class="check"><input type="checkbox" id="reviewReference"><span data-t="reviewReference"></span></label>
+  <label class="check"><input type="checkbox" id="reviewDetails"><span data-t="reviewDetails"></span></label>
+  <h3 class="sub" data-t="stackTitle"></h3>
+  <div class="row">
+    <label class="field"><span data-t="stackScoreInput"></span>
+      <input type="text" id="stackScoreInput" size="10" dir="ltr">
+    </label>
+    <label class="field"><span data-t="stackAnswerInput"></span>
+      <input type="text" id="stackAnswerInput" size="10" dir="ltr">
+    </label>
+  </div>
+  <div class="hint" data-t="stackHint"></div>
+  <div id="stackModels"></div>
 </section>
 
 <section>
@@ -252,13 +272,14 @@ function loadKeyboardLibrary(sources,done,failed){
    Student-side code. It is copied into every snippet with toString(),
    so it must stay self-contained ES5 (it runs inside Moodle).
    host: an element with an id; cfg: the question configuration.
-   Returns { keyboard, feedback: [student, reference] } (feedback may be empty).
+   Returns { keyboard, feedback: [reference keyboard of the review page] } (feedback may be empty).
    ================================================================ */
 function chemkbdRun(host,cfg){
   var lang=cfg.language==="he"||cfg.language==="ar"?cfg.language:"en";
-  var CHECK={en:"Check",he:"בדיקה",ar:"تحقق"};
+  var CHECK={en:"Check the writing",he:"בדיקת הכתיבה",ar:"فحص الكتابة"};
+  var WRITTEN_OK={en:"No writing problems were found.",he:"לא נמצאו בעיות בכתיבה.",ar:"لم يتم العثور على مشكلات في الكتابة."};
   var base=host.id;
-  var options,input=null,keyboard,que,button,summary,details,section,studentTitle,studentDiv,referenceTitle,referenceDiv,feedback=[];
+  var options,keyboard,button,summary,details,referenceTitle,referenceDiv,feedback=[];
 
   function make(tag,suffix,css){
     var e=document.createElement(tag);
@@ -269,6 +290,9 @@ function chemkbdRun(host,cfg){
 
   host.textContent="";
   host.dir=lang==="en"?"ltr":"rtl";
+
+  /* ids of the parts: from the host's id, made unique if another keyboard on the page already uses them */
+  if(document.getElementById(base+"-keyboard"))base+="-"+(window.__chemkbdRuns=(window.__chemkbdRuns||1)+1);
 
   var keyboardDiv=make("div","keyboard");
   host.appendChild(keyboardDiv);
@@ -284,58 +308,181 @@ function chemkbdRun(host,cfg){
   else if(cfg.elementsMode==="custom")options.elements=(cfg.elements||[]).slice();
   if(cfg.rubric)options.rubric=cfg.rubric;
   if(cfg.distinguishIsomers)options.distinguishIsomers=true;
+  if(cfg.conditions===false)options.conditions=false;     // no reaction-condition (process) keys
 
   /*
-   * The keyboard writes the student's answer into the question's own answer box (hidden).
-   * It is stored as the keyboard model (JSON): getValue() text loses subscripts and
-   * charges (2H2O reads back as ₂H₂O), the model reads back exactly.
+   * Connection to the STACK question (cfg.stack). On every change the keyboard writes into inputs
+   * of the same question, and hides them:
+   *   scoreInput:  the score from 0 to 1 (rubric score / 100; without a rubric 1 = correct, 0 = not);
+   *                the PRT gives it as the mark
+   *   answerInput: the answer as value text (H_{2}O, SO_{4}^{2-}); Moodle keeps it, and the
+   *                keyboard starts from it when the page is shown again
+   * An empty answer empties both, so STACK sees an unanswered question.
+   * STACK names its inputs "q<usage>:<slot>_ans1", so an input is found by the end of its name.
    */
-  if(cfg.answerField){
-    que=host.closest?host.closest(".que"):null;
-    input=que?que.querySelector("input[type=text],textarea"):null;
-    if(input){
-      input.style.display="none";
-      if(input.value){
-        try{options.value=JSON.parse(input.value);}catch(e){options.value=input.value;}
-      }
-      options.onChange=function(r){input.value=r.model.length?JSON.stringify(r.model):"";};
+  function findInput(name){
+    if(!name)return null;
+    var que=host.closest&&host.closest(".que");
+    return (que||document).querySelector("input[name$='_"+name+"'],textarea[name$='_"+name+"']");
+  }
+  function setInput(field,value){
+    var e,i,types=["input","change"];
+    if(!field||field.value===value)return;
+    field.value=value;
+    for(i=0;i<types.length;i++){
+      try{e=new Event(types[i],{bubbles:true});}catch(x){e=document.createEvent("Event");e.initEvent(types[i],true,true);}
+      field.dispatchEvent(e);
     }
+  }
+  /* the model in the value notation that setValue reads (getValue() drops the sub/sup levels) */
+  function valueText(chars){
+    var out="",i=0,c,script,run;
+    while(i<chars.length){
+      c=chars[i];
+      if(c.kind==="state"){out+=c.ch;i++;continue;}
+      if(c.script==="sub"||c.script==="sup"){
+        script=c.script;run="";
+        while(i<chars.length&&chars[i].script===script&&chars[i].kind!=="state"){run+=chars[i].ch;i++;}
+        out+=(script==="sub"?"_{":"^{")+run+"}";
+        continue;
+      }
+      out+=c.ch;
+      if(c.condition&&c.condition.length)out+="["+valueText(c.condition)+"]";
+      i++;
+    }
+    return out;
+  }
+
+  /*
+   * answerInput holds "answer || score% | feedback | feedback ...": the answer (read back by the
+   * keyboard) and, after " || ", the feedback the student got, for Moodle's response history.
+   * Quotes and backslashes are left out of the feedback (STACK string input).
+   */
+  var FEEDBACK_SEPARATOR=" || ";
+  function savedAnswer(text){
+    var i=text.indexOf(FEEDBACK_SEPARATOR);
+    return i>=0?text.slice(0,i):text;
+  }
+  function feedbackLine(result){
+    var parts=[],i,items=result.errors.concat(result.notes||[]);
+    if(result.score)parts.push(result.score.total+"%");
+    else if(result.correct)parts.push(ChemicalGrammar.feedbackText(lang,"correct"));
+    for(i=0;i<items.length;i++){
+      if(items[i].suppressedBy)continue;      // not counted: caused by another error
+      if(items[i].description)parts.push(items[i].description);
+    }
+    return parts.join(" | ").replace(/["\\⁦-⁩]/g,"");
+  }
+  function compare(ast){
+    return ChemicalGrammar.compare(ast,cfg.correctAnswer||"",lang,
+      {rubric:cfg.rubric||null,distinguishIsomers:cfg.distinguishIsomers===true});
+  }
+
+  var stack=cfg.stack||{};
+  var scoreInput=findInput(stack.scoreInput);
+  var answerInput=findInput(stack.answerInput);
+  if(window.console&&((stack.scoreInput&&!scoreInput)||(stack.answerInput&&!answerInput))){
+    console.warn("Chemical keyboard "+base+": STACK input not found:",
+      stack.scoreInput&&!scoreInput?stack.scoreInput:"",stack.answerInput&&!answerInput?stack.answerInput:"");
+  }
+  /* review page (after the attempt is submitted): Moodle shows the inputs read-only */
+  var review=[scoreInput,answerInput].some(function(f){return f&&(f.readOnly||f.disabled);});
+
+  if(scoreInput)scoreInput.style.display="none";
+  if(answerInput){
+    answerInput.style.display="none";
+    if(answerInput.value)options.value=savedAnswer(answerInput.value);
+  }
+
+  /*
+   * Review (after submission): the student's answer, read-only - nothing can change any more.
+   * What else is shown is set in the builder (cfg.review, each true unless set to false):
+   *   grade:     the score line (with a rubric) or correct / number of issues (without)
+   *   reference: the reference answer, marked; when false the student's answer is not marked
+   *              either, because the marking gives the answer away
+   *   details:   the detailed evaluation (the penalty lines of the rubric / the list of errors)
+   */
+  if(review){
+    var show=cfg.review||{};
+    var showGrade=show.grade!==false,showReference=show.reference!==false,showDetails=show.details!==false;
+
+    options.mode="readonly-errors";
+    keyboard=new ChemicalKeyboard(options);
+    if(options.value){
+      var reviewResult=keyboard.compare();
+      if(showReference)keyboard.setComparisonFeedback(reviewResult,"student",options.value);
+
+      /* renderComparison fills both parts; only the parts that are switched on are put on the page */
+      summary=make("div","summary","margin-top:8px;font-weight:bold");
+      details=make("div","details");
+      ChemicalGrammar.renderComparison(reviewResult,lang,summary,details);
+      if(showGrade)host.appendChild(summary);
+      if(showDetails)host.appendChild(details);
+
+      if(showReference){
+        referenceTitle=make("div",null,"font-weight:bold;margin:12px 0 4px");
+        referenceTitle.textContent=ChemicalGrammar.feedbackText(lang,"referenceAnswer");
+        referenceDiv=make("div","reference");
+        host.appendChild(referenceTitle);
+        host.appendChild(referenceDiv);
+        feedback.push(new ChemicalKeyboard({divId:referenceDiv.id,language:lang,mode:"readonly-errors",value:""}));
+        feedback[0].setComparisonFeedback(reviewResult,"reference",cfg.correctAnswer||"");
+      }
+    }
+    return {keyboard:keyboard,feedback:feedback};
+  }
+
+  if(scoreInput||answerInput){
+    options.onChange=function(r){
+      var result,score;
+      if(!r.model.length){
+        setInput(answerInput,"");
+        setInput(scoreInput,"");
+        return;
+      }
+      result=compare(r.ast);
+      score=result.score?result.score.total/100:(result.correct?1:0);
+      setInput(answerInput,valueText(r.model)+FEEDBACK_SEPARATOR+feedbackLine(result));
+      setInput(scoreInput,String(Math.round(score*10000)/10000));
+    };
   }
 
   keyboard=new ChemicalKeyboard(options);
 
+  /*
+   * Check button while answering: the WRITING only - syntax errors and symbols that are not
+   * elements - never the grade or anything that compares with the reference (that is for Moodle's
+   * own Check and the review page). The answer is compared with itself, so the only errors left
+   * are those of the writing; unbalanced atoms are left out (balancing is part of the task).
+   */
+  var WRITING_CODES=["syntax-error","unknown-element"];
   if(cfg.checkButton){
     button=make("button","check","margin-top:8px;padding:5px 14px;font-size:16px;cursor:pointer");
     button.type="button";
     button.textContent=CHECK[lang];
-    summary=make("div","summary","margin-top:8px;font-weight:bold");
-    details=make("div","details");
-    section=make("div","feedback","display:none;margin-top:12px");
-    studentTitle=make("div",null,"font-weight:bold;margin:8px 0 4px");
-    studentDiv=make("div","student");
-    referenceTitle=make("div",null,"font-weight:bold;margin:8px 0 4px");
-    referenceDiv=make("div","reference");
-
-    section.appendChild(studentTitle);
-    section.appendChild(studentDiv);
-    section.appendChild(referenceTitle);
-    section.appendChild(referenceDiv);
+    summary=make("div","summary","margin-top:8px");
     host.appendChild(button);
     host.appendChild(summary);
-    host.appendChild(details);
-    host.appendChild(section);
-
-    feedback.push(new ChemicalKeyboard({divId:studentDiv.id,language:lang,mode:"readonly-errors",value:""}));
-    feedback.push(new ChemicalKeyboard({divId:referenceDiv.id,language:lang,mode:"readonly-errors",value:""}));
 
     button.addEventListener("click",function(){
-      var result=keyboard.compare();
-      feedback[0].setComparisonFeedback(result,"student",keyboard.getModel());
-      feedback[1].setComparisonFeedback(result,"reference",keyboard.correctAnswer);
-      studentTitle.textContent=ChemicalGrammar.feedbackText(lang,"studentAnswer");
-      referenceTitle.textContent=ChemicalGrammar.feedbackText(lang,"referenceAnswer");
-      section.style.display="block";
-      ChemicalGrammar.renderComparison(result,lang,summary,details);
+      var ast=keyboard.getAST(),problems=[],errors,i;
+      summary.textContent="";
+      if(!keyboard.getModel().length)return;
+      errors=ChemicalGrammar.compare(ast,ast,lang,{}).errors;
+      for(i=0;i<errors.length;i++){
+        if(WRITING_CODES.indexOf(errors[i].code)>=0&&problems.indexOf(errors[i].description)<0)problems.push(errors[i].description);
+      }
+      if(!problems.length){
+        summary.style.color="#18742a";
+        summary.textContent=WRITTEN_OK[lang];
+        return;
+      }
+      summary.style.color="#a12622";
+      for(i=0;i<problems.length;i++){
+        var line=document.createElement("div");
+        line.textContent=problems[i];
+        summary.appendChild(line);
+      }
     });
   }
 
@@ -367,8 +514,21 @@ const TEXT={
     libraryLocal:"This page uses the local copy of the library (next to the page), not the GitHub copy.",
     libraryPublic:"This page uses the GitHub copy of the library.",
     distinguishIsomers:"Treat isomers as different substances (compare by the written structural formula)",
-    checkButton:"Show the student a Check button with feedback",
-    answerField:"Copy the student's answer into the question's answer box, and hide that box",
+    conditions:"Show the reaction-condition (process) keys: the arrow with a condition, Δ, hν, °C, K",
+    issueConditions:"The reference answer has reaction conditions above the arrow, but the condition keys are off: the student cannot write them.",
+    checkButton:"Show the student a button that checks the writing (syntax and element symbols; no grade)",
+    reviewTitle:"After the attempt is submitted (review)",
+    reviewHint:"The student's answer is always shown, read-only. Set these to match the Moodle quiz review options (marks, right answer).",
+    reviewGrade:"Show the grade",
+    reviewReference:"Show the reference answer, and mark the errors in the student's answer (when off, nothing is marked)",
+    reviewDetails:"Show the detailed evaluation (the rubric's penalty lines / the list of errors)",
+    stackTitle:"Connection to the STACK question",
+    stackScoreInput:"STACK input for the score (0 to 1)",
+    stackAnswerInput:"STACK input for the answer and its feedback (optional)",
+    stackHint:"Input names as in the STACK question. The keyboard fills them whenever the answer changes; the answer input is needed to show the student's answer again after the attempt is submitted. Leave a field empty when that input is not used.",
+    modelFor:"Model answer of {name}",
+    issueStackName:"A STACK input name starts with a letter and contains only letters, digits and _.",
+    issueStackSame:"The score and the answer need two different STACK inputs.",
     secElements:"Element keys on the panel",
     elementsDefault:"Default set", elementsCustom:"Custom", elementsNone:"None (the student uses the full list)",
     elementsHint:"Every element can always be reached through the keyboard's full alphabetical list, so the panel may be empty.",
@@ -444,8 +604,21 @@ const TEXT={
     libraryLocal:"העמוד הזה משתמש בעותק המקומי של הספרייה (שליד העמוד), ולא בעותק שבגיטהב.",
     libraryPublic:"העמוד הזה משתמש בעותק של הספרייה שבגיטהב.",
     distinguishIsomers:"להתייחס לאיזומרים כחומרים שונים (השוואה לפי נוסחת המבנה הכתובה)",
-    checkButton:"להציג לתלמיד כפתור בדיקה עם משוב",
-    answerField:"להעתיק את תשובת התלמיד לתיבת התשובה של השאלה, ולהסתיר את התיבה",
+    conditions:"הצגת מקשי תנאי התגובה (התהליך): החץ עם תנאי, Δ, hν, ‏°C, ‏K",
+    issueConditions:"בתשובת הייחוס יש תנאי תגובה מעל החץ, אבל מקשי התנאים כבויים: התלמיד לא יוכל לכתוב אותם.",
+    checkButton:"להציג לתלמיד כפתור לבדיקת הכתיבה (תחביר וסמלי יסודות; ללא ציון)",
+    reviewTitle:"אחרי הגשת הניסיון (סקירה)",
+    reviewHint:"תשובת התלמיד מוצגת תמיד, לקריאה בלבד. כדאי להגדיר בהתאם לאפשרויות הסקירה של הבוחן ב־Moodle (ציונים, התשובה הנכונה).",
+    reviewGrade:"הצגת הציון",
+    reviewReference:"הצגת תשובת הייחוס וסימון השגיאות בתשובת התלמיד (כשכבוי, שום דבר לא מסומן)",
+    reviewDetails:"הצגת ההערכה המפורטת (שורות ההורדה של המחוון / רשימת השגיאות)",
+    stackTitle:"חיבור לשאלת STACK",
+    stackScoreInput:"קלט STACK לציון (0 עד 1)",
+    stackAnswerInput:"קלט STACK לתשובה ולמשוב עליה (לא חובה)",
+    stackHint:"שמות הקלטים כמו בשאלת STACK. המקלדת ממלאת אותם בכל שינוי בתשובה; קלט התשובה נחוץ כדי להציג שוב את תשובת התלמיד אחרי הגשת הניסיון. אפשר להשאיר שדה ריק אם הקלט הזה לא בשימוש.",
+    modelFor:"תשובת המודל של {name}",
+    issueStackName:"שם קלט STACK מתחיל באות ומכיל רק אותיות, ספרות ו־_.",
+    issueStackSame:"הציון והתשובה צריכים שני קלטי STACK שונים.",
     secElements:"מקשי היסודות בלוח",
     elementsDefault:"ברירת המחדל", elementsCustom:"בחירה אישית", elementsNone:"ללא (התלמיד משתמש ברשימה המלאה)",
     elementsHint:"כל יסוד זמין תמיד דרך הרשימה המלאה של המקלדת, הממוינת לפי האלף־בית, ולכן הלוח יכול להיות ריק.",
@@ -521,8 +694,21 @@ const TEXT={
     libraryLocal:"تستخدم هذه الصفحة النسخة المحلية من المكتبة (بجانب الصفحة)، وليس النسخة في GitHub.",
     libraryPublic:"تستخدم هذه الصفحة نسخة المكتبة في GitHub.",
     distinguishIsomers:"اعتبار المتصاوغات مواد مختلفة (المقارنة حسب الصيغة البنائية المكتوبة)",
-    checkButton:"عرض زر تحقق مع تغذية راجعة للطالب",
-    answerField:"نسخ إجابة الطالب إلى مربع الإجابة في السؤال، وإخفاء هذا المربع",
+    conditions:"عرض مفاتيح ظروف التفاعل (العملية): السهم مع شرط، Δ، hν، ‏°C، ‏K",
+    issueConditions:"في الإجابة المرجعية ظروف تفاعل فوق السهم، لكن مفاتيح الظروف مُطفأة: لن يتمكن الطالب من كتابتها.",
+    checkButton:"عرض زر للطالب لفحص الكتابة (الصياغة ورموز العناصر؛ بدون درجة)",
+    reviewTitle:"بعد تسليم المحاولة (المراجعة)",
+    reviewHint:"تُعرض إجابة الطالب دائمًا للقراءة فقط. اضبط هذه الخيارات بما يتوافق مع خيارات المراجعة في اختبار Moodle (الدرجات، الإجابة الصحيحة).",
+    reviewGrade:"عرض الدرجة",
+    reviewReference:"عرض الإجابة المرجعية وتمييز الأخطاء في إجابة الطالب (عند الإيقاف لا يُميَّز شيء)",
+    reviewDetails:"عرض التقييم المفصّل (أسطر الخصم في سلم التقدير / قائمة الأخطاء)",
+    stackTitle:"الربط بسؤال STACK",
+    stackScoreInput:"مدخل STACK للدرجة (من 0 إلى 1)",
+    stackAnswerInput:"مدخل STACK للإجابة والتغذية الراجعة عليها (اختياري)",
+    stackHint:"أسماء المدخلات كما في سؤال STACK. تملؤها لوحة المفاتيح عند كل تغيير في الإجابة؛ مدخل الإجابة ضروري لعرض إجابة الطالب مرة أخرى بعد تسليم المحاولة. اترك الحقل فارغًا إن لم يُستخدم هذا المدخل.",
+    modelFor:"الإجابة النموذجية لـ {name}",
+    issueStackName:"يبدأ اسم مدخل STACK بحرف ويحتوي فقط على أحرف وأرقام و_.",
+    issueStackSame:"تحتاج الدرجة والإجابة إلى مدخلين مختلفين في STACK.",
     secElements:"مفاتيح العناصر في اللوحة",
     elementsDefault:"المجموعة الافتراضية", elementsCustom:"اختيار مخصص", elementsNone:"بدون (يستخدم الطالب القائمة الكاملة)",
     elementsHint:"يمكن دائمًا الوصول إلى كل عنصر من خلال القائمة الكاملة المرتبة أبجديًا في لوحة المفاتيح، لذا يمكن أن تكون اللوحة فارغة.",
@@ -636,8 +822,13 @@ function newState(){
     libraryUrl:DEFAULT_LIBRARY_URL,
     language:"he",
     distinguishIsomers:false,
+    conditions:true,
     checkButton:true,
-    answerField:false,
+    reviewGrade:true,
+    reviewReference:true,
+    reviewDetails:true,
+    stackScoreInput:"ans1",
+    stackAnswerInput:"ans2",
     elementsMode:"default",
     elements:[],
     correctAnswer:"",
@@ -713,10 +904,13 @@ function questionConfig(){
     correctAnswer:state.correctAnswer,
     value:state.value,
     checkButton:state.checkButton,
-    answerField:state.answerField
+    review:{grade:state.reviewGrade,reference:state.reviewReference,details:state.reviewDetails}
   };
+  /* always written, also when empty: an emptied field must stay empty when the file is opened again */
+  cfg.stack={scoreInput:state.stackScoreInput,answerInput:state.stackAnswerInput};
   if(state.elementsMode==="custom") cfg.elements=state.elements.slice();
   if(state.distinguishIsomers) cfg.distinguishIsomers=true;
+  if(!state.conditions) cfg.conditions=false;
   const rubric=rubricForLibrary();
   if(rubric) cfg.rubric=rubric;
   return cfg;
@@ -732,8 +926,16 @@ function applyConfig(cfg){
   s.correctAnswer=typeof cfg.correctAnswer==="string"?cfg.correctAnswer:"";
   s.value=typeof cfg.value==="string"?cfg.value:"";
   s.distinguishIsomers=cfg.distinguishIsomers===true;
+  s.conditions=cfg.conditions!==false;
   s.checkButton=cfg.checkButton!==false;
-  s.answerField=cfg.answerField===true;
+  const review=cfg.review||{};     // files from before these options: all shown
+  s.reviewGrade=review.grade!==false;
+  s.reviewReference=review.reference!==false;
+  s.reviewDetails=review.details!==false;
+  if(cfg.stack){      // files from before the STACK fields keep the defaults (ans1, ans2)
+    s.stackScoreInput=typeof cfg.stack.scoreInput==="string"?cfg.stack.scoreInput:"";
+    s.stackAnswerInput=typeof cfg.stack.answerInput==="string"?cfg.stack.answerInput:"";
+  }
   s.rubricEnabled=!!cfg.rubric;
   s.rubric=rubricRulesFrom(cfg.rubric||SAMPLE_RUBRIC);
   state=s;
@@ -741,21 +943,34 @@ function applyConfig(cfg){
 
 function configId(){ return "chemkbd-"+state.questionId; }
 
+/* Written into the code's first comment, to see which version of the code a question has. Change it when chemkbdRun changes. */
+const SNIPPET_VERSION="2026-10-08.8";
+
 function snippet(){
   const id=configId();
   const json=JSON.stringify(questionConfig(),null,1).replace(/</g,"\\u003c");
   return [
-    "<!-- Chemical keyboard question \""+state.questionId+"\". Created with the chemical keyboard question builder:",
+    "<!-- Chemical keyboard question \""+state.questionId+"\" (code version "+SNIPPET_VERSION+"). Created with the chemical keyboard question builder:",
     "     to change it, open the saved file in the builder. Do not edit by hand. -->",
     "<div id=\""+id+"\"></div>",
     "<script type=\"application/json\" id=\""+id+"-config\">"+json+"<\/script>",
     "<script>",
     "(function(){",
     "var HOST_ID="+JSON.stringify(id)+",LIBRARY_URL="+JSON.stringify(state.libraryUrl)+";",
+    "var SCRIPT=document.currentScript;",
     chemkbdRun.toString(),
+    "/* this copy's own element with the given id: the nearest one before this script (another copy of the code may use the same id) */",
+    "function own(id){",
+    "  for(var e=SCRIPT&&SCRIPT.previousElementSibling;e;e=e.previousElementSibling){if(e.id===id)return e;}",
+    "  return document.getElementById(id);",
+    "}",
+    "/* the STACK inputs come after this code in the question text: start only when the whole page is read */",
     "function start(){",
-    "  var host=document.getElementById(HOST_ID);",
-    "  chemkbdRun(host,JSON.parse(document.getElementById(HOST_ID+\"-config\").textContent));",
+    "  if(document.readyState===\"loading\"){document.addEventListener(\"DOMContentLoaded\",start);return;}",
+    "  var copies=document.querySelectorAll(\"[id='\"+HOST_ID+\"']\").length;",
+    "  if(copies>1&&window.console)console.warn(\"[chemkbd \"+HOST_ID+\"] \"+copies+\" keyboards on this page have the id \"+HOST_ID+\": the code was pasted more than once, or two questions have the same question id\");",
+    "  try{chemkbdRun(own(HOST_ID),JSON.parse(own(HOST_ID+\"-config\").textContent));}",
+    "  catch(e){if(window.console)console.error(\"[chemkbd \"+HOST_ID+\"] failed:\",e);}",
     "}",
     "/* the library is loaded once for all the keyboard questions on the page */",
     "if(window.ChemicalKeyboard){start();return;}",
@@ -766,6 +981,7 @@ function snippet(){
     "var script=document.createElement(\"script\");",
     "script.src=LIBRARY_URL;",
     "script.onload=function(){while(queue.length)queue.shift()();};",
+    "script.onerror=function(){if(window.console)console.error(\"[chemkbd \"+HOST_ID+\"] the library could not be loaded:\",LIBRARY_URL);};",
     "document.head.appendChild(script);",
     "})();",
     "<\/script>"
@@ -842,6 +1058,7 @@ function makeEditor(hostId,value,onValue){
     onChange:r=>{ if(!building) onValue(modelToValue(r.model)); }};
   const elements=keyboardElements();
   if(elements) options.elements=elements;
+  if(!state.conditions) options.conditions=false;
   const keyboard=new ChemicalKeyboard(options);
   oneWindowAtATime(keyboard);
   return keyboard;
@@ -868,7 +1085,7 @@ function buildTry(){
   }
   const cfg=questionConfig();
   cfg.checkButton=true;      // the teacher always gets the check button here
-  cfg.answerField=false;
+  delete cfg.stack;          // no STACK inputs on this page
   building=true;
   tryRun=chemkbdRun($("tryHost"),cfg);
   building=false;
@@ -1211,8 +1428,12 @@ function referenceProblems(){
 function renderIssues(){
   const issues=[];
   if(!/^[A-Za-z0-9_-]+$/.test(state.questionId)) issues.push(t("issueId"));
+  const stackNames=[state.stackScoreInput,state.stackAnswerInput].filter(Boolean);
+  if(stackNames.some(name=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(name))) issues.push(t("issueStackName"));
+  if(stackNames.length===2&&stackNames[0]===stackNames[1]) issues.push(t("issueStackSame"));
   if(!state.libraryUrl.trim()) issues.push(t("issueUrl"));
   if(!state.correctAnswer) issues.push(t("referenceEmpty"));
+  if(!state.conditions&&/[→⇌]\[/.test(state.correctAnswer)) issues.push(t("issueConditions"));
   else if(referenceProblems().length) issues.push(t("issueReference"));
   const info=[];
   if(state.rubricEnabled&&RUBRIC_CATEGORIES.every(c=>state.rubric[c].mode==="none")) info.push(t("issueNoPenalty"));
@@ -1235,6 +1456,59 @@ function renderIssues(){
 function renderOutput(){
   $("output").value=snippet();
   $("copyStatus").textContent="";
+  renderStackModels();
+}
+
+/*
+ * Model answers for the STACK inputs, to copy into the STACK question:
+ *   score input:  1
+ *   answer input: what it holds for a correct answer - the reference, " || ", and its feedback
+ *                 (same format and language as chemkbdRun writes: savedAnswer / feedbackLine there),
+ *                 as a quoted string, because it is a String input.
+ */
+function stackModelAnswer(){
+  const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,state.language,
+    {rubric:rubricForLibrary(),distinguishIsomers:state.distinguishIsomers});
+  const parts=[];
+  if(result.score) parts.push(result.score.total+"%");
+  else if(result.correct) parts.push(ChemicalGrammar.feedbackText(state.language,"correct"));
+  result.errors.concat(result.notes||[]).forEach(e=>{ if(!e.suppressedBy&&e.description) parts.push(e.description); });
+  const feedback=parts.join(" | ").replace(/["\\\u2066-\u2069]/g,"");
+  return "\""+state.correctAnswer.replace(/["\\]/g,"")+" || "+feedback+"\"";
+}
+
+function renderStackModels(){
+  const box=$("stackModels");
+  box.textContent="";
+  const rows=[];
+  if(state.stackScoreInput) rows.push([state.stackScoreInput,"1"]);
+  if(state.stackAnswerInput&&state.correctAnswer) rows.push([state.stackAnswerInput,stackModelAnswer()]);
+
+  rows.forEach(([name,value])=>{
+    const row=document.createElement("div");
+    row.className="model-row";
+    const label=document.createElement("span");
+    label.className="label";
+    label.textContent=t("modelFor").replace("{name}",name);
+    const field=document.createElement("input");
+    field.type="text";
+    field.readOnly=true;
+    field.value=value;
+    field.addEventListener("focus",()=>field.select());
+    const copy=document.createElement("button");
+    copy.type="button";
+    copy.textContent=t("copy");
+    copy.addEventListener("click",()=>{
+      field.select();
+      const done=()=>{ copy.textContent=t("copied"); setTimeout(()=>{ copy.textContent=t("copy"); },1500); };
+      if(navigator.clipboard) navigator.clipboard.writeText(value).then(done,()=>{ document.execCommand("copy"); done(); });
+      else { document.execCommand("copy"); done(); }
+    });
+    row.appendChild(label);
+    row.appendChild(field);
+    row.appendChild(copy);
+    box.appendChild(row);
+  });
 }
 
 function renderFileState(){
@@ -1270,8 +1544,13 @@ function renderSettings(){
   $("questionId").value=state.questionId;
   $("libraryUrl").value=state.libraryUrl;
   $("distinguishIsomers").checked=state.distinguishIsomers;
+  $("conditions").checked=state.conditions;
   $("checkButton").checked=state.checkButton;
-  $("answerField").checked=state.answerField;
+  $("reviewGrade").checked=state.reviewGrade;
+  $("reviewReference").checked=state.reviewReference;
+  $("reviewDetails").checked=state.reviewDetails;
+  $("stackScoreInput").value=state.stackScoreInput;
+  $("stackAnswerInput").value=state.stackAnswerInput;
 }
 
 function renderAll(){
@@ -1373,8 +1652,14 @@ $("studentLanguage").addEventListener("change",e=>{
 $("questionId").addEventListener("input",e=>{ state.questionId=e.target.value.trim(); changed(); });
 $("libraryUrl").addEventListener("input",e=>{ state.libraryUrl=e.target.value.trim(); changed(); });
 $("distinguishIsomers").addEventListener("change",e=>{ state.distinguishIsomers=e.target.checked; changed({try:"sync"}); });
+/* the builder's keyboards show the same keys as the student's: rebuilt */
+$("conditions").addEventListener("change",e=>{ state.conditions=e.target.checked; buildKeyboards(); changed(); });
 $("checkButton").addEventListener("change",e=>{ state.checkButton=e.target.checked; changed(); });
-$("answerField").addEventListener("change",e=>{ state.answerField=e.target.checked; changed(); });
+$("reviewGrade").addEventListener("change",e=>{ state.reviewGrade=e.target.checked; changed(); });
+$("reviewReference").addEventListener("change",e=>{ state.reviewReference=e.target.checked; changed(); });
+$("reviewDetails").addEventListener("change",e=>{ state.reviewDetails=e.target.checked; changed(); });
+$("stackScoreInput").addEventListener("input",e=>{ state.stackScoreInput=e.target.value.trim(); changed(); });
+$("stackAnswerInput").addEventListener("input",e=>{ state.stackAnswerInput=e.target.value.trim(); changed(); });
 
 document.querySelectorAll("input[name=elementsMode]").forEach(radio=>{
   radio.addEventListener("change",()=>{

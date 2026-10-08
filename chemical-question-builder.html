@@ -134,6 +134,7 @@ table.rubric .na{color:#a5b0bc}
   <label class="field"><span data-t="libraryUrl"></span>
     <input type="url" id="libraryUrl" placeholder="https://.../chemical-keyboard-v4.js">
   </label>
+  <div class="hint" id="librarySource"></div>
   <label class="check"><input type="checkbox" id="distinguishIsomers"><span data-t="distinguishIsomers"></span></label>
   <label class="check"><input type="checkbox" id="checkButton"><span data-t="checkButton"></span></label>
   <label class="check"><input type="checkbox" id="answerField"><span data-t="answerField"></span></label>
@@ -217,7 +218,35 @@ table.rubric .na{color:#a5b0bc}
 
 </main>
 
-<script src="chemical-keyboard-v4.js"></script>
+<script>
+/*
+ * The keyboard library: the copy next to this page first (development: changes show at once,
+ * before they are pushed), and if there is none, the public GitHub copy (the builder on the internet).
+ * The builder starts only after the library has loaded (startBuilder, below).
+ */
+var PUBLIC_LIBRARY_URL="https://cdn.jsdelivr.net/gh/AviNat/chemistryLib@main/chemical-keyboard-v4.js";
+var LIBRARY_SOURCES=[
+  {url:"chemical-keyboard-v4.js",kind:"local"},
+  {url:PUBLIC_LIBRARY_URL,kind:"public"}
+];
+
+function loadKeyboardLibrary(sources,done,failed){
+  var script=document.createElement("script");
+  script.src=sources[0].url;
+  script.onload=function(){
+    if(window.ChemicalKeyboard)done(sources[0]);
+    else next();
+  };
+  script.onerror=next;
+  document.head.appendChild(script);
+
+  function next(){
+    script.remove();
+    if(sources.length>1)loadKeyboardLibrary(sources.slice(1),done,failed);
+    else failed();
+  }
+}
+</script>
 <script>
 /* ================================================================
    Student-side code. It is copied into every snippet with toString(),
@@ -314,7 +343,8 @@ function chemkbdRun(host,cfg){
 }
 </script>
 <script>
-(function(){
+/* librarySource: the entry of LIBRARY_SOURCES that loaded */
+function startBuilder(librarySource){
 "use strict";
 
 /* ================================================================
@@ -334,6 +364,8 @@ const TEXT={
     questionId:"Question id",
     questionIdHint:"Letters, digits, - and _ only. Each question shown on the same Moodle page needs a different id.",
     libraryUrl:"Keyboard library address (the GitHub copy by default)",
+    libraryLocal:"This page uses the local copy of the library (next to the page), not the GitHub copy.",
+    libraryPublic:"This page uses the GitHub copy of the library.",
     distinguishIsomers:"Treat isomers as different substances (compare by the written structural formula)",
     checkButton:"Show the student a Check button with feedback",
     answerField:"Copy the student's answer into the question's answer box, and hide that box",
@@ -409,6 +441,8 @@ const TEXT={
     questionId:"מזהה השאלה",
     questionIdHint:"אותיות, ספרות, ‎-‎ ו־_ בלבד. כל שאלה שמוצגת באותו עמוד ב־Moodle צריכה מזהה אחר.",
     libraryUrl:"כתובת ספריית המקלדת (כברירת מחדל, העותק בגיטהב)",
+    libraryLocal:"העמוד הזה משתמש בעותק המקומי של הספרייה (שליד העמוד), ולא בעותק שבגיטהב.",
+    libraryPublic:"העמוד הזה משתמש בעותק של הספרייה שבגיטהב.",
     distinguishIsomers:"להתייחס לאיזומרים כחומרים שונים (השוואה לפי נוסחת המבנה הכתובה)",
     checkButton:"להציג לתלמיד כפתור בדיקה עם משוב",
     answerField:"להעתיק את תשובת התלמיד לתיבת התשובה של השאלה, ולהסתיר את התיבה",
@@ -484,6 +518,8 @@ const TEXT={
     questionId:"معرّف السؤال",
     questionIdHint:"أحرف وأرقام و- و_ فقط. يحتاج كل سؤال يُعرض في صفحة Moodle نفسها إلى معرّف مختلف.",
     libraryUrl:"عنوان مكتبة لوحة المفاتيح (النسخة في GitHub افتراضيًا)",
+    libraryLocal:"تستخدم هذه الصفحة النسخة المحلية من المكتبة (بجانب الصفحة)، وليس النسخة في GitHub.",
+    libraryPublic:"تستخدم هذه الصفحة نسخة المكتبة في GitHub.",
     distinguishIsomers:"اعتبار المتصاوغات مواد مختلفة (المقارنة حسب الصيغة البنائية المكتوبة)",
     checkButton:"عرض زر تحقق مع تغذية راجعة للطالب",
     answerField:"نسخ إجابة الطالب إلى مربع الإجابة في السؤال، وإخفاء هذا المربع",
@@ -571,11 +607,11 @@ const SAMPLE_RUBRIC={
 };
 
 /*
- * The library address written into the Moodle code: the GitHub copy, served by jsDelivr.
- * (This page itself uses the local chemical-keyboard-v4.js next to it.)
+ * The library address written into the Moodle code: always the public GitHub copy, served by jsDelivr,
+ * whichever copy this page itself loaded (LIBRARY_SOURCES).
  * A saved local file:// address is replaced by it when a file is opened - Moodle cannot load file://.
  */
-const DEFAULT_LIBRARY_URL="https://cdn.jsdelivr.net/gh/AviNat/chemistryLib@main/chemical-keyboard-v4.js";
+const DEFAULT_LIBRARY_URL=PUBLIC_LIBRARY_URL;
 
 const FILE_TOOL="chemkbd-question-builder";
 const FILE_VERSION=1;
@@ -1225,6 +1261,8 @@ function renderTexts(){
   document.title=t("appTitle");
   document.querySelectorAll("[data-t]").forEach(el=>{ el.textContent=t(el.dataset.t); });
   $("teacherLanguage").value=teacherLanguage;
+  $("librarySource").textContent=t(librarySource.kind==="local"?"libraryLocal":"libraryPublic");
+  $("librarySource").style.color=librarySource.kind==="local"?"var(--warn)":"";
 }
 
 function renderSettings(){
@@ -1392,7 +1430,14 @@ window.addEventListener("beforeunload",e=>{
    ================================================================ */
 buildPeriodicTable();
 loadState(null);
-})();
+}
+
+loadKeyboardLibrary(LIBRARY_SOURCES,startBuilder,function(){
+  document.querySelector("main").innerHTML=
+    "<section><h2>The keyboard library could not be loaded.</h2>" +
+    "<p dir='ltr'>" + PUBLIC_LIBRARY_URL + "</p>" +
+    "<p dir='rtl'>לא ניתן לטעון את ספריית המקלדת.</p><p dir='rtl'>تعذّر تحميل مكتبة لوحة المفاتيح.</p></section>";
+});
 </script>
 </body>
 </html>

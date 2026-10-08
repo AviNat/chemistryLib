@@ -45,8 +45,9 @@ built on the **current** library functionality only.
 ## Decided (2026-10-08)
 - The snippet goes into a Moodle **STACK** question. The connection mechanism will be designed later by the user;
   until then the answer-box option is a placeholder (a STACK input is a text input inside `.que`, so it may fit).
-- Library address: the local `chemical-keyboard-v4.js` next to the tool (`file:///…`) by default; it will move to GitHub.
-  Files saved with an empty address get the default when opened.
+- Library address in the Moodle code: `https://cdn.jsdelivr.net/gh/AviNat/chemistryLib@main/chemical-keyboard-v4.js`
+  (GitHub through jsDelivr) by default. Files saved with an empty or a local `file://` address get it when opened.
+  The tool page itself still loads the local `chemical-keyboard-v4.js` next to it.
 - `<script>` tags in the question text are not a problem.
 - The reference answer will not be visible in the Moodle question (not a concern for the snippet).
 

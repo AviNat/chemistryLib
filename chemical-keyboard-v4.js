@@ -4043,20 +4043,33 @@ ChemicalKeyboard.prototype.syncRenderedDisplay=function(){
 
   this.renderedDisplay.textContent="\\("+latex+"\\)";
 
-  if(window.MathJax&&MathJax.startup&&MathJax.startup.promise){
-    MathJax.startup.promise.then(function(){
-      if(revision!==self.renderRevision)return;
-
-      if(MathJax.typesetClear){
-        MathJax.typesetClear([self.renderedDisplay]);
-      }
-
-      self.renderedDisplay.textContent="\\("+self.toLatex()+"\\)";
-
-      return MathJax.typesetPromise([self.renderedDisplay]);
-    });
-  }
+  typesetMath(this.renderedDisplay,function(){
+    /* MathJax 3 runs this later: skip an older version of the answer, write the current one */
+    if(revision!==self.renderRevision)return false;
+    self.renderedDisplay.textContent="\\("+self.toLatex()+"\\)";
+    return true;
+  });
 };
+
+/*
+ * Typeset an element with the page's MathJax. The host page may load version 3 (startup.promise,
+ * typesetPromise) or version 2 (Hub.Queue) - Moodle up to 4.x loads MathJax 2.7 - and while
+ * MathJax is still loading neither exists yet; then MathJax typesets the page when it starts.
+ * prepare (optional): runs just before typesetting (MathJax 3 only); false skips it.
+ */
+function typesetMath(element,prepare){
+  var mj=window.MathJax;
+
+  if(mj&&mj.startup&&mj.startup.promise&&mj.typesetPromise){
+    mj.startup.promise.then(function(){
+      if(mj.typesetClear)mj.typesetClear([element]);
+      if(prepare&&prepare()===false)return;
+      return mj.typesetPromise([element]);
+    });
+  }else if(mj&&mj.Hub&&mj.Hub.Queue){
+    mj.Hub.Queue(["Typeset",mj.Hub,element]);
+  }
+}
 ChemicalKeyboard.prototype.setCursorFromClick=function(e){
   var target=e.target,start,end,rect,after,script,conditionArrow;
 
@@ -5016,12 +5029,7 @@ function renderComparisonResult(result,language,summary,details){
     details.appendChild(notesBlock);
   }
 
-  if(window.MathJax&&MathJax.startup&&MathJax.startup.promise){
-    MathJax.startup.promise.then(function(){
-      if(MathJax.typesetClear) MathJax.typesetClear([details]);
-      return MathJax.typesetPromise([details]);
-    });
-  }
+  typesetMath(details);
 }
 function feedbackText(language,key){
   var messages=ERROR_TEXT[language]||ERROR_TEXT.en;

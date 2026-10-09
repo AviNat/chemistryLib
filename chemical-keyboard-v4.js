@@ -3337,6 +3337,8 @@ ChemicalKeyboard.prototype.buildRenderedElement=function(){
   });
 
   this.renderedDisplay=node("div");
+  /* MathJax processes this field even inside an element it is told to skip (tex2jax_ignore / mathjax_ignore) */
+  this.renderedDisplay.className="tex2jax_process mathjax_process";
 
   apply(this.renderedDisplay,{
     direction:"ltr",
@@ -5048,6 +5050,6 @@ function feedbackText(language,key){
   feedbackText:feedbackText,
   renderComparison:renderComparisonResult,
   elements:SYMBOLS.slice(),
-  version:"2.0.3"
+  version:"2.0.5"     // raise with every change, to see in the console which copy a page runs
 };
 })(window);

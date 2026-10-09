@@ -303,13 +303,16 @@ function chemkbdRun(host,cfg){
     return e;
   }
 
+  /* the texts (feedback, titles) follow the student language; the formulas are always left to right */
   host.textContent="";
   host.dir=lang==="en"?"ltr":"rtl";
+  var FORMULA_CSS="direction:ltr;text-align:left";
 
   /* ids of the parts: from the host's id, made unique if another keyboard on the page already uses them */
   if(document.getElementById(base+"-keyboard"))base+="-"+(window.__chemkbdRuns=(window.__chemkbdRuns||1)+1);
 
-  var keyboardDiv=make("div","keyboard");
+  var keyboardDiv=make("div","keyboard",FORMULA_CSS);
+  keyboardDiv.dir="ltr";
   host.appendChild(keyboardDiv);
 
   options={
@@ -437,7 +440,8 @@ function chemkbdRun(host,cfg){
       if(showReference){
         referenceTitle=make("div",null,"font-weight:bold;margin:12px 0 4px");
         referenceTitle.textContent=ChemicalGrammar.feedbackText(lang,"referenceAnswer");
-        referenceDiv=make("div","reference");
+        referenceDiv=make("div","reference",FORMULA_CSS);
+        referenceDiv.dir="ltr";
         host.appendChild(referenceTitle);
         host.appendChild(referenceDiv);
         feedback.push(new ChemicalKeyboard({divId:referenceDiv.id,language:lang,mode:"readonly-errors",value:""}));
@@ -959,7 +963,7 @@ function applyConfig(cfg){
 function configId(){ return "chemkbd-"+state.questionId; }
 
 /* Written into the code's first comment, to see which version of the code a question has. Change it when chemkbdRun changes. */
-const SNIPPET_VERSION="2026-10-08.8";
+const SNIPPET_VERSION="2026-10-09.1";
 
 /* the script tags of the snippet, built from parts (see the note at the top of this page) */
 const SCRIPT_OPEN="<"+"script";

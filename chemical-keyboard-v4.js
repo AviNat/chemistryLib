@@ -2874,9 +2874,14 @@ ChemicalKeyboard.prototype.build=function(){
    * header with its close button; read-only keyboards are part of the
    * page (feedback), so they have no title bar, close button or dragging.
    */
+  /*
+   * Formulas are always written left to right, and left-aligned: direction and text-align are set
+   * here, because in a right-to-left page (Moodle in Hebrew or Arabic) both are inherited as rtl/right.
+   */
   apply(root,{
     fontFamily:"Arial,sans-serif",
     direction:"ltr",
+    textAlign:"left",
     maxWidth:"820px",
     boxSizing:"border-box"
   });
@@ -2884,6 +2889,8 @@ ChemicalKeyboard.prototype.build=function(){
   this.display=node("div");
 
  apply(this.display,{
+    direction:"ltr",
+    textAlign:"left",
     minHeight:"56px",
     border:"1px solid #789",
     borderRadius:"8px",
@@ -3319,9 +3326,11 @@ ChemicalKeyboard.prototype.buildRenderedElement=function(){
 
   this.displayContainer=node("div");
 
+  /* left to right and left-aligned also in a right-to-left page (see build) */
   apply(this.displayContainer,{
     display:"flex",
     direction:"ltr",
+    textAlign:"left",
     alignItems:"stretch",
     gap:"8px",
     width:"100%"
@@ -3331,6 +3340,7 @@ ChemicalKeyboard.prototype.buildRenderedElement=function(){
 
   apply(this.renderedDisplay,{
     direction:"ltr",
+    textAlign:"left",
     minHeight:"56px",
     flex:"1 1 auto",
     minWidth:"0",

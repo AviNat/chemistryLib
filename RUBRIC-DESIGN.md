@@ -140,6 +140,55 @@ score: {
   to enter a fraction coefficient anyway.)
 - A penalty that covers several errors is written once (`score.penalties`, see 6).
 
+## 8a. Reaction conditions, part by part (design, 2026-10-09 - not implemented)
+
+Today the condition above the arrow is compared as one text (spaces removed, comma parts sorted):
+`missing-condition`, `wrong-condition`, or a note when the reference has none. "Δ, 400°C" vs "Δ, 450°C" is the same
+`wrong-condition` as a wrong catalyst. Proposal:
+
+- **Split the condition into typed parts** (both answers) and match them by type, not position:
+  heat (Δ), light (hν), temperature (number + °C / K), catalyst (a formula: Fe, V₂O₅, Pt, MnO₂), other text.
+  (Pressure only if it turns out to be needed; otherwise an unrecognized part is "other text".)
+- **Temperature: no teacher setting.** Within **10% of the reference value, in the reference's unit, at least ±5
+  degrees** (0°C would otherwise allow nothing). The student's value is converted between °C and K first
+  (723 K = 450°C).
+- **Δ and temperature** (decided):
+
+  | Reference | Student | Result |
+  |---|---|---|
+  | Δ | a temperature | correct (a temperature means heating) |
+  | a temperature | only Δ | partly correct: `heat-instead-of-temperature`, own rubric item |
+  | a temperature | wrong value | `wrong-temperature` |
+  | a temperature | none | `missing-temperature` |
+
+  A reference with both Δ and a temperature is redundant: the temperature is the requirement. The builder notes
+  "Δ is not needed when a temperature is given".
+- **Catalysts are compared as formulas only** (decided). Names cannot be entered usefully: the keyboard builds the
+  condition from element keys and digits; words need a physical keyboard and Latin letters only (no Hebrew / Arabic,
+  nothing on a tablet). Different formula → `wrong-catalyst`; none → `missing-catalyst`.
+- Other errors: `missing-heat` (Δ / hν expected, neither Δ nor a temperature given), `extra-condition` (a part the
+  reference does not have; a note by default).
+- **Rubric:** `conditions` becomes an object (a plain number keeps today's meaning):
+  ```js
+  conditions: {
+    missing: 10,                     // nothing above the arrow: one penalty, hides the per-part errors
+    heat: 5,                         // Δ / hν missing
+    temperature: { missing: 5, wrong: 3, heatOnly: 2 },   // heatOnly = heat-instead-of-temperature
+    catalyst: { missing: 5, wrong: 5 },
+    extra: 0
+  }
+  ```
+- Open: is pressure (atm / kPa) needed; required / optional parts per reference (kept out for now - no teacher
+  burden); exact penalty defaults.
+- Open (to check against the curriculum):
+  - **A general "catalyst" key**, without naming the substance ("a catalyst is used")? If yes: does it match a
+    reference with a specific catalyst (partly right?), and the reverse?
+  - **Electricity as a condition** (electrolysis): a key / symbol for it, and how it is compared.
+  - **Conditions like "acidic environment"** (H⁺ / acid, basic environment): a key for each, or written as a formula
+    (H⁺, OH⁻), and how they are compared.
+  These are not formulas and cannot be typed as words (Latin letters only, see above), so each would need its own key
+  and its own part type.
+
 ## 9. Implemented in `chemical-keyboard-v4.js` (2026-10-06)
 
 - `config.rubric` / `setRubric(rubric)`; `ChemicalGrammar.compare(student, reference, language, { rubric })`;

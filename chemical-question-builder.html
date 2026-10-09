@@ -71,8 +71,11 @@ button.primary:hover{background:#174c7b}
 .periodic button.picked{background:var(--picked);border-color:var(--picked);color:var(--picked-text)}
 .periodic .gap{grid-column:1/-1;height:6px}
 .chips{direction:ltr;display:flex;flex-wrap:wrap;gap:6px;min-height:34px;padding:6px;border:1px dashed var(--line);border-radius:8px}
-.chips .chip{padding:4px 10px;background:var(--chip);border:1px solid #b9c7d6;border-radius:14px;cursor:grab}
-.chips .chip.dragging{opacity:.4}
+.chips .chip{padding:4px 10px;background:var(--chip);border:1px solid #b9c7d6;border-radius:14px;cursor:grab;
+  touch-action:none;user-select:none;-webkit-user-select:none;position:relative}
+.chips .chip.dragging{cursor:grabbing;z-index:2;box-shadow:0 3px 10px rgba(0,0,0,.2);opacity:.85}
+.chips .chip.drop-before{box-shadow:-5px 0 0 -1px var(--accent)}
+.chips .chip.drop-after{box-shadow:5px 0 0 -1px var(--accent)}
 .chips .empty{color:var(--muted);font-size:13px;align-self:center}
 .chips.inline{display:inline-flex;min-height:0;padding:0;border:0;vertical-align:middle}
 .chip.on-panel,.chip.full-list{padding:2px 9px;border-radius:12px;font-size:14px;cursor:default;direction:ltr;display:inline-block}
@@ -1228,24 +1231,77 @@ function renderElements(){
     const chip=document.createElement("span");
     chip.className="chip";
     chip.textContent=symbol;
-    chip.draggable=true;
-    chip.addEventListener("click",()=>toggleElement(symbol));
-    chip.addEventListener("dragstart",e=>{
-      chip.classList.add("dragging");
-      e.dataTransfer.setData("text/plain",String(index));
-      e.dataTransfer.effectAllowed="move";
-    });
-    chip.addEventListener("dragend",()=>chip.classList.remove("dragging"));
-    chip.addEventListener("dragover",e=>{ e.preventDefault(); e.dataTransfer.dropEffect="move"; });
-    chip.addEventListener("drop",e=>{
-      e.preventDefault();
-      const from=Number(e.dataTransfer.getData("text/plain"));
-      if(!isFinite(from)||from===index) return;
-      const moved=state.elements.splice(from,1)[0];
-      state.elements.splice(index,0,moved);
-      elementsChanged();
-    });
+    chipPointer(chip,symbol,index);
     chips.appendChild(chip);
+  });
+}
+
+/*
+ * A chip: a click removes the element; a drag moves it. Pointer events, not the browser's drag
+ * and drop: they work the same with a mouse and a finger (tablets), and the drop may be anywhere
+ * in the list - the marker shows where the element goes. Removing is on "click" (also sent by
+ * assistive tools); the click the browser may send at the end of a drag is ignored.
+ */
+function chipPointer(chip,symbol,index){
+  let justDragged=false;
+  chip.addEventListener("click",()=>{
+    if(justDragged){ justDragged=false; return; }
+    toggleElement(symbol);
+  });
+  chip.addEventListener("pointerdown",e=>{
+    if(e.button!==0) return;
+    const startX=e.clientX,startY=e.clientY;
+    let dragging=false,target=null;
+    chip.setPointerCapture(e.pointerId);
+
+    const move=ev=>{
+      if(!dragging&&Math.hypot(ev.clientX-startX,ev.clientY-startY)>5){
+        dragging=true;
+        chip.classList.add("dragging");
+      }
+      if(!dragging) return;
+      chip.style.transform="translate("+(ev.clientX-startX)+"px,"+(ev.clientY-startY)+"px)";
+      target=chipDropIndex(chip,ev.clientX,ev.clientY);
+      chipDropMarker(chip,target);
+    };
+    const end=ev=>{
+      chip.removeEventListener("pointermove",move);
+      chip.removeEventListener("pointerup",end);
+      chip.removeEventListener("pointercancel",end);
+      if(!dragging) return;                                  // a click: handled by the click listener
+      justDragged=true;
+      setTimeout(()=>{ justDragged=false; },0);              // only the click that follows at once
+      chip.classList.remove("dragging");
+      chip.style.transform="";
+      chipDropMarker(chip,null);
+      if(target===null||ev.type!=="pointerup") return;
+      state.elements.splice(index,1);
+      state.elements.splice(target,0,symbol);
+      elementsChanged();
+    };
+    chip.addEventListener("pointermove",move);
+    chip.addEventListener("pointerup",end);
+    chip.addEventListener("pointercancel",end);
+  });
+}
+
+/* Where the dragged chip goes: its index in the list without it, from the pointer position (reading order, left to right). */
+function chipDropIndex(dragged,x,y){
+  const others=[...$("chips").querySelectorAll(".chip")].filter(c=>c!==dragged);
+  for(let i=0;i<others.length;i++){
+    const r=others[i].getBoundingClientRect();
+    if(y<r.top) return i;                                   // a row above this chip
+    if(y<=r.bottom&&x<r.left+r.width/2) return i;           // this row, left of the chip's middle
+  }
+  return others.length;                                     // after the last chip
+}
+
+/* The marker: a bar before the chip the dragged one will be put before (or after the last chip). */
+function chipDropMarker(dragged,target){
+  const others=[...$("chips").querySelectorAll(".chip")].filter(c=>c!==dragged);
+  others.forEach((c,i)=>{
+    c.classList.toggle("drop-before",target===i);
+    c.classList.toggle("drop-after",target===others.length&&i===others.length-1);
   });
 }
 

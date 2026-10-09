@@ -20,9 +20,20 @@
   "Try it as a student" section runs exactly the code that Moodle will run.
 -->
 <script>
+/*
+ * MathJax (renders the keyboards' display). Its script tag is added from here, not written in the
+ * page: htmlpreview.github.io loads a written script tag with a src only when the file is on GitHub;
+ * any other src (MathJax on jsDelivr) is silently dropped - the display stayed plain LaTeX.
+ * A tag added from a script is not touched by it.
+ */
 window.MathJax={tex:{inlineMath:[["\\(","\\)"]]},svg:{fontCache:"global"}};
+(function(){
+  var mathjax=document.createElement("script");
+  mathjax.async=true;
+  mathjax.src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js";
+  document.head.appendChild(mathjax);
+})();
 </script>
-<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <style>
 :root{
   --bg:#f4f6f9; --card:#fff; --text:#1d2733; --muted:#5b6876; --line:#d5dce4;

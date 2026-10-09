@@ -70,6 +70,9 @@ built on the **current** library functionality only.
   strings included; build it as `"<"+"script"`). htmlpreview.github.io rewrites every `<script` it finds in the page
   text, which broke a JS string ("Unexpected identifier 'text'", found 2026-10-09). GitHub Pages serves the page as is
   and is the better way to publish it.
+- htmlpreview also drops every `<script src>` that is not on GitHub (it keeps only the tag's empty text), so MathJax
+  never loaded and the keyboards showed plain LaTeX. MathJax's tag is therefore created from a script (like the
+  keyboard library's), which htmlpreview does not touch.
 - The debug log messages were removed (2026-10-08). Still reported in the console: a STACK input not found, the code
   pasted twice / duplicate question id, a failure, the library not loading. The code version is in the snippet's
   first comment.

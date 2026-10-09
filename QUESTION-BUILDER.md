@@ -16,6 +16,11 @@ built on the **current** library functionality only.
 | Copy the answer into the Moodle question's answer box | snippet option |
 
 - The keyboards in the tool use the **student** language, so the teacher sees what the student sees.
+- Student language **"system"** (2026-10-09): one copy of the question serves all languages. The student-side code
+  takes `window.studentLanguage` when a script on the page sets it (e.g. with Moodle's multilang filter), otherwise
+  `<html lang>`, which Moodle sets to the user's current language (`he`, `ar`, `en`, `en_us` → first two letters);
+  anything else is English. The builder previews a "system" question in the interface language (also the language of
+  the ans2 model answer's "correct" text - STACK never compares with it).
 - An empty element panel is valid: every element is reachable through the keyboard's full alphabetical list.
 - "Check the reference answer" button: compares the reference with itself and reports syntax errors, unknown elements
   and **unbalanced atoms** (the live status under the keyboard reports only the first two), with the problem parts
@@ -79,6 +84,12 @@ built on the **current** library functionality only.
 - MathJax version: Moodle (up to 4.x) loads **MathJax 2.7**. The library typesets with whichever version the page has
   (`typesetMath`: version 3 `typesetPromise`, version 2 `Hub.Queue`). Before, it knew only version 3, so in Moodle the
   formula field in the question text turned into plain LaTeX as soon as the student typed (2026-10-09).
+- **Releasing a library change** (Moodle loads it through jsDelivr `@main`, which caches for hours):
+  1. raise `ChemicalGrammar.version` in `chemical-keyboard-v4.js` (2.0.5 on 2026-10-09);
+  2. commit and push (GitHub Desktop);
+  3. open `https://purge.jsdelivr.net/gh/AviNat/chemistryLib@main/chemical-keyboard-v4.js` (wait for "finished");
+  4. in Moodle start a new preview, Ctrl+F5, and check `ChemicalGrammar.version` in the console.
+  A change in the student-side code (`chemkbdRun`) instead needs the Moodle code copied again (`SNIPPET_VERSION`).
 - The debug log messages were removed (2026-10-08). Still reported in the console: a STACK input not found, the code
   pasted twice / duplicate question id, a failure, the library not loading. The code version is in the snippet's
   first comment.

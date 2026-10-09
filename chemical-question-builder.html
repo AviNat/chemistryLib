@@ -139,6 +139,7 @@ table.rubric .na{color:#a5b0bc}
   <div class="row">
     <label class="field"><span data-t="studentLanguage"></span>
       <select id="studentLanguage">
+        <option value="system" data-t="languageSystem"></option>
         <option value="he">עברית</option>
         <option value="ar">العربية</option>
         <option value="en">English</option>
@@ -149,6 +150,7 @@ table.rubric .na{color:#a5b0bc}
     </label>
   </div>
   <div class="hint" data-t="studentLanguageHint"></div>
+  <div class="hint" id="languageSystemHint" data-t="languageSystemHint"></div>
   <div class="hint" data-t="questionIdHint"></div>
   <label class="field"><span data-t="libraryUrl"></span>
     <input type="url" id="libraryUrl" placeholder="https://.../chemical-keyboard-v4.js">
@@ -290,7 +292,19 @@ function loadKeyboardLibrary(sources,done,failed){
    Returns { keyboard, feedback: [reference keyboard of the review page] } (feedback may be empty).
    ================================================================ */
 function chemkbdRun(host,cfg){
-  var lang=cfg.language==="he"||cfg.language==="ar"?cfg.language:"en";
+  /*
+   * The student language. "system": the language Moodle shows the page in, so one copy of the
+   * question serves all languages - window.studentLanguage when a script on the page sets it
+   * (e.g. through Moodle's multilang filter), otherwise <html lang="..."> which Moodle sets to the
+   * user's current language ("he", "ar", "en", "en_us"...); anything else is English.
+   */
+  function supported(code){
+    code=String(code||"").replace(/['"\s]/g,"").toLowerCase().slice(0,2);
+    return code==="he"||code==="ar"||code==="en"?code:"";
+  }
+  var lang=cfg.language==="system"
+    ?(supported(window.studentLanguage)||supported(document.documentElement.lang)||"en")
+    :(supported(cfg.language)||"en");
   var CHECK={en:"Check the writing",he:"בדיקת הכתיבה",ar:"فحص الكتابة"};
   var WRITTEN_OK={en:"No writing problems were found.",he:"לא נמצאו בעיות בכתיבה.",ar:"لم يتم العثور على مشكلات في الكتابة."};
   var base=host.id;
@@ -527,6 +541,8 @@ const TEXT={
     secSettings:"Question settings",
     studentLanguage:"Student language",
     studentLanguageHint:"The student language is used for the keyboard tooltips, the element names and the feedback. The keyboards on this page use it too, so you see what the student will see.",
+    languageSystem:"System (Moodle's language)",
+    languageSystemHint:"System: the question uses the language Moodle shows the page in, so one copy serves all languages. This page previews it in the interface language.",
     questionId:"Question id",
     questionIdHint:"Letters, digits, - and _ only. Each question shown on the same Moodle page needs a different id.",
     libraryUrl:"Keyboard library address (the GitHub copy by default)",
@@ -617,6 +633,8 @@ const TEXT={
     secSettings:"הגדרות השאלה",
     studentLanguage:"שפת התלמיד",
     studentLanguageHint:"שפת התלמיד משמשת לתיאורי המקשים, לשמות היסודות ולמשוב. גם המקלדות בעמוד הזה משתמשות בה, כך שרואים בדיוק את מה שהתלמיד יראה.",
+    languageSystem:"מערכת (השפה של Moodle)",
+    languageSystemHint:"מערכת: השאלה משתמשת בשפה שבה Moodle מציג את הדף, כך שעותק אחד משרת את כל השפות. בעמוד הזה התצוגה המקדימה היא בשפת הממשק.",
     questionId:"מזהה השאלה",
     questionIdHint:"אותיות, ספרות, ‎-‎ ו־_ בלבד. כל שאלה שמוצגת באותו עמוד ב־Moodle צריכה מזהה אחר.",
     libraryUrl:"כתובת ספריית המקלדת (כברירת מחדל, העותק בגיטהב)",
@@ -707,6 +725,8 @@ const TEXT={
     secSettings:"إعدادات السؤال",
     studentLanguage:"لغة الطالب",
     studentLanguageHint:"تُستخدم لغة الطالب لتلميحات المفاتيح وأسماء العناصر والتغذية الراجعة. تستخدمها لوحات المفاتيح في هذه الصفحة أيضًا، فترى ما سيراه الطالب.",
+    languageSystem:"النظام (لغة Moodle)",
+    languageSystemHint:"النظام: يستخدم السؤال اللغة التي يعرض بها Moodle الصفحة، فتخدم نسخة واحدة جميع اللغات. تُعرض المعاينة في هذه الصفحة بلغة الواجهة.",
     questionId:"معرّف السؤال",
     questionIdHint:"أحرف وأرقام و- و_ فقط. يحتاج كل سؤال يُعرض في صفحة Moodle نفسها إلى معرّف مختلف.",
     libraryUrl:"عنوان مكتبة لوحة المفاتيح (النسخة في GitHub افتراضيًا)",
@@ -939,7 +959,7 @@ function applyConfig(cfg){
   const s=newState();
   if(typeof cfg.questionId==="string") s.questionId=cfg.questionId;
   if(typeof cfg.libraryUrl==="string"&&cfg.libraryUrl&&!/^file:/i.test(cfg.libraryUrl)) s.libraryUrl=cfg.libraryUrl;
-  if(["he","ar","en"].indexOf(cfg.language)>=0) s.language=cfg.language;
+  if(["system","he","ar","en"].indexOf(cfg.language)>=0) s.language=cfg.language;
   if(["default","custom","none"].indexOf(cfg.elementsMode)>=0) s.elementsMode=cfg.elementsMode;
   if(Array.isArray(cfg.elements)) s.elements=cfg.elements.filter(e=>ALL_ELEMENTS.indexOf(e)>=0);
   s.correctAnswer=typeof cfg.correctAnswer==="string"?cfg.correctAnswer:"";
@@ -963,7 +983,12 @@ function applyConfig(cfg){
 function configId(){ return "chemkbd-"+state.questionId; }
 
 /* Written into the code's first comment, to see which version of the code a question has. Change it when chemkbdRun changes. */
-const SNIPPET_VERSION="2026-10-09.1";
+const SNIPPET_VERSION="2026-10-09.2";
+
+/* The language the builder's keyboards show: the student language, or with "system" the interface language. */
+function previewLanguage(){
+  return state.language==="system"?teacherLanguage:state.language;
+}
 
 /* the script tags of the snippet, built from parts (see the note at the top of this page) */
 const SCRIPT_OPEN="<"+"script";
@@ -1077,7 +1102,7 @@ function modelToValue(chars){
 }
 
 function makeEditor(hostId,value,onValue){
-  const options={divId:hostId,language:state.language,mode:"edit",value:value,
+  const options={divId:hostId,language:previewLanguage(),mode:"edit",value:value,
     onChange:r=>{ if(!building) onValue(modelToValue(r.model)); }};
   const elements=keyboardElements();
   if(elements) options.elements=elements;
@@ -1109,6 +1134,7 @@ function buildTry(){
   const cfg=questionConfig();
   cfg.checkButton=true;      // the teacher always gets the check button here
   delete cfg.stack;          // no STACK inputs on this page
+  cfg.language=previewLanguage();
   building=true;
   tryRun=chemkbdRun($("tryHost"),cfg);
   building=false;
@@ -1394,7 +1420,7 @@ function checkReference(){
   texts.forEach(text=>{ const li=document.createElement("li"); li.textContent=text; ul.appendChild(li); });
   box.appendChild(ul);
 
-  const marked=new ChemicalKeyboard({divId:"referenceCheckView",language:state.language,mode:"readonly-errors",value:""});
+  const marked=new ChemicalKeyboard({divId:"referenceCheckView",language:previewLanguage(),mode:"readonly-errors",value:""});
   marked.setComparisonFeedback(Object.assign({},result,{errors:problems}),"student",referenceKeyboard.getModel());
   view.style.display="";
 }
@@ -1490,11 +1516,12 @@ function renderOutput(){
  *                 as a quoted string, because it is a String input.
  */
 function stackModelAnswer(){
-  const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,state.language,
+  /* with "system" the feedback text is in the preview language: STACK never compares with it, it only needs a model answer */
+  const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,previewLanguage(),
     {rubric:rubricForLibrary(),distinguishIsomers:state.distinguishIsomers});
   const parts=[];
   if(result.score) parts.push(result.score.total+"%");
-  else if(result.correct) parts.push(ChemicalGrammar.feedbackText(state.language,"correct"));
+  else if(result.correct) parts.push(ChemicalGrammar.feedbackText(previewLanguage(),"correct"));
   result.errors.concat(result.notes||[]).forEach(e=>{ if(!e.suppressedBy&&e.description) parts.push(e.description); });
   const feedback=parts.join(" | ").replace(/["\\\u2066-\u2069]/g,"");
   return "\""+state.correctAnswer.replace(/["\\]/g,"")+" || "+feedback+"\"";
@@ -1564,6 +1591,7 @@ function renderTexts(){
 
 function renderSettings(){
   $("studentLanguage").value=state.language;
+  $("languageSystemHint").style.display=state.language==="system"?"":"none";
   $("questionId").value=state.questionId;
   $("libraryUrl").value=state.libraryUrl;
   $("distinguishIsomers").checked=state.distinguishIsomers;
@@ -1664,11 +1692,13 @@ async function saveFile(saveAs){
 $("teacherLanguage").addEventListener("change",e=>{
   teacherLanguage=e.target.value;
   savePreference("teacherLanguage",teacherLanguage);
+  if(state.language==="system") buildKeyboards();   // they preview the question in the interface language
   renderAll();
 });
 
 $("studentLanguage").addEventListener("change",e=>{
   state.language=e.target.value;
+  $("languageSystemHint").style.display=state.language==="system"?"":"none";
   buildKeyboards();
   changed();
 });

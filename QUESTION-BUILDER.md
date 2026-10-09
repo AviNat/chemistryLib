@@ -73,6 +73,9 @@ built on the **current** library functionality only.
 - htmlpreview also drops every `<script src>` that is not on GitHub (it keeps only the tag's empty text), so MathJax
   never loaded and the keyboards showed plain LaTeX. MathJax's tag is therefore created from a script (like the
   keyboard library's), which htmlpreview does not touch.
+- Formulas are always left to right and left-aligned, also in a Hebrew / Arabic Moodle page (2026-10-09): the library
+  sets `direction:ltr; text-align:left` on its root and display fields (they inherited rtl / right before), and the
+  snippet puts the keyboard and the reference in `dir="ltr"` boxes; feedback texts keep the student language direction.
 - The debug log messages were removed (2026-10-08). Still reported in the console: a STACK input not found, the code
   pasted twice / duplicate question id, a failure, the library not loading. The code version is in the snippet's
   first comment.

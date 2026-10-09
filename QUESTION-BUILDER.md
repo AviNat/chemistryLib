@@ -66,6 +66,10 @@ built on the **current** library functionality only.
 - Option **condition keys** (`conditions`, default true; library `config.conditions`): when off, the keyboard has no
   reaction-condition (process) keys - the arrow with the condition placeholder, Δ, hν, °C, K. The builder's keyboards
   follow it, and it warns when the reference answer has a condition while the keys are off.
+- The builder page must not contain the text of a script tag anywhere except in its real tags (comments and JS
+  strings included; build it as `"<"+"script"`). htmlpreview.github.io rewrites every `<script` it finds in the page
+  text, which broke a JS string ("Unexpected identifier 'text'", found 2026-10-09). GitHub Pages serves the page as is
+  and is the better way to publish it.
 - The debug log messages were removed (2026-10-08). Still reported in the console: a STACK input not found, the code
   pasted twice / duplicate question id, a failure, the library not loading. The code version is in the snippet's
   first comment.

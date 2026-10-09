@@ -10,8 +10,12 @@
   initial answer and the grading rubric (RUBRIC-DESIGN.md). The output is a snippet to paste into
   the Moodle question text; it is saved as a .txt file and can be opened here again.
 
-  The saved file is the snippet itself. The configuration is in it once, as JSON in
-  <script type="application/json" id="chemkbd-...-config">; opening a file reads only that block.
+  The saved file is the snippet itself. The configuration is in it once, as JSON in a script
+  element of type application/json with the id chemkbd-...-config; opening a file reads only that block.
+
+  Nothing in this page may contain the text of a script tag except the real tags (write it as
+  "<"+"script" in code): page previewers such as htmlpreview.github.io find the scripts by
+  searching for that text, and would cut the code at the wrong place.
   The student-side code in the snippet is chemkbdRun (below), copied with toString(), so the
   "Try it as a student" section runs exactly the code that Moodle will run.
 -->
@@ -946,6 +950,10 @@ function configId(){ return "chemkbd-"+state.questionId; }
 /* Written into the code's first comment, to see which version of the code a question has. Change it when chemkbdRun changes. */
 const SNIPPET_VERSION="2026-10-08.8";
 
+/* the script tags of the snippet, built from parts (see the note at the top of this page) */
+const SCRIPT_OPEN="<"+"script";
+const SCRIPT_CLOSE="<"+"/script>";
+
 function snippet(){
   const id=configId();
   const json=JSON.stringify(questionConfig(),null,1).replace(/</g,"\\u003c");
@@ -953,8 +961,8 @@ function snippet(){
     "<!-- Chemical keyboard question \""+state.questionId+"\" (code version "+SNIPPET_VERSION+"). Created with the chemical keyboard question builder:",
     "     to change it, open the saved file in the builder. Do not edit by hand. -->",
     "<div id=\""+id+"\"></div>",
-    "<script type=\"application/json\" id=\""+id+"-config\">"+json+"<\/script>",
-    "<script>",
+    SCRIPT_OPEN+" type=\"application/json\" id=\""+id+"-config\">"+json+SCRIPT_CLOSE,
+    SCRIPT_OPEN+">",
     "(function(){",
     "var HOST_ID="+JSON.stringify(id)+",LIBRARY_URL="+JSON.stringify(state.libraryUrl)+";",
     "var SCRIPT=document.currentScript;",
@@ -984,14 +992,14 @@ function snippet(){
     "script.onerror=function(){if(window.console)console.error(\"[chemkbd \"+HOST_ID+\"] the library could not be loaded:\",LIBRARY_URL);};",
     "document.head.appendChild(script);",
     "})();",
-    "<\/script>"
+    SCRIPT_CLOSE
   ].join("\n");
 }
 
 /* Reads the configuration back from a saved snippet (or a plain JSON file). */
 function parseFile(text){
   let json=null;
-  const match=/<script[^>]*type=["']application\/json["'][^>]*>([\s\S]*?)<\/script>/i.exec(text);
+  const match=new RegExp(SCRIPT_OPEN+"[^>]*type=[\"']application/json[\"'][^>]*>([\\s\\S]*?)"+SCRIPT_CLOSE,"i").exec(text);
   if(match) json=match[1];
   else if(/^\s*\{/.test(text)) json=text;
   if(!json) throw new Error("no configuration");

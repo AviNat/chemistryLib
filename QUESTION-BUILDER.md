@@ -68,6 +68,13 @@ built on the **current** library functionality only.
   are not elements (the answer compared with itself; unbalanced atoms left out). No grade, nothing compared with the
   reference: a private, free, unlimited check would let students try until 100% and bypass Moodle's penalties; grading
   feedback during the attempt is Moodle's own Check (interactive / adaptive behaviour). Trial, to see if it has merit.
+  **Replaced 2026-10-10** by the library's validation icon (`config.validation`, on by default, library 2.0.6): a red
+  "!" in a circle inside the keyboard's typing area (only there - that's where the student looks), after a 2 s pause
+  in typing, at once when the keyboard closes or a value is set; a tap shows the problems. Same rule as the button
+  (`ChemicalGrammar.validate`: syntax errors and unknown elements). The left padding is reserved so the text doesn't
+  move. The check button option is hidden in the builder and always saved off; its code stays in `chemkbdRun`.
+  Questions already pasted with `checkButton:true` keep the button until their code is copied again. Grading is
+  unchanged: an invalid answer that is submitted scores 0.
 - Option **condition keys** (`conditions`, default true; library `config.conditions`): when off, the keyboard has no
   reaction-condition (process) keys - the arrow with the condition placeholder, Δ, hν, °C, K. The builder's keyboards
   follow it, and it warns when the reference answer has a condition while the keys are off.

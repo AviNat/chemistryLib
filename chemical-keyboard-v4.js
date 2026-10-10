@@ -43,7 +43,8 @@
     tipRight:"Move the cursor one chemical unit to the right",
     tipDelete:"Delete the chemical unit to the left of the cursor",
     tipClear:"Clear the complete formula or equation",
-    tipAllElements:"Open the complete list of chemical elements"
+    tipAllElements:"Open the complete list of chemical elements",
+    invalidWriting:"The answer is not written correctly:"
   },
 
   he:{
@@ -82,7 +83,8 @@
     tipRight:"הזזת הסמן יחידה כימית אחת ימינה",
     tipDelete:"מחיקת היחידה הכימית שמשמאל לסמן",
     tipClear:"מחיקת הנוסחה או המשוואה כולה",
-    tipAllElements:"פתיחת הרשימה המלאה של היסודות הכימיים"
+    tipAllElements:"פתיחת הרשימה המלאה של היסודות הכימיים",
+    invalidWriting:"התשובה אינה כתובה נכון:"
   },
 
   ar:{
@@ -121,7 +123,8 @@
     tipRight:"تحريك المؤشر وحدة كيميائية واحدة إلى اليمين",
     tipDelete:"حذف الوحدة الكيميائية الموجودة إلى يسار المؤشر",
     tipClear:"مسح الصيغة أو المعادلة كاملة",
-    tipAllElements:"فتح القائمة الكاملة للعناصر الكيميائية"
+    tipAllElements:"فتح القائمة الكاملة للعناصر الكيميائية",
+    invalidWriting:"الإجابة غير مكتوبة بشكل صحيح:"
   }
 };
 
@@ -2384,6 +2387,24 @@ ChemicalKeyboard.prototype.setComparisonFeedback=function(result,answer,value){
                                 (order and brackets), for questions whose
                                 substances have isomers. Default false.
 */
+/*
+ * The problems of the WRITING only (syntax errors, symbols that are not elements), as texts in the
+ * language: the answer is compared with itself, so nothing depends on a reference; unbalanced atoms
+ * are left out (balancing is part of the task). Used by the validation icon. value: text or AST.
+ */
+var WRITING_CODES=["syntax-error","unknown-element"];
+
+function validateWriting(value,language){
+  var errors=compareChemicalAnswers(value,value,language,{}).errors,problems=[],i;
+
+  for(i=0;i<errors.length;i++){
+    if(WRITING_CODES.indexOf(errors[i].code)>=0&&problems.indexOf(errors[i].description)<0){
+      problems.push(errors[i].description);
+    }
+  }
+  return problems;
+}
+
 function compareChemicalAnswers(studentValue,referenceValue,language,options){
   language=language==="he"||language==="ar"?language:"en";
   options=options||{};
@@ -2914,7 +2935,11 @@ ChemicalKeyboard.prototype.build=function(){
   this.display.style.setProperty("border-radius","8px","important");
   this.display.style.setProperty("background","#fff","important");
 
-  root.appendChild(this.display);
+  if(this.mode==="edit"&&this.config.validation!==false){
+    this.buildValidation(root,t);
+  }else{
+    root.appendChild(this.display);
+  }
 
   this.panel=node("div");
 
@@ -4018,6 +4043,115 @@ ChemicalKeyboard.prototype.key = function (e) {
   if(typeof this.config.onChange==="function"){
     this.config.onChange(r);
   }
+  this.scheduleValidation();
+};
+
+/*
+ * VALIDATION ICON (config.validation, on unless false; edit mode only)
+ * Like Moodle's formulas question: a red "!" in a circle inside the typing area when the answer
+ * is not written correctly (syntax errors, symbols that are not elements - see validateWriting).
+ * A half-written answer is always invalid, so the check runs only after a pause in typing
+ * (VALIDATION_DELAY) and at once when the keyboard closes or a value is set. The left padding
+ * of the typing area is reserved for the icon, so the text does not move when it appears.
+ */
+var VALIDATION_DELAY=2000;
+
+ChemicalKeyboard.prototype.buildValidation=function(root,t){
+  var self=this,wrapper=node("div"),icon=node("span","!"),message=node("div");
+
+  apply(wrapper,{position:"relative"});
+  apply(this.display,{paddingLeft:"44px"});
+
+  apply(icon,{
+    position:"absolute",
+    left:"12px",
+    top:"50%",
+    transform:"translateY(-50%)",
+    display:"none",
+    width:"22px",
+    height:"22px",
+    lineHeight:"19px",
+    border:"2px solid #c62828",
+    borderRadius:"50%",
+    boxSizing:"border-box",
+    color:"#c62828",
+    fontSize:"15px",
+    fontWeight:"bold",
+    textAlign:"center",
+    cursor:"pointer",
+    userSelect:"none"
+  });
+  icon.setAttribute("role","img");
+
+  /* a tap shows the problems under the typing area (no hover on a tablet); focus stays in the typing area */
+  icon.addEventListener("pointerdown",function(e){ e.preventDefault(); });
+  icon.addEventListener("click",function(e){
+    e.stopPropagation();
+    message.style.display=message.style.display==="none"?"block":"none";
+    self.display.focus();
+  });
+
+  apply(message,{
+    display:"none",
+    marginTop:"6px",
+    padding:"6px 10px",
+    border:"1px solid #e3a1a1",
+    borderRadius:"6px",
+    background:"#fdecec",
+    color:"#a12622",
+    fontSize:"14px",
+    direction:this.language==="he"||this.language==="ar"?"rtl":"ltr",
+    textAlign:"start"
+  });
+
+  wrapper.appendChild(this.display);
+  wrapper.appendChild(icon);
+  root.appendChild(wrapper);
+  root.appendChild(message);
+
+  this.validationIcon=icon;
+  this.validationMessage=message;
+  this.validationText=t.invalidWriting||T.en.invalidWriting;
+};
+
+/* The problems of the writing (texts in the keyboard language); empty when it is written correctly. */
+ChemicalKeyboard.prototype.validate=function(){
+  return validateWriting(this.getAST(),this.language);
+};
+
+ChemicalKeyboard.prototype.scheduleValidation=function(){
+  var self=this;
+
+  if(!this.validationIcon)return;
+  clearTimeout(this.validationTimer);
+  this.showValidation([]);             // editing: no icon until the next pause
+  this.validationTimer=setTimeout(function(){ self.updateValidation(); },VALIDATION_DELAY);
+};
+
+ChemicalKeyboard.prototype.updateValidation=function(){
+  if(!this.validationIcon)return;
+  clearTimeout(this.validationTimer);
+  this.showValidation(this.mode==="edit"&&this.chars.length?this.validate():[]);
+};
+
+ChemicalKeyboard.prototype.showValidation=function(problems){
+  var invalid=problems.length>0,i,line;
+
+  this.validationIcon.style.display=invalid?"block":"none";
+  this.validationIcon.title=invalid?this.validationText+"\n"+problems.join("\n"):"";
+  this.validationIcon.setAttribute("aria-label",invalid?this.validationIcon.title:"");
+  this.display.style.setProperty("border",invalid?"1px solid #c62828":"1px solid #789","important");
+
+  this.validationMessage.textContent="";
+  if(!invalid){
+    this.validationMessage.style.display="none";
+    return;
+  }
+  this.validationMessage.appendChild(node("div",this.validationText));
+  for(i=0;i<problems.length;i++){
+    line=node("div",problems[i]);
+    this.validationMessage.appendChild(line);
+  }
 };
 
   ChemicalKeyboard.prototype.isHighlighted = function (i) {
@@ -4661,6 +4795,7 @@ ChemicalKeyboard.prototype.markStates = function () {
       if ( typeof this.config.onChange === "function" ) {
         this.config.onChange( this.result() );
       }
+      this.updateValidation();   // a set value (e.g. a saved answer) is checked at once
     };
 
 ChemicalKeyboard.prototype.setMode = function (m) {
@@ -4673,6 +4808,7 @@ ChemicalKeyboard.prototype.setMode = function (m) {
     this.root.tabIndex = m === "edit" ? 0 : -1;
 
     this.render();
+    this.updateValidation();
   };
 
   ChemicalKeyboard.prototype.setHighlights = function (h) {
@@ -4831,6 +4967,7 @@ ChemicalKeyboard.prototype.show=function(){
 ChemicalKeyboard.prototype.hide=function(){
   this.closeElementWindows();
   this.root.style.display="none";
+  this.updateValidation();          // no pause to wait for: the student has finished typing
 };
 
 ChemicalKeyboard.prototype.showElementLetter = function (letter) {
@@ -5049,7 +5186,8 @@ function feedbackText(language,key){
   feedbackHighlights:comparisonHighlights,
   feedbackText:feedbackText,
   renderComparison:renderComparisonResult,
+  validate:validateWriting,
   elements:SYMBOLS.slice(),
-  version:"2.0.5"     // raise with every change, to see in the console which copy a page runs
+  version:"2.0.6"     // raise with every change, to see in the console which copy a page runs
 };
 })(window);

@@ -161,7 +161,8 @@ table.rubric .na{color:#a5b0bc}
   <div class="hint" id="librarySource"></div>
   <label class="check"><input type="checkbox" id="distinguishIsomers"><span data-t="distinguishIsomers"></span></label>
   <label class="check"><input type="checkbox" id="conditions"><span data-t="conditions"></span></label>
-  <label class="check"><input type="checkbox" id="checkButton"><span data-t="checkButton"></span></label>
+  <!-- hidden (2026-10-10): the keyboard's validation icon replaces the check button; the code stays in chemkbdRun -->
+  <label class="check" hidden><input type="checkbox" id="checkButton"><span data-t="checkButton"></span></label>
   <h3 class="sub" data-t="reviewTitle"></h3>
   <div class="hint" data-t="reviewHint"></div>
   <label class="check"><input type="checkbox" id="reviewGrade"><span data-t="reviewGrade"></span></label>
@@ -873,7 +874,7 @@ function newState(){
     language:"he",
     distinguishIsomers:false,
     conditions:true,
-    checkButton:true,
+    checkButton:false,
     reviewGrade:true,
     reviewReference:true,
     reviewDetails:true,
@@ -977,7 +978,7 @@ function applyConfig(cfg){
   s.value=typeof cfg.value==="string"?cfg.value:"";
   s.distinguishIsomers=cfg.distinguishIsomers===true;
   s.conditions=cfg.conditions!==false;
-  s.checkButton=cfg.checkButton!==false;
+  s.checkButton=false;             // hidden option: older files that had it on are saved without it
   const review=cfg.review||{};     // files from before these options: all shown
   s.reviewGrade=review.grade!==false;
   s.reviewReference=review.reference!==false;
@@ -1143,7 +1144,6 @@ function buildTry(){
     tryRun.feedback.forEach(removeKeyboard);
   }
   const cfg=questionConfig();
-  cfg.checkButton=true;      // the teacher always gets the check button here
   delete cfg.stack;          // no STACK inputs on this page
   cfg.language=previewLanguage();
   building=true;

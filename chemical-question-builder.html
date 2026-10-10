@@ -211,6 +211,8 @@ table.rubric .na{color:#a5b0bc}
     <div class="row">
       <button type="button" id="startFromDefault" data-t="startFromDefault"></button>
       <button type="button" id="clearElements" data-t="clearElements"></button>
+      <button type="button" id="sortAlpha" data-t="sortAlpha"></button>
+      <button type="button" id="sortAtomic" data-t="sortAtomic"></button>
     </div>
     <div class="periodic" id="periodic"></div>
     <div class="hint"><span data-t="elementsOrder"></span> <span data-t="dragHint"></span></div>
@@ -573,6 +575,8 @@ const TEXT={
     addFromReference:"Add the elements of the reference answer",
     startFromDefault:"Start from the default set",
     clearElements:"Clear",
+    sortAlpha:"Sort A–Z",
+    sortAtomic:"Sort by atomic number",
     elementsOrder:"Panel order (click an element to remove it).",
     dragHint:"Drag to change the order.",
     noElements:"No elements selected.",
@@ -665,6 +669,8 @@ const TEXT={
     addFromReference:"הוספת היסודות שבתשובת הייחוס",
     startFromDefault:"התחלה מברירת המחדל",
     clearElements:"ניקוי",
+    sortAlpha:"מיון לפי א״ב (A–Z)",
+    sortAtomic:"מיון לפי מספר אטומי",
     elementsOrder:"הסדר בלוח (לחיצה על יסוד מסירה אותו).",
     dragHint:"גרירה משנה את הסדר.",
     noElements:"לא נבחרו יסודות.",
@@ -757,6 +763,8 @@ const TEXT={
     addFromReference:"إضافة عناصر الإجابة المرجعية",
     startFromDefault:"البدء من المجموعة الافتراضية",
     clearElements:"مسح",
+    sortAlpha:"ترتيب أبجدي (A–Z)",
+    sortAtomic:"ترتيب حسب العدد الذري",
     elementsOrder:"الترتيب في اللوحة (انقر على عنصر لإزالته).",
     dragHint:"اسحب لتغيير الترتيب.",
     noElements:"لم يتم اختيار عناصر.",
@@ -1787,6 +1795,12 @@ $("addFromReference").addEventListener("click",()=>{
 });
 $("startFromDefault").addEventListener("click",()=>{ state.elements=DEFAULT_ELEMENTS.slice(); elementsChanged(); });
 $("clearElements").addEventListener("click",()=>{ state.elements=[]; elementsChanged(); });
+// One-off sorts: the result is an ordinary order, still changed by dragging afterwards.
+$("sortAlpha").addEventListener("click",()=>{ state.elements.sort(); elementsChanged(); });
+$("sortAtomic").addEventListener("click",()=>{
+  state.elements.sort((a,b)=>ALL_ELEMENTS.indexOf(a)-ALL_ELEMENTS.indexOf(b));
+  elementsChanged();
+});
 
 $("copyFromReference").addEventListener("click",()=>{ initialKeyboard.setValue(state.correctAnswer); });
 $("clearInitial").addEventListener("click",()=>{ initialKeyboard.setValue(""); });

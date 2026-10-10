@@ -7,7 +7,7 @@ built on the **current** library functionality only.
 | Setting | Goes into the keyboard config as |
 |---|---|
 | Student language (he / ar / en), independent of the tool's interface language | `language` |
-| Element keys: default set / custom list (periodic table + drag to reorder) / none | omitted / `elements:[...]` / `elements:[]` |
+| Element keys: default set / custom list (periodic table + drag to reorder, or one-click sort A–Z / by atomic number) / none | omitted / `elements:[...]` / `elements:[]` |
 | Reference answer (entered with the keyboard) | `correctAnswer` |
 | Initial student answer (optional, e.g. a partial answer to complete) | `value` |
 | Rubric per category: no penalty / once / per error (+ cap, + `allMissing` for states), or no grading | `rubric` (format of RUBRIC-DESIGN.md) |

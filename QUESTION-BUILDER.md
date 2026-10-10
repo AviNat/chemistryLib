@@ -102,6 +102,69 @@ built on the **current** library functionality only.
   get `input` + `change` events so STACK notices the new value.
 - The score is computed in the browser, so a determined student could change it (acceptable for practice).
 - The earlier placeholder "copy the answer into the first answer box" (model JSON) is removed.
+- The STACK integration works and is simple to set up (confirmed by the user 2026-10-10, with a demo question).
+
+## Review settings outside the code (design, 2026-10-10 - not implemented, deferred)
+
+**Deferred** until the decision on a dedicated Moodle question type (see "Decided"): such a question type would take
+the review options from Moodle and make this mechanism unnecessary in Moodle.
+
+Goal: the teacher changes what the review page shows (grade, feedback, correct answer) **without generating the code
+again**, and the same generated code serves every quiz.
+
+### Why not read Moodle's review page (rejected)
+The keyboard could guess the quiz review options from what Moodle renders (`.rightanswer`, `.specificfeedback`,
+the mark in `.info .grade`). Rejected: Moodle's output may change between versions, and STACK leaves some parts out
+even when the option is on (no `.specificfeedback` when the PRT gives no text). Named settings are a stable contract.
+
+### The settings are quiz-wide by nature
+In Moodle the review options (marks, specific feedback, right answer) are set **per quiz** and apply to every question
+in it. So the display is the same in every case:
+- a question with **several parts** (several keyboards in one question, each with its own question id);
+- **several questions on one page**;
+- the **review / summary** page, which can show all the questions of the quiz.
+
+So the main setting is **one page-wide value**; a per-question value is only an exception.
+
+### Mechanism: one namespace object on `window`
+```html
+<script>
+  window.chemkbdSettings = window.chemkbdSettings || {};
+  chemkbdSettings["*"]  = { showGrade: true, showFeedback: true, showCorrectAnswer: false };  // all keyboards on the page
+  chemkbdSettings["q1"] = { showCorrectAnswer: true };                                     // exception for one question id
+</script>
+```
+- One object (`chemkbdSettings`), not `window.<questionName>`: the browser creates a `window` global for every
+  element id (`window["chemkbd-q1"]` is already the host div), and plain names may clash with Moodle's scripts.
+- Lookup per setting: `chemkbdSettings[id]` → `chemkbdSettings["*"]` → `review` in the config JSON → shown (true).
+  Each setting is looked up on its own, so an exception can name only the setting it changes.
+- The keyboard reads the object when it starts (`DOMContentLoaded`), after all scripts in the page text have run,
+  so the block can be anywhere on the page.
+- Names follow Moodle's review options, which teachers know:
+
+  | Setting | Moodle review option | Today in the config |
+  |---|---|---|
+  | `showGrade` | Marks | `review.grade` |
+  | `showFeedback` | Specific feedback | `review.details` |
+  | `showCorrectAnswer` | Right answer | `review.reference` (also turns the marking of the student's answer on / off) |
+
+- Not tied to Moodle: any platform that can put a script on the page can set the same object.
+- STACK may fill the values from question variables (`showGrade: {#sg#}`) - not tested.
+
+### Builder output
+- The generated code starts with a short, separate settings block with a comment ("edit true / false here"), filled
+  from the builder's review checkboxes, so the teacher edits three words in the HTML view and never the JSON or the code.
+- The config JSON keeps `review` as the fallback; old files (only `review` in the JSON) keep working.
+- Changes `chemkbdRun` → new `SNIPPET_VERSION`. No library change.
+
+### Open
+- **Where a quiz-wide block lives.** Moodle has no per-quiz place for page scripts. Candidates: in each question's
+  text (works, but must be edited in every question, and the last block run wins for `"*"`); a Description item in the
+  quiz (only on its own page; a paged review shows other questions without it); the site's "Additional HTML" (admin
+  only, the whole site). Decide whether the generated block writes `"*"` or the question's own id - if every question
+  writes `"*"`, they must agree, which matches the quiz-wide nature but hides a mismatch.
+- The teacher must keep the settings in step with the quiz's real review options by hand (the price of not reading
+  Moodle's page).
 
 ## Decided (2026-10-08)
 - The snippet goes into a Moodle **STACK** question. The connection mechanism will be designed later by the user;
@@ -114,6 +177,10 @@ built on the **current** library functionality only.
   The settings show which copy is in use (orange when local). The Moodle code always uses the public address.
 - `<script>` tags in the question text are not a problem.
 - The reference answer will not be visible in the Moodle question (not a concern for the snippet).
+- A dedicated Moodle question type (the builder as the edit form, saved in Moodle, review options from Moodle) was
+  is under consideration (2026-10-10), **not decided**. Concerns: porting the grading and keeping it compatible across
+  platforms is a large effort. Either way the snippet approach stays, so the keyboard remains usable on other
+  learning platforms. The review-settings design above waits for this decision.
 
 ## Open
 - Verify in the real STACK: score field of the PRT taking `ans1`, hidden inputs with validation off.

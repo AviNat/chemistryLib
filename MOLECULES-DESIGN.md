@@ -66,6 +66,8 @@ molecules: [
 elements in **3 columns** (the element buttons are made narrower to fit), molecules in **2 wider columns** beside them
 (labels like Cr₂O₇²⁻ are longer). The keyboard window grows (today 435 px); on a narrow screen the molecule part wraps
 below the elements. Without molecule keys the panel stays as today (but with the narrower 3-column elements).
+**Done 2026-10-11 (library 2.0.9):** the elements are in 3 columns (the panel keeps its 190px width; buttons about 54px).
+The default set of 14 elements takes 5 rows, level with the digits panel.
 
 ## 6. Builder (proposal)
 

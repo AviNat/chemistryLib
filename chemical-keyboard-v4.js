@@ -2916,7 +2916,12 @@ ChemicalKeyboard.prototype.build=function(){
     border:"1px solid #789",
     borderRadius:"8px",
     padding:"12px",
-    fontSize:"28px",
+    /*
+     * The keyboard window's typing area is smaller, so longer formulas fit on one line (see buildPopupWindow).
+     * Read-only displays: config.fontSize (any CSS value) when given - "inherit" takes the size from the
+     * host div, so a page can style it (size, color, place) - otherwise 28px.
+     */
+    fontSize:this.mode==="edit"?TYPING_FONT_SIZE+"px":(this.config.fontSize||"28px"),
     background:"#fff",
     boxSizing:"border-box",
     outline:"none",
@@ -3225,9 +3230,10 @@ ChemicalKeyboard.prototype.build=function(){
 
   atomsGrid=node("div");
 
+  /* 3 columns: the default set fits in fewer rows (and room is left for molecule keys later, MOLECULES-DESIGN.md) */
   apply(atomsGrid,{
     display:"grid",
-    gridTemplateColumns:"repeat(2, 1fr)",
+    gridTemplateColumns:"repeat(3, 1fr)",
     gap:"6px"
   });
 
@@ -3245,7 +3251,7 @@ ChemicalKeyboard.prototype.build=function(){
         sym,
         function(){self.insertText(sym,"normal");},
         tooltip,
-        {width:"100%"}
+        {width:"100%",minWidth:"0"}
       );
     })(common[i]);
   }
@@ -3257,7 +3263,7 @@ ChemicalKeyboard.prototype.build=function(){
     t.tipAllElements,
     {
       width:"100%",
-      gridColumn:"1 / span 2",
+      gridColumn:"1 / span 3",
       fontSize:"15px"
     }
   );
@@ -3430,12 +3436,21 @@ ChemicalKeyboard.prototype.buildEmbeddedWindow=function(root){
 
   this.host.appendChild(root);
 };
+/*
+ * Typing area of the keyboard window. config.displayChars widens the window so that many characters
+ * fit on one line; a character is counted as CHAR_WIDTH_EM of the font size (a capital letter or a
+ * digit at the normal level - sub/superscripts take less, so the count is on the safe side).
+ * Horizontal space in the typing area: border 2px + padding 12px right + 44px left (room for the
+ * validation icon; counted also without it, so the width does not depend on that option).
+ * DISPLAY_CHARS is the default and the minimum: at 32 characters (481px) the first row of keys,
+ * up to the comma, fits on one line.
+ */
+var TYPING_FONT_SIZE=22,CHAR_WIDTH_EM=0.6,DISPLAY_CHARS=32;
+
 ChemicalKeyboard.prototype.buildPopupWindow=function(root,t){
-  /*
-   * Width fits the first panel row on one line:
-   * 8 buttons x 44px + 7 gaps x 6px = 394px, plus padding and border.
-   */
-  var self=this,header,title,close,width=435;
+  var self=this,header,title,close,
+  chars=Math.max(DISPLAY_CHARS,Number(this.config.displayChars)||0),
+  width=Math.ceil(chars*CHAR_WIDTH_EM*TYPING_FONT_SIZE)+2+12+44;
 
   apply(root,{
     position:"fixed",
@@ -5188,6 +5203,6 @@ function feedbackText(language,key){
   renderComparison:renderComparisonResult,
   validate:validateWriting,
   elements:SYMBOLS.slice(),
-  version:"2.0.6"     // raise with every change, to see in the console which copy a page runs
+  version:"2.0.10"     // raise with every change, to see in the console which copy a page runs
 };
 })(window);

@@ -12,6 +12,8 @@ built on the **current** library functionality only.
 | Initial student answer (optional, e.g. a partial answer to complete) | `value` |
 | Rubric per category: no penalty / once / per error (+ cap, + `allMissing` for states), or no grading | `rubric` (format of RUBRIC-DESIGN.md) |
 | Isomers as different substances | `distinguishIsomers` |
+| Keyboard window width in characters (empty = standard 32, also the minimum: the first row of keys fits) | `displayChars` (library option) |
+| Review display div: id of a div the teacher puts and styles in the question text | `reviewDiv` (snippet option) |
 | Check button with feedback for the student | snippet option |
 | Copy the answer into the Moodle question's answer box | snippet option |
 
@@ -59,6 +61,13 @@ built on the **current** library functionality only.
   - `reference`: the reference answer, marked; when off, the student's answer is **not marked** either (the marking
     gives the answer away)
   - `details`: the detailed evaluation (rubric penalty lines / list of errors)
+- **Review display div** (`cfg.reviewDiv`, 2026-10-11): instead of fixed sizes for the read-only displays, the teacher
+  adds a div to the question text and styles it (size, place, font size, color), e.g.
+  `<div id="q1-review" style="font-size:18px; max-width:600px"></div>`. On the review page the student's answer, grade,
+  evaluation and reference answer go into it, and the formulas take its font size (the library's read-only
+  `config.fontSize: "inherit"`, library 2.0.8; without it 28px). Looked up in the same `.que` first. Hidden while
+  answering, so an empty styled box isn't seen. Not found → output under the question as before (console warning).
+  The formula boxes keep their own border, white background, padding and minimum height.
 - `ans2` does not need a PRT: it is saved and restored without one (confirmed in Moodle 2026-10-08).
 - Inputs are left `readonly` (as Moodle renders them), never set to `disabled`: a disabled field is not sent with the
   form ("Try again" in interactive mode would lose the answer).

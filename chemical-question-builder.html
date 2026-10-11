@@ -163,8 +163,16 @@ table.rubric .na{color:#a5b0bc}
   <label class="check"><input type="checkbox" id="conditions"><span data-t="conditions"></span></label>
   <!-- hidden (2026-10-10): the keyboard's validation icon replaces the check button; the code stays in chemkbdRun -->
   <label class="check" hidden><input type="checkbox" id="checkButton"><span data-t="checkButton"></span></label>
+  <label class="field"><span data-t="displayChars"></span>
+    <input type="number" id="displayChars" min="32" max="120" step="1" placeholder="32">
+  </label>
+  <div class="hint" data-t="displayCharsHint"></div>
   <h3 class="sub" data-t="reviewTitle"></h3>
   <div class="hint" data-t="reviewHint"></div>
+  <label class="field"><span data-t="reviewDiv"></span>
+    <input type="text" id="reviewDiv" size="16" dir="ltr">
+  </label>
+  <div class="hint"><span data-t="reviewDivHint"></span> <code dir="ltr" id="reviewDivExample"></code></div>
   <label class="check"><input type="checkbox" id="reviewGrade"><span data-t="reviewGrade"></span></label>
   <label class="check"><input type="checkbox" id="reviewReference"><span data-t="reviewReference"></span></label>
   <label class="check"><input type="checkbox" id="reviewDetails"><span data-t="reviewDetails"></span></label>
@@ -347,6 +355,7 @@ function chemkbdRun(host,cfg){
   if(cfg.rubric)options.rubric=cfg.rubric;
   if(cfg.distinguishIsomers)options.distinguishIsomers=true;
   if(cfg.conditions===false)options.conditions=false;     // no reaction-condition (process) keys
+  if(cfg.displayChars>0)options.displayChars=cfg.displayChars;   // keyboard window width, in characters
 
   /*
    * Connection to the STACK question (cfg.stack). On every change the keyboard writes into inputs
@@ -426,6 +435,20 @@ function chemkbdRun(host,cfg){
   /* review page (after the attempt is submitted): Moodle shows the inputs read-only */
   var review=[scoreInput,answerInput].some(function(f){return f&&(f.readOnly||f.disabled);});
 
+  /*
+   * The teacher's review div (cfg.reviewDiv, an id): a div the teacher puts in the question text and
+   * styles (size, place, font size, color). The review output goes into it, and the formulas take
+   * its font size. Looked up in the same question first (ids repeat when a question is shown twice).
+   * Hidden while answering, so an empty styled box is not seen. Without it the output stays in host.
+   */
+  var out=host,reviewDiv=null;
+  if(cfg.reviewDiv){
+    var que=host.closest&&host.closest(".que");
+    reviewDiv=(que&&que.querySelector("[id='"+cfg.reviewDiv+"']"))||document.getElementById(cfg.reviewDiv);
+    if(!reviewDiv&&window.console)console.warn("Chemical keyboard "+base+": review div not found:",cfg.reviewDiv);
+  }
+  if(reviewDiv&&!review)reviewDiv.style.display="none";
+
   if(scoreInput)scoreInput.style.display="none";
   if(answerInput){
     answerInput.style.display="none";
@@ -445,6 +468,13 @@ function chemkbdRun(host,cfg){
     var showGrade=show.grade!==false,showReference=show.reference!==false,showDetails=show.details!==false;
 
     options.mode="readonly-errors";
+    if(reviewDiv){
+      out=reviewDiv;
+      out.textContent="";
+      out.dir=host.dir;
+      out.appendChild(keyboardDiv);
+      options.fontSize="inherit";
+    }
     keyboard=new ChemicalKeyboard(options);
     if(options.value){
       var reviewResult=keyboard.compare();
@@ -454,17 +484,18 @@ function chemkbdRun(host,cfg){
       summary=make("div","summary","margin-top:8px;font-weight:bold");
       details=make("div","details");
       ChemicalGrammar.renderComparison(reviewResult,lang,summary,details);
-      if(showGrade)host.appendChild(summary);
-      if(showDetails)host.appendChild(details);
+      if(showGrade)out.appendChild(summary);
+      if(showDetails)out.appendChild(details);
 
       if(showReference){
         referenceTitle=make("div",null,"font-weight:bold;margin:12px 0 4px");
         referenceTitle.textContent=ChemicalGrammar.feedbackText(lang,"referenceAnswer");
         referenceDiv=make("div","reference",FORMULA_CSS);
         referenceDiv.dir="ltr";
-        host.appendChild(referenceTitle);
-        host.appendChild(referenceDiv);
-        feedback.push(new ChemicalKeyboard({divId:referenceDiv.id,language:lang,mode:"readonly-errors",value:""}));
+        out.appendChild(referenceTitle);
+        out.appendChild(referenceDiv);
+        feedback.push(new ChemicalKeyboard({divId:referenceDiv.id,language:lang,mode:"readonly-errors",value:"",
+          fontSize:options.fontSize}));
         feedback[0].setComparisonFeedback(reviewResult,"reference",cfg.correctAnswer||"");
       }
     }
@@ -550,7 +581,7 @@ const TEXT={
     languageSystem:"System (Moodle's language)",
     languageSystemHint:"System: the question uses the language Moodle shows the page in, so one copy serves all languages. This page previews it in the interface language.",
     questionId:"Question id",
-    questionIdHint:"Letters, digits, - and _ only. Each question shown on the same Moodle page needs a different id.",
+    questionIdHint:"Question id: letters, digits, - and _ only. Each question shown on the same Moodle page needs a different id.",
     libraryUrl:"Keyboard library address (the GitHub copy by default)",
     libraryLocal:"This page uses the local copy of the library (next to the page), not the GitHub copy.",
     libraryPublic:"This page uses the GitHub copy of the library.",
@@ -558,6 +589,11 @@ const TEXT={
     conditions:"Show the reaction-condition (process) keys: the arrow with a condition, Δ, hν, °C, K",
     issueConditions:"The reference answer has reaction conditions above the arrow, but the condition keys are off: the student cannot write them.",
     checkButton:"Show the student a button that checks the writing (syntax and element symbols; no grade)",
+    displayChars:"Keyboard window width (characters on one line)",
+    displayCharsHint:"Empty: the standard width (about 32 characters). A larger number widens the keyboard window so longer answers fit on one line; it is never narrower than the standard width or wider than the screen.",
+    reviewDiv:"Review display div (id, optional)",
+    reviewDivHint:"After the attempt, the student's answer, the grade, the evaluation and the reference answer go into this div, and the formulas take its font size. Put the div in the Moodle question text (HTML view) and set its style there, e.g.:",
+    issueReviewDiv:"The review div id may contain only letters, digits, - and _.",
     reviewTitle:"After the attempt is submitted (review)",
     reviewHint:"The student's answer is always shown, read-only. Set these to match the Moodle quiz review options (marks, right answer).",
     reviewGrade:"Show the grade",
@@ -644,7 +680,7 @@ const TEXT={
     languageSystem:"מערכת (השפה של Moodle)",
     languageSystemHint:"מערכת: השאלה משתמשת בשפה שבה Moodle מציג את הדף, כך שעותק אחד משרת את כל השפות. בעמוד הזה התצוגה המקדימה היא בשפת הממשק.",
     questionId:"מזהה השאלה",
-    questionIdHint:"אותיות, ספרות, ‎-‎ ו־_ בלבד. כל שאלה שמוצגת באותו עמוד ב־Moodle צריכה מזהה אחר.",
+    questionIdHint:"מזהה השאלה: אותיות, ספרות, ‎-‎ ו־_ בלבד. כל שאלה שמוצגת באותו עמוד ב־Moodle צריכה מזהה אחר.",
     libraryUrl:"כתובת ספריית המקלדת (כברירת מחדל, העותק בגיטהב)",
     libraryLocal:"העמוד הזה משתמש בעותק המקומי של הספרייה (שליד העמוד), ולא בעותק שבגיטהב.",
     libraryPublic:"העמוד הזה משתמש בעותק של הספרייה שבגיטהב.",
@@ -652,6 +688,11 @@ const TEXT={
     conditions:"הצגת מקשי תנאי התגובה (התהליך): החץ עם תנאי, Δ, hν, ‏°C, ‏K",
     issueConditions:"בתשובת הייחוס יש תנאי תגובה מעל החץ, אבל מקשי התנאים כבויים: התלמיד לא יוכל לכתוב אותם.",
     checkButton:"להציג לתלמיד כפתור לבדיקת הכתיבה (תחביר וסמלי יסודות; ללא ציון)",
+    displayChars:"רוחב חלון המקלדת (תווים בשורה אחת)",
+    displayCharsHint:"ריק: הרוחב הרגיל (כ־32 תווים). מספר גדול יותר מרחיב את חלון המקלדת כך שתשובות ארוכות ייכנסו בשורה אחת; החלון אף פעם לא צר מהרוחב הרגיל ולא רחב מהמסך.",
+    reviewDiv:"div לתצוגת הסקירה (מזהה, לא חובה)",
+    reviewDivHint:"אחרי הניסיון, תשובת התלמיד, הציון, ההערכה ותשובת הייחוס מוצגים בתוך ה־div הזה, והנוסחאות מקבלות את גודל הגופן שלו. יש להוסיף את ה־div לטקסט השאלה ב־Moodle (בתצוגת HTML) ולהגדיר שם את העיצוב שלו, למשל:",
+    issueReviewDiv:"מזהה ה־div של הסקירה יכול להכיל רק אותיות, ספרות, ‎-‎ ו־_.",
     reviewTitle:"אחרי הגשת הניסיון (סקירה)",
     reviewHint:"תשובת התלמיד מוצגת תמיד, לקריאה בלבד. כדאי להגדיר בהתאם לאפשרויות הסקירה של הבוחן ב־Moodle (ציונים, התשובה הנכונה).",
     reviewGrade:"הצגת הציון",
@@ -738,7 +779,7 @@ const TEXT={
     languageSystem:"النظام (لغة Moodle)",
     languageSystemHint:"النظام: يستخدم السؤال اللغة التي يعرض بها Moodle الصفحة، فتخدم نسخة واحدة جميع اللغات. تُعرض المعاينة في هذه الصفحة بلغة الواجهة.",
     questionId:"معرّف السؤال",
-    questionIdHint:"أحرف وأرقام و- و_ فقط. يحتاج كل سؤال يُعرض في صفحة Moodle نفسها إلى معرّف مختلف.",
+    questionIdHint:"معرّف السؤال: أحرف وأرقام و- و_ فقط. يحتاج كل سؤال يُعرض في صفحة Moodle نفسها إلى معرّف مختلف.",
     libraryUrl:"عنوان مكتبة لوحة المفاتيح (النسخة في GitHub افتراضيًا)",
     libraryLocal:"تستخدم هذه الصفحة النسخة المحلية من المكتبة (بجانب الصفحة)، وليس النسخة في GitHub.",
     libraryPublic:"تستخدم هذه الصفحة نسخة المكتبة في GitHub.",
@@ -746,6 +787,11 @@ const TEXT={
     conditions:"عرض مفاتيح ظروف التفاعل (العملية): السهم مع شرط، Δ، hν، ‏°C، ‏K",
     issueConditions:"في الإجابة المرجعية ظروف تفاعل فوق السهم، لكن مفاتيح الظروف مُطفأة: لن يتمكن الطالب من كتابتها.",
     checkButton:"عرض زر للطالب لفحص الكتابة (الصياغة ورموز العناصر؛ بدون درجة)",
+    displayChars:"عرض نافذة لوحة المفاتيح (عدد الأحرف في سطر واحد)",
+    displayCharsHint:"فارغ: العرض العادي (نحو 32 حرفًا). الرقم الأكبر يوسّع نافذة لوحة المفاتيح لتتسع الإجابات الطويلة في سطر واحد؛ ولا تكون النافذة أبدًا أضيق من العرض العادي أو أعرض من الشاشة.",
+    reviewDiv:"div لعرض المراجعة (المعرّف، اختياري)",
+    reviewDivHint:"بعد المحاولة تُعرض إجابة الطالب والدرجة والتقييم والإجابة المرجعية داخل هذا الـ div، وتأخذ الصيغ حجم خطّه. أضف الـ div إلى نص السؤال في Moodle (في عرض HTML) واضبط تنسيقه هناك، مثلًا:",
+    issueReviewDiv:"يمكن أن يحتوي معرّف div المراجعة على أحرف وأرقام و‎-‎ و_ فقط.",
     reviewTitle:"بعد تسليم المحاولة (المراجعة)",
     reviewHint:"تُعرض إجابة الطالب دائمًا للقراءة فقط. اضبط هذه الخيارات بما يتوافق مع خيارات المراجعة في اختبار Moodle (الدرجات، الإجابة الصحيحة).",
     reviewGrade:"عرض الدرجة",
@@ -875,6 +921,8 @@ function newState(){
     distinguishIsomers:false,
     conditions:true,
     checkButton:false,
+    displayChars:"",          // keyboard window width in characters; empty = the library's default
+    reviewDiv:"",             // id of the teacher's div for the review output; empty = under the question
     reviewGrade:true,
     reviewReference:true,
     reviewDetails:true,
@@ -962,6 +1010,8 @@ function questionConfig(){
   if(state.elementsMode==="custom") cfg.elements=state.elements.slice();
   if(state.distinguishIsomers) cfg.distinguishIsomers=true;
   if(!state.conditions) cfg.conditions=false;
+  if(displayChars()) cfg.displayChars=displayChars();
+  if(state.reviewDiv) cfg.reviewDiv=state.reviewDiv;
   const rubric=rubricForLibrary();
   if(rubric) cfg.rubric=rubric;
   return cfg;
@@ -979,6 +1029,8 @@ function applyConfig(cfg){
   s.distinguishIsomers=cfg.distinguishIsomers===true;
   s.conditions=cfg.conditions!==false;
   s.checkButton=false;             // hidden option: older files that had it on are saved without it
+  if(cfg.displayChars>0) s.displayChars=String(cfg.displayChars);
+  if(typeof cfg.reviewDiv==="string") s.reviewDiv=cfg.reviewDiv;
   const review=cfg.review||{};     // files from before these options: all shown
   s.reviewGrade=review.grade!==false;
   s.reviewReference=review.reference!==false;
@@ -992,10 +1044,16 @@ function applyConfig(cfg){
   state=s;
 }
 
+/* The keyboard window width as a whole number of characters, or 0 (empty / not a positive number: the default). */
+function displayChars(){
+  const n=Math.round(Number(state.displayChars));
+  return state.displayChars!==""&&n>0?n:0;
+}
+
 function configId(){ return "chemkbd-"+state.questionId; }
 
 /* Written into the code's first comment, to see which version of the code a question has. Change it when chemkbdRun changes. */
-const SNIPPET_VERSION="2026-10-09.2";
+const SNIPPET_VERSION="2026-10-11.1";
 
 /* The language the builder's keyboards show: the student language, or with "system" the interface language. */
 function previewLanguage(){
@@ -1119,6 +1177,7 @@ function makeEditor(hostId,value,onValue){
   const elements=keyboardElements();
   if(elements) options.elements=elements;
   if(!state.conditions) options.conditions=false;
+  if(displayChars()) options.displayChars=displayChars();
   const keyboard=new ChemicalKeyboard(options);
   oneWindowAtATime(keyboard);
   return keyboard;
@@ -1541,6 +1600,7 @@ function referenceProblems(){
 function renderIssues(){
   const issues=[];
   if(!/^[A-Za-z0-9_-]+$/.test(state.questionId)) issues.push(t("issueId"));
+  if(state.reviewDiv&&!/^[A-Za-z0-9_-]+$/.test(state.reviewDiv)) issues.push(t("issueReviewDiv"));
   const stackNames=[state.stackScoreInput,state.stackAnswerInput].filter(Boolean);
   if(stackNames.some(name=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(name))) issues.push(t("issueStackName"));
   if(stackNames.length===2&&stackNames[0]===stackNames[1]) issues.push(t("issueStackSame"));
@@ -1661,11 +1721,19 @@ function renderSettings(){
   $("distinguishIsomers").checked=state.distinguishIsomers;
   $("conditions").checked=state.conditions;
   $("checkButton").checked=state.checkButton;
+  $("displayChars").value=state.displayChars;
+  $("reviewDiv").value=state.reviewDiv;
+  renderReviewDivExample();
   $("reviewGrade").checked=state.reviewGrade;
   $("reviewReference").checked=state.reviewReference;
   $("reviewDetails").checked=state.reviewDetails;
   $("stackScoreInput").value=state.stackScoreInput;
   $("stackAnswerInput").value=state.stackAnswerInput;
+}
+
+/* The example div for the Moodle question text, with the id the teacher typed. */
+function renderReviewDivExample(){
+  $("reviewDivExample").textContent='<div id="'+(state.reviewDiv||"q1-review")+'" style="font-size:18px; color:#123; max-width:600px"></div>';
 }
 
 function renderAll(){
@@ -1772,6 +1840,9 @@ $("distinguishIsomers").addEventListener("change",e=>{ state.distinguishIsomers=
 /* the builder's keyboards show the same keys as the student's: rebuilt */
 $("conditions").addEventListener("change",e=>{ state.conditions=e.target.checked; buildKeyboards(); changed(); });
 $("checkButton").addEventListener("change",e=>{ state.checkButton=e.target.checked; changed(); });
+/* the builder's keyboards get the same window width as the student's: rebuilt */
+$("displayChars").addEventListener("change",e=>{ state.displayChars=e.target.value.trim(); buildKeyboards(); changed(); });
+$("reviewDiv").addEventListener("input",e=>{ state.reviewDiv=e.target.value.trim(); renderReviewDivExample(); changed(); });
 $("reviewGrade").addEventListener("change",e=>{ state.reviewGrade=e.target.checked; changed(); });
 $("reviewReference").addEventListener("change",e=>{ state.reviewReference=e.target.checked; changed(); });
 $("reviewDetails").addEventListener("change",e=>{ state.reviewDetails=e.target.checked; changed(); });

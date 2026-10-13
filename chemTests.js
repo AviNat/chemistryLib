@@ -139,40 +139,12 @@ let CASES = [
 
 /* --------------------------------------------------------------
    Editor content in the value notation (lossless: getValue() drops
-   the sub/sup levels, so it cannot be used for the expectations)
+   the sub/sup levels, so it cannot be used for the expectations).
+   The library's own ChemicalGrammar.valueText (library 2.1.0), so
+   every key-sequence case also tests it.
    -------------------------------------------------------------- */
 function showChars(chars) {
-    let out = "";
-    let i = 0;
-
-    while (i < chars.length) {
-        let c = chars[i];
-
-        if (c.kind === "state") {
-            out += c.ch;
-            i += 1;
-            continue;
-        }
-
-        if (c.script === "sub" || c.script === "sup") {
-            let script = c.script;
-            let run = "";
-
-            while (i < chars.length && chars[i].script === script && chars[i].kind !== "state") {
-                run += chars[i].ch;
-                i += 1;
-            }
-
-            out += (script === "sub" ? "_{" : "^{") + run + "}";
-            continue;
-        }
-
-        out += c.ch;
-        if (c.condition && c.condition.length) out += "[" + showChars(c.condition) + "]";
-        i += 1;
-    }
-
-    return out;
+    return ChemicalGrammar.valueText(chars);
 }
 
 /* Comparison result: "correct" or "wrong", then the error codes with their substance / atom, then the notes */

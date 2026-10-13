@@ -1344,6 +1344,41 @@ function conditionText(condition){
   return s;
 }
 
+/*
+ * A model (getModel()) in the value notation that setValue / modelFromValue read exactly:
+ * a run of subscript characters -> _{...}, a run of superscript characters -> ^{...}, states as
+ * written ((s), (aq) - recognized as states when read), the condition above an arrow -> [...]
+ * after it, in the same notation. Unlike getValue(), the sub/superscript levels are kept:
+ * getValue() gives "SO42-" for SO₄²⁻, which can't be read back without guessing.
+ */
+function valueTextOf(chars){
+  var out="",i=0,c,script,run;
+
+  chars=chars||[];
+  while(i<chars.length){
+    c=chars[i];
+    if(c.kind==="state"){
+      out+=c.ch;
+      i++;
+      continue;
+    }
+    if(c.script==="sub"||c.script==="sup"){
+      script=c.script;
+      run="";
+      while(i<chars.length&&chars[i].script===script&&chars[i].kind!=="state"){
+        run+=chars[i].ch;
+        i++;
+      }
+      out+=(script==="sub"?"_{":"^{")+run+"}";
+      continue;
+    }
+    out+=c.ch;
+    if(c.condition&&c.condition.length)out+="["+valueTextOf(c.condition)+"]";
+    i++;
+  }
+  return out;
+}
+
 function matchValueToken(s,i){
   var k;
 
@@ -4712,6 +4747,11 @@ ChemicalKeyboard.prototype.toLatex=function(){
       return s;
     };
 
+  /* The answer in the value notation (H_{2}O, SO_{4}^{2-}): setValue(getValueText()) gives the same model. */
+  ChemicalKeyboard.prototype.getValueText = function () {
+      return valueTextOf(this.chars);
+    };
+
   ChemicalKeyboard.prototype.getModel = function () {
       return JSON.parse(JSON.stringify(this.chars));
     };
@@ -4723,6 +4763,7 @@ ChemicalKeyboard.prototype.toLatex=function(){
   ChemicalKeyboard.prototype.result = function () {
       return {
         value: this.getValue(),
+        valueText: this.getValueText(),
         latex: this.toLatex(),
         model: this.getModel(),
         ast: this.getAST()
@@ -5202,7 +5243,8 @@ function feedbackText(language,key){
   feedbackText:feedbackText,
   renderComparison:renderComparisonResult,
   validate:validateWriting,
+  valueText:valueTextOf,
   elements:SYMBOLS.slice(),
-  version:"2.0.10"     // raise with every change, to see in the console which copy a page runs
+  version:"2.1.0"     // raise with every change, to see in the console which copy a page runs
 };
 })(window);

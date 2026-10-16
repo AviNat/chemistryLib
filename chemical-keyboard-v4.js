@@ -3640,8 +3640,8 @@ ChemicalKeyboard.prototype.build=function(){
         width:Math.max(key.full.A.length,key.full.Z.length)*.42+"em",height:"1em",verticalAlign:"-.18em",marginRight:"1px"});
       top=node("span",key.full.A);
       bottom=node("span",key.full.Z);
-      apply(top,{position:"absolute",right:"0",top:"-.25em",fontSize:"65%",lineHeight:"1",whiteSpace:"nowrap"});
-      apply(bottom,{position:"absolute",right:"0",top:".62em",fontSize:"65%",lineHeight:"1",whiteSpace:"nowrap"});
+      apply(top,{position:"absolute",right:"0",top:"-.3em",fontSize:"58%",lineHeight:"1",whiteSpace:"nowrap"});
+      apply(bottom,{position:"absolute",right:"0",top:".78em",fontSize:"58%",lineHeight:"1",whiteSpace:"nowrap"});
       stack.appendChild(top);
       stack.appendChild(bottom);
       b.appendChild(stack);
@@ -5137,6 +5137,9 @@ function appendCharacter(parent,index,mode){
   makeClickable(sp,index);
   color=self.isHighlighted(index);
 
+  /* a script character's box (and highlight) is exactly one line of its small font: no overlap with the other line */
+  if(mode==="sub"||mode==="sup")apply(sp,{display:"inline-block",lineHeight:"1"});
+
   if(color)sp.style.backgroundColor=color;
 
   parent.appendChild(sp);
@@ -5223,17 +5226,23 @@ function appendCharacter(parent,index,mode){
       apply(subLine,{
         position:"absolute",
         left:"0",
-        top:".62em",
-        fontSize:"65%",
+        top:".78em",
+        fontSize:"58%",
         lineHeight:"1",
         whiteSpace:"nowrap"
       });
 
+      /*
+       * Script sizes and places (2026-10-16): smaller (58%) and further apart, so that the highlighted boxes of
+       * a superscript and a subscript stacked above each other (²³⁸₉₂U, SO₄²⁻) do not cover each other in the
+       * feedback. "top" is in the line's own (small) em: superscript -0.17..0.41, subscript 0.45..1.03 of the
+       * formula's font size.
+       */
       apply(supLine,{
         position:"absolute",
         left:"0",
-        top:"-.25em",
-        fontSize:"65%",
+        top:"-.3em",
+        fontSize:"58%",
         lineHeight:"1",
         whiteSpace:"nowrap"
       });
@@ -6420,7 +6429,7 @@ function runQuestion(host,cfg){
   elements:SYMBOLS.slice(),
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
-  version:"2.6.1"     // raise with every change, to see in the console which copy a page runs
+  version:"2.6.2"     // raise with every change, to see in the console which copy a page runs
 };
 
 /* questions queued by snippets before the library was loaded */

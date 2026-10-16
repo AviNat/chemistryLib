@@ -142,11 +142,15 @@ library also undoes `&lt; &gt; &amp; &quot;` in the configuration text before pa
 - MathJax version: Moodle (up to 4.x) loads **MathJax 2.7**. The library typesets with whichever version the page has
   (`typesetMath`: version 3 `typesetPromise`, version 2 `Hub.Queue`). Before, it knew only version 3, so in Moodle the
   formula field in the question text turned into plain LaTeX as soon as the student typed (2026-10-09).
-- **Releasing a library change** (Moodle loads it through jsDelivr `@main`, which caches for hours):
-  1. raise `ChemicalGrammar.version` in `chemical-keyboard-v4.js` (2.0.5 on 2026-10-09);
+- **Releasing a library change** (since 2026-10-16 the default address is GitHub Pages,
+  `https://avinat.github.io/chemistryLib/chemical-keyboard-v4.js`, cached 10 minutes; jsDelivr `@main` cached up to
+  12 hours and a purge did not reach every server - 2.6.3 was still served after 2.7.0 was pushed and purged):
+  1. raise `ChemicalGrammar.version` in `chemical-keyboard-v4.js`;
   2. commit and push (GitHub Desktop);
-  3. open `https://purge.jsdelivr.net/gh/AviNat/chemistryLib@main/chemical-keyboard-v4.js` (wait for "finished");
+  3. wait about 10 minutes (GitHub Pages builds and its cache expires); no purge;
   4. in Moodle start a new preview, Ctrl+F5, and check `ChemicalGrammar.version` in the console.
+  Questions pasted with the old jsDelivr address keep it until their code is copied again (the builder replaces the
+  old default address when a file is opened); for them the purge`https://purge.jsdelivr.net/gh/AviNat/chemistryLib@main/chemical-keyboard-v4.js` still applies.
   A change in the student-side code (`chemkbdRun`) instead needs the Moodle code copied again (`SNIPPET_VERSION`).
 - The debug log messages were removed (2026-10-08). Still reported in the console: a STACK input not found, the code
   pasted twice / duplicate question id, a failure, the library not loading. The code version is in the snippet's

@@ -304,7 +304,14 @@ table.rubric .na{color:#a5b0bc}
  * before they are pushed), and if there is none, the public GitHub copy (the builder on the internet).
  * The builder starts only after the library has loaded (startBuilder, below).
  */
-var PUBLIC_LIBRARY_URL="https://cdn.jsdelivr.net/gh/AviNat/chemistryLib@main/chemical-keyboard-v4.js";
+/*
+ * GitHub Pages (2026-10-16): a push is served within ~10 minutes (max-age=600), no purge needed. jsDelivr's @main
+ * address was cached up to 12 hours and a purge did not always reach every server (2.6.3 was still served an
+ * hour after 2.7.0 was pushed and purged).
+ */
+var PUBLIC_LIBRARY_URL="https://avinat.github.io/chemistryLib/chemical-keyboard-v4.js";
+/* the earlier default address: files saved with it get the new one when opened */
+var OLD_PUBLIC_LIBRARY_URL="https://cdn.jsdelivr.net/gh/AviNat/chemistryLib@main/chemical-keyboard-v4.js";
 var LIBRARY_SOURCES=[
   {url:"chemical-keyboard-v4.js",kind:"local"},
   {url:PUBLIC_LIBRARY_URL,kind:"public"}
@@ -872,6 +879,7 @@ function applyConfig(cfg){
   const s=newState();
   if(typeof cfg.questionId==="string") s.questionId=cfg.questionId;
   if(typeof cfg.libraryUrl==="string"&&cfg.libraryUrl&&!/^file:/i.test(cfg.libraryUrl)) s.libraryUrl=cfg.libraryUrl;
+  if(s.libraryUrl===OLD_PUBLIC_LIBRARY_URL) s.libraryUrl=DEFAULT_LIBRARY_URL;   // the old default (jsDelivr) -> GitHub Pages
   if(["system","he","ar","en"].indexOf(cfg.language)>=0) s.language=cfg.language;
   if(["default","custom","none"].indexOf(cfg.elementsMode)>=0) s.elementsMode=cfg.elementsMode;
   if(Array.isArray(cfg.elements)) s.elements=cfg.elements.filter(e=>ALL_ELEMENTS.indexOf(e)>=0);
@@ -914,7 +922,7 @@ function displayChars(){
 function configId(){ return "chemkbd-"+state.questionId; }
 
 /* Written into the code's first comment, to see which version of the code a question has. Change it when the snippet changes (the student-side code itself is in the library: ChemicalKeyboard.runQuestion). */
-const SNIPPET_VERSION="2026-10-16.3";
+const SNIPPET_VERSION="2026-10-16.4";
 
 /* The language the builder's keyboards show: the student language, or with "system" the interface language. */
 function previewLanguage(){

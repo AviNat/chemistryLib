@@ -60,6 +60,12 @@ library also undoes `&lt; &gt; &amp; &quot;` in the configuration text before pa
 - "Try it as a student" in the builder runs `ChemicalKeyboard.runQuestion` - the same code as Moodle.
 - Questions pasted before must be copied again once (their code contains `<`).
 - Advice for teachers: edit STACK questions with the plain-text or Atto editor (TinyMCE rewrites the HTML).
+- **Line breaks (2026-10-16, library 2.6.1, snippet 2026-10-16.3):** in Moodle the question text was shown with
+  `<br />` for every line break - also inside the scripts (`<script> <br />` -> "Unexpected token '<'"): Moodle's
+  "Moodle auto-format" text format. The snippet is now **one line** (no indentation in the JSON, the loader joined
+  without line breaks; the builder refuses a loader with a line break), and the library removes `<br />` from the
+  configuration text before parsing. Teachers should also choose "HTML format" under the question text when the
+  plain-text editor is used.
 
 ## Output / file
 - The saved `.txt` **is** the Moodle snippet: a `div`, the configuration as JSON in

@@ -6106,9 +6106,13 @@ function feedbackText(language,key){
    release, without copying the questions again.
    ================================================================ */
 
-/* undo HTML escaping that a server or filter may have done to the configuration text */
+/*
+ * undo what a server or filter may have done to the configuration text: <br /> for each line break (Moodle's
+ * auto-format, found 2026-10-16) and HTML escaping
+ */
 function decodeEntities(text){
   return String(text)
+    .replace(/<br\s*\/?>/gi,"")
     .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,"\"").replace(/&#0?39;/g,"'").replace(/&amp;/g,"&");
 }
 
@@ -6416,7 +6420,7 @@ function runQuestion(host,cfg){
   elements:SYMBOLS.slice(),
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
-  version:"2.6.0"     // raise with every change, to see in the console which copy a page runs
+  version:"2.6.1"     // raise with every change, to see in the console which copy a page runs
 };
 
 /* questions queued by snippets before the library was loaded */

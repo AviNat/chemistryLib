@@ -914,7 +914,7 @@ function displayChars(){
 function configId(){ return "chemkbd-"+state.questionId; }
 
 /* Written into the code's first comment, to see which version of the code a question has. Change it when the snippet changes (the student-side code itself is in the library: ChemicalKeyboard.runQuestion). */
-const SNIPPET_VERSION="2026-10-16.2";
+const SNIPPET_VERSION="2026-10-16.3";
 
 /* The language the builder's keyboards show: the student language, or with "system" the interface language. */
 function previewLanguage(){
@@ -928,7 +928,8 @@ const SCRIPT_CLOSE="<"+"/script>";
 function snippet(){
   const id=configId();
   /* the JSON never contains < > & (a Moodle server or filter may turn them into &lt; &gt; &amp;) */
-  const json=JSON.stringify(questionConfig(),null,1)
+  /* one line, no indentation: Moodle (auto-format) turns every line break into <br /> - also inside scripts */
+  const json=JSON.stringify(questionConfig())
     .replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026");
   /*
    * The student-side code is in the library (ChemicalKeyboard.runQuestion). The script below only queues the
@@ -948,17 +949,18 @@ function snippet(){
     "s.onerror=function(){if(window.console){console.error(\"[chemkbd \"+id+\"] the library could not be loaded: \"+url);}};",
     "document.head.appendChild(s);",
     "})();"
-  ].join("\n");
-  if(/[<>&]/.test(loader)) throw new Error("the snippet's script must not contain < > &");
+  ].join("");
+  if(/[<>&\n]/.test(loader)) throw new Error("the snippet's script must not contain < > & or line breaks");
+  /*
+   * The whole snippet is ONE line (2026-10-16): Moodle's auto-format turns each line break of the question text
+   * into <br />, also inside a script, where it breaks the code ("Unexpected token '<'").
+   */
   return [
-    "<!-- Chemical keyboard question \""+state.questionId+"\" (code version "+SNIPPET_VERSION+"). Created with the chemical keyboard question builder:",
-    "     to change it, open the saved file in the builder. Do not edit by hand. -->",
+    "<!-- Chemical keyboard question \""+state.questionId+"\" (code version "+SNIPPET_VERSION+"). Created with the chemical keyboard question builder: to change it, open the saved file in the builder. Do not edit by hand. -->",
     "<div id=\""+id+"\"></div>",
     SCRIPT_OPEN+" type=\"application/json\" id=\""+id+"-config\">"+json+SCRIPT_CLOSE,
-    SCRIPT_OPEN+">",
-    loader,
-    SCRIPT_CLOSE
-  ].join("\n");
+    SCRIPT_OPEN+">"+loader+SCRIPT_CLOSE
+  ].join("");
 }
 
 /* Reads the configuration back from a saved snippet (or a plain JSON file). */

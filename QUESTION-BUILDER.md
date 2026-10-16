@@ -68,6 +68,11 @@ library also undoes `&lt; &gt; &amp; &quot;` in the configuration text before pa
   when a new snippet loaded it first).
 - Changes of the student-side code now reach Moodle with a library release - no copying of questions.
 - "Try it as a student" in the builder runs `ChemicalKeyboard.runQuestion` - the same code as Moodle.
+  **Submit** (2026-10-17): the button "Submit and see the feedback" runs `runQuestion` a second time like Moodle's
+  review page - the answer in a read-only `try_ans2`, `try_ans1` empty, inside a `.que` - so the grade, details and
+  reference answer appear as the review options set them. Changing the reference / rubric or rebuilding the try
+  keyboard clears it. Found with it (library 2.8.3): several read-only displays typeset at once by MathJax 3 broke
+  the autoload of `\bbox` ("You can't use 'macro parameter character #'"); `typesetMath` now chains the calls.
 - Questions pasted before must be copied again once (their code contains `<`).
 - Advice for teachers: edit STACK questions with the plain-text or Atto editor (TinyMCE rewrites the HTML).
 - **Line breaks (2026-10-16, library 2.6.1, snippet 2026-10-16.3):** in Moodle the question text was shown with

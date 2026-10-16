@@ -77,6 +77,14 @@ let CASES = [
     { group: "Typing", name: "dot: number after it is a multiplier", keys: "Cu S O 4 · 5 H 2 O", expect: "CuSO_{4}·5H_{2}O" },
     { group: "Typing", name: "capital letter leaves the subscript", keys: "H 2 S O 4", expect: "H_{2}SO_{4}" },
 
+    /* Parentheses with a place to type ((▢) key, 2026-10-17) */
+    { group: "Parentheses", name: "DEL in an empty pair removes both", keys: "Ca () DEL", expect: "Ca" },
+    { group: "Parentheses", name: "DEL after ) goes inside and deletes from the end", keys: "Ca () O H →| DEL DEL", expect: "Ca(O)" },
+    { group: "Parentheses", name: "deleting the content, then the empty pair", keys: "Ca () O H →| DEL DEL DEL DEL", expect: "Ca" },
+    { group: "Parentheses", name: "physical ( opens a pair, ) steps over it", keys: "Ca k:( k:O k:H k:) 2", expect: "Ca(OH)_{2}" },
+    { group: "Parentheses", name: "fatty acid: (ω9) with physical keys", config: { lipids: true },
+      keys: "C 1 8 k:: 1 k:( k:w k:9 k:) k:c k:i k:s", expect: "C18:1(w9)cis" },
+
     /* Typing without the automatic subscript (config.autoSubscript: false) */
     { group: "No automatic subscript", name: "digits stay at the normal level", config: { autoSubscript: false },
       keys: "H 2 O", expect: "H2O" },

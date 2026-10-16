@@ -23,6 +23,10 @@ triglycerides, not lipidomics).
   `: , = - ( )` and lowercase letters accepted. Builder: option "Fatty acids / triglycerides", six rubric rows shown
   only with it. Tests: group "Lipids" in chemTests.js (30 cases); 182 / 182 pass.
 - Not in this version: ester / group formulas of triglycerides (needs several reference answers).
+- **Parentheses with a place to type** (2026-10-17, library 2.8.2, the user; all question types): the key `(▢)`
+  (and `TG(▢)`) inserts a pair with the cursor inside; an empty pair is drawn with a dashed box, like the formula
+  state; → leaves it. DEL in an empty pair removes both; DEL right after its ")" goes inside. A physical "(" opens a
+  pair and ")" steps over its closing parenthesis. A state (aq) is not affected.
 - **cis / trans are one unit** (2026-10-17, library 2.8.1, the user): DEL removes the whole word and the arrows jump
   over it, like a two-letter element symbol (`markElements` groups them as kind "word" in a fatty-acid question - also
   when typed letter by letter or read back from a saved answer).

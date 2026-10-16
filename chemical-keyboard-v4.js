@@ -3922,7 +3922,8 @@ ChemicalKeyboard.prototype.build=function(){
 
   this.panel.appendChild(operatorsRow);
 
-  btn(operatorsRow,"()",function(){
+  /* parentheses with a place to type in them (an empty pair is drawn with a dashed box); → leaves them */
+  btn(operatorsRow,"(▢)",function(){
     self.insertPair();
   },t.tipParentheses);
 
@@ -4114,7 +4115,7 @@ ChemicalKeyboard.prototype.build=function(){
      ["cis",function(){self.insertText("cis","normal");},t.tipCis],
      ["trans",function(){self.insertText("trans","normal");},t.tipTrans],
      ["=",function(){self.insertText("=","normal");},t.tipDoubleBond],
-     ["TG( )",function(){self.insertText("TG","normal");self.insertPair();},t.tipTriglyceride]
+     ["TG(▢)",function(){self.insertText("TG","normal");self.insertPair();},t.tipTriglyceride]
     ].forEach(function(k){ btn(lipidRow,k[0],k[1],k[2],{minWidth:"52px"}); });
   }
 
@@ -5198,6 +5199,30 @@ ChemicalKeyboard.prototype.del=function(){
     return;
   }
 
+  /*
+   * Parentheses from the (▢) key: DEL in an empty pair removes both; DEL right after the ")" goes inside the
+   * parentheses (deleting from their end), like the formula state - the pair is never left half deleted.
+   */
+  if(this.isEmptyPair(this.cursor-1)){
+    this.chars.splice(this.cursor-1,2);
+    this.cursor--;
+    this.script="normal";
+    this.changed();
+    return;
+  }
+  if(previous.ch===")"&&this.openingOf(this.cursor-1)>=0){
+    if(this.openingOf(this.cursor-1)===this.cursor-2){
+      this.chars.splice(this.cursor-2,2);
+      this.cursor-=2;
+      this.changed();
+      return;
+    }
+    this.cursor--;
+    this.script="normal";
+    this.render();
+    return;
+  }
+
   removedScript=previous.script;
   keepNavigationScript= this.navigationScript&& this.script===removedScript;
   this.navigationScript=false;
@@ -5309,7 +5334,23 @@ ChemicalKeyboard.prototype.key = function (e) {
     }
 
     /* fatty acids: the signs of the shorthand, the triglyceride and the condensed formula, typed as they are */
-    if (this.config.lipids && !this.cond && ":,=-() ".indexOf(k) >= 0) {
+    /*
+     * Parentheses typed on a physical keyboard work like the (▢) key: "(" opens a pair, ")" steps over the
+     * closing parenthesis of the pair the cursor is in (it would otherwise add a second one).
+     */
+    if (!this.cond && k === "(") {
+      e.preventDefault();
+      this.script = "normal";
+      this.insertPair();
+      return;
+    }
+    if (!this.cond && k === ")" && this.cursor < this.chars.length && this.openingOf(this.cursor) >= 0) {
+      e.preventDefault();
+      this.move(1);
+      return;
+    }
+
+    if (this.config.lipids && !this.cond && ":,=-) ".indexOf(k) >= 0) {
       e.preventDefault();
       this.script = "normal";          // these signs end a subscript: (CH₂)₇ then ")" ... ; :1
       if (k !== " ") this.insertText(k, "normal");
@@ -5538,14 +5579,20 @@ ChemicalKeyboard.prototype.syncRenderedDisplay=function(){
  * MathJax is still loading neither exists yet; then MathJax typesets the page when it starts.
  * prepare (optional): runs just before typesetting (MathJax 3 only); false skips it.
  */
+/* MathJax 3 calls one after another: run together, the first one to meet \bbox loads its extension and the
+   others fail ("\bbox" undefined, then "You can't use 'macro parameter character #'" for its color) */
+var typesetChain=null;
+
 function typesetMath(element,prepare){
   var mj=window.MathJax;
 
   if(mj&&mj.startup&&mj.startup.promise&&mj.typesetPromise){
-    mj.startup.promise.then(function(){
+    typesetChain=(typesetChain||mj.startup.promise).then(function(){
       if(mj.typesetClear)mj.typesetClear([element]);
       if(prepare&&prepare()===false)return;
       return mj.typesetPromise([element]);
+    }).catch(function(error){
+      if(window.console)console.error("[chemkbd] MathJax:",error);
     });
   }else if(mj&&mj.Hub&&mj.Hub.Queue){
     mj.Hub.Queue(["Typeset",mj.Hub,element]);
@@ -5857,6 +5904,18 @@ function appendCharacter(parent,index,mode){
     }
 
     this.display.appendChild(sp);
+
+    /*
+     * An empty pair of parentheses from the (▢) key: a dashed box between them, with the caret in it - the
+     * place to type, like the formula state. The student leaves it with → (insertPair, 2026-10-17).
+     */
+    if(this.isEmptyPair(i)){
+      wrapper=node("span","");
+      apply(wrapper,{display:"inline-block",minWidth:".7em",height:"1em",verticalAlign:"-.15em",margin:"0 1px",
+        border:"1px dashed #1769aa",borderRadius:"3px",boxSizing:"border-box"});
+      if(this.mode==="edit"&&this.cursor===i+1&&!cursorDrawn&&this.script==="normal")addCaret(wrapper,"normal");
+      this.display.appendChild(wrapper);
+    }
     i++;
   }
 
@@ -6017,6 +6076,20 @@ function conditionToLatex(condition){
 
   return out;
 }
+
+/* chars[i] is the "(" of a pair from the (▢) key and its ")" follows at once (nothing typed in it yet) */
+ChemicalKeyboard.prototype.isEmptyPair=function(i){
+  var a=this.chars[i],b=this.chars[i+1];
+  return !!(a&&b&&a.ch==="("&&b.ch===")"&&a.pair&&a.pair===b.pair&&a.script==="normal"&&!a.kind&&!b.kind);
+};
+
+/* the index of the "(" that belongs to the ")" at index i (same pair), or -1 - parentheses only, not a state (aq) */
+ChemicalKeyboard.prototype.openingOf=function(i){
+  var k,c=this.chars[i];
+  if(!c||c.ch!==")"||!c.pair||c.kind)return -1;
+  for(k=i-1;k>=0;k--)if(this.chars[k].ch==="("&&this.chars[k].pair===c.pair)return k;
+  return -1;
+};
 
 /*
  * The script cluster chars[start..end) stands before a symbol at the start of a substance: the mass and
@@ -7003,7 +7076,7 @@ function runQuestion(host,cfg){
   elements:SYMBOLS.slice(),
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
-  version:"2.8.1"     // raise with every change, to see in the console which copy a page runs
+  version:"2.8.3"    // raise with every change, to see in the console which copy a page runs
 };
 
 /* questions queued by snippets before the library was loaded */

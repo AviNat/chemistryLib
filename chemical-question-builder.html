@@ -287,6 +287,13 @@ table.rubric .na{color:#a5b0bc}
   <div class="hint" data-t="tryHint"></div>
   <div class="row"><button type="button" id="restartTry" data-t="restartTry"></button></div>
   <div id="tryHost"></div>
+  <div class="row"><button type="button" id="submitTry" data-t="submitTry"></button></div>
+  <!-- the review page after submission, made by the same library code as in Moodle (read-only inputs, as Moodle shows them) -->
+  <div class="que" id="tryReviewQue" hidden>
+    <div id="tryReview"></div>
+    <input type="text" name="try_ans1" readonly hidden>
+    <input type="text" name="try_ans2" readonly hidden>
+  </div>
 </section>
 
 <section>
@@ -461,6 +468,7 @@ const TEXT={
     },
     secTry:"Try it as a student",
     tryHint:"This is the student's view, in the student language. What you type here is not saved.",
+    submitTry:"Submit and see the feedback (the review page, with the review options above)",
     restartTry:"Restart",
     secOutput:"Moodle code",
     outputHint:"Paste this into the Moodle question text, in the editor's HTML (source code) view. Save the file too, so you can open and change the question later.",
@@ -588,6 +596,7 @@ const TEXT={
     },
     secTry:"ניסיון כתלמיד",
     tryHint:"זה מה שהתלמיד רואה, בשפת התלמיד. מה שמוקלד כאן לא נשמר.",
+    submitTry:"הגשה וצפייה במשוב (דף הסקירה, לפי אפשרויות הסקירה שלמעלה)",
     restartTry:"התחלה מחדש",
     secOutput:"קוד ל־Moodle",
     outputHint:"יש להדביק את הקוד בטקסט השאלה ב־Moodle, בתצוגת ה־HTML (קוד המקור) של העורך. כדאי גם לשמור את הקובץ, כדי לפתוח ולשנות את השאלה בהמשך.",
@@ -715,6 +724,7 @@ const TEXT={
     },
     secTry:"التجربة كطالب",
     tryHint:"هذا ما يراه الطالب، بلغة الطالب. ما تكتبه هنا لا يُحفظ.",
+    submitTry:"إرسال وعرض الملاحظات (صفحة المراجعة، حسب خيارات المراجعة أعلاه)",
     restartTry:"البدء من جديد",
     secOutput:"رمز Moodle",
     outputHint:"الصق هذا الرمز في نص السؤال في Moodle، في عرض HTML (الشيفرة المصدرية) للمحرر. احفظ الملف أيضًا لتتمكن من فتح السؤال وتعديله لاحقًا.",
@@ -1090,11 +1100,42 @@ function buildKeyboards(){
   buildTry();
 }
 
+/*
+ * "Submit": the review page the student gets after submitting, made by the library's own review code
+ * (ChemicalKeyboard.runQuestion sees read-only STACK inputs, as Moodle renders them) with the review options of
+ * this question - grade, detailed feedback, reference answer.
+ */
+let tryReviewRun=null;
+function clearTryReview(){
+  if(tryReviewRun){
+    removeKeyboard(tryReviewRun.keyboard);
+    tryReviewRun.feedback.forEach(removeKeyboard);
+    tryReviewRun=null;
+  }
+  $("tryReview").textContent="";
+  $("tryReviewQue").hidden=true;
+}
+function submitTry(){
+  if(!tryRun) return;
+  clearTryReview();
+  const answer=tryRun.keyboard.getValueText();
+  const cfg=questionConfig();
+  cfg.language=previewLanguage();
+  cfg.stack={scoreInput:"ans1",answerInput:"ans2"};
+  delete cfg.reviewDiv;      // the teacher's review div is in the Moodle question text, not on this page
+  document.querySelector("[name='try_ans2']").value=answer;
+  document.querySelector("[name='try_ans1']").value="";
+  $("tryReviewQue").hidden=false;
+  tryReviewRun=ChemicalKeyboard.runQuestion($("tryReview"),cfg);
+  $("tryReviewQue").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
 function buildTry(){
   if(tryRun){
     removeKeyboard(tryRun.keyboard);
     tryRun.feedback.forEach(removeKeyboard);
   }
+  clearTryReview();
   const cfg=questionConfig();
   delete cfg.stack;          // no STACK inputs on this page
   cfg.language=previewLanguage();
@@ -1107,6 +1148,7 @@ function buildTry(){
 /* Reference answer / rubric / isomers changed: the "try" keyboard checks against the new values. */
 function syncTry(){
   if(!tryRun) return;
+  clearTryReview();          // the shown review was graded against the old values
   const keyboard=tryRun.keyboard;
   keyboard.setCorrectAnswer(state.correctAnswer);
   keyboard.setRubric(rubricForLibrary());
@@ -1843,6 +1885,7 @@ document.querySelectorAll("input[name=elementsMode]").forEach(radio=>{
 });
 /* From the default set or "none" this switches to a custom panel: the current panel plus the missing elements. */
 $("addMolecule").addEventListener("click",addMolecule);
+$("submitTry").addEventListener("click",submitTry);
 $("addFromReference").addEventListener("click",()=>{
   if(state.elementsMode!=="custom") state.elements=(panelElements()||[]).slice();
   state.elementsMode="custom";

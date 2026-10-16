@@ -59,6 +59,7 @@ section h3.sub{font-size:14px;margin:16px 0 4px;padding-top:12px;border-top:1px 
 .row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:8px 0}
 label.field{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted)}
 label.check{display:flex;gap:8px;align-items:flex-start;margin:6px 0}
+[hidden]{display:none!important}   /* display:flex above would otherwise show hidden options */
 input[type=text],input[type=url],select{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--text)}
 input[type=number]{font:inherit;width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:6px}
 #libraryUrl{width:min(560px,90vw);direction:ltr}
@@ -161,6 +162,20 @@ table.rubric .na{color:#a5b0bc}
   <div class="hint" id="librarySource"></div>
   <label class="check"><input type="checkbox" id="distinguishIsomers"><span data-t="distinguishIsomers"></span></label>
   <label class="check"><input type="checkbox" id="conditions"><span data-t="conditions"></span></label>
+  <label class="check"><input type="checkbox" id="autoSubscript"><span data-t="autoSubscript"></span></label>
+  <label class="check"><input type="checkbox" id="ionKeys"><span data-t="ionKeys"></span></label>
+  <label class="check"><input type="checkbox" id="formulaStateKey"><span data-t="formulaStateKey"></span></label>
+  <label class="check"><input type="checkbox" id="nuclear"><span data-t="nuclear"></span></label>
+  <div id="particleLabelsField" style="margin-inline-start:26px">
+    <label class="field"><span data-t="particleLabels"></span>
+      <select id="particleLabels">
+        <option value="short" data-t="particleLabelsShort"></option>
+        <option value="full" data-t="particleLabelsFull"></option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" id="autoNuclideNumbers"><span data-t="autoNuclideNumbers"></span></label>
+    <label class="check"><input type="checkbox" id="nuclearStates"><span data-t="nuclearStates"></span></label>
+  </div>
   <!-- hidden (2026-10-10): the keyboard's validation icon replaces the check button; the code stays in chemkbdRun -->
   <label class="check" hidden><input type="checkbox" id="checkButton"><span data-t="checkButton"></span></label>
   <label class="field"><span data-t="displayChars"></span>
@@ -355,6 +370,15 @@ function chemkbdRun(host,cfg){
   if(cfg.rubric)options.rubric=cfg.rubric;
   if(cfg.distinguishIsomers)options.distinguishIsomers=true;
   if(cfg.conditions===false)options.conditions=false;     // no reaction-condition (process) keys
+  if(cfg.autoSubscript===false)options.autoSubscript=false; // the student chooses subscripts with _ or the key
+  if(cfg.ionKeys)options.ionKeys=true;                    // shortcut keys ⁺(aq) and ⁻(aq)
+  if(cfg.formulaStateKey)options.formulaStateKey=true;    // key for a state written as a formula, I₂(CCl₄)
+  if(cfg.nuclear){                                        // nuclear equation: particle keys
+    options.nuclear=true;
+    if(cfg.particleLabels==="full")options.particleLabels="full";
+    if(cfg.autoNuclideNumbers)options.autoNuclideNumbers=true;
+    if(cfg.states===true)options.states=true;             // state keys in a nuclear question
+  }
   if(cfg.displayChars>0)options.displayChars=cfg.displayChars;   // keyboard window width, in characters
 
   /*
@@ -570,6 +594,15 @@ const TEXT={
     libraryPublic:"This page uses the GitHub copy of the library.",
     distinguishIsomers:"Treat isomers as different substances (compare by the written structural formula)",
     conditions:"Show the reaction-condition (process) keys: the arrow with a condition, Δ, hν, °C, K",
+    autoSubscript:"Automatic subscript: a digit after a symbol becomes a subscript by itself (off: the student chooses it with _ or the subscript key)",
+    ionKeys:"Show the ion keys ⁺(aq) and ⁻(aq) (a shortcut for a charge and (aq))",
+    formulaStateKey:"Show the key (▢) for a state written as a formula, e.g. a solution in another solvent: I₂(CCl₄)",
+    nuclear:"Nuclear equation: particle keys (α, β, β⁺, γ, e⁻, n, p); mass and atomic numbers before the symbol",
+    particleLabels:"Particle keys show",
+    particleLabelsShort:"the symbol only: α, β",
+    particleLabelsFull:"the symbol with its numbers: ⁴₂α, ⁰₋₁β",
+    autoNuclideNumbers:"Enter the mass and atomic numbers automatically with an element (the most common isotope, e.g. ¹²₆C; the student changes them as needed)",
+    nuclearStates:"Show the state keys (s), (l), (g), (aq) in the nuclear equation",
     issueConditions:"The reference answer has reaction conditions above the arrow, but the condition keys are off: the student cannot write them.",
     checkButton:"Show the student a button that checks the writing (syntax and element symbols; no grade)",
     displayChars:"Keyboard window width (characters on one line)",
@@ -628,6 +661,8 @@ const TEXT={
       answerType:"Wrong answer type (e.g. a formula instead of an equation)",
       unknownElement:"Unknown element",
       substances:"Wrong, missing or extra substance",
+      massNumbers:"Mass number wrong or missing, or numbers missing (nuclear)",
+      atomicNumbers:"Wrong or missing atomic number (nuclear)",
       coefficients:"Wrong coefficient",
       scaledCoefficients:"All coefficients a multiple of the reference",
       balance:"Unbalanced atom (not caused by another error)",
@@ -669,6 +704,15 @@ const TEXT={
     libraryPublic:"העמוד הזה משתמש בעותק של הספרייה שבגיטהב.",
     distinguishIsomers:"להתייחס לאיזומרים כחומרים שונים (השוואה לפי נוסחת המבנה הכתובה)",
     conditions:"הצגת מקשי תנאי התגובה (התהליך): החץ עם תנאי, Δ, hν, ‏°C, ‏K",
+    autoSubscript:"כתב תחתי אוטומטי: ספרה אחרי סמל הופכת לכתב תחתי מעצמה (כבוי: התלמיד בוחר בכתב תחתי עם _ או עם המקש)",
+    ionKeys:"הצגת מקשי היונים ‏⁺(aq) ו-‏⁻(aq) (קיצור למטען ול-(aq))",
+    formulaStateKey:"הצגת המקש (▢) למצב הכתוב כנוסחה, למשל תמיסה בממס אחר: ⁦I₂(CCl₄)⁩",
+    nuclear:"משוואה גרעינית: מקשי חלקיקים (α, β, β⁺, γ, e⁻, n, p); מספר מסה ומספר אטומי לפני הסמל",
+    particleLabels:"מקשי החלקיקים מציגים",
+    particleLabelsShort:"את הסמל בלבד: α, β",
+    particleLabelsFull:"את הסמל עם המספרים: ⁴₂α, ⁰₋₁β",
+    autoNuclideNumbers:"הכנסה אוטומטית של מספר המסה והמספר האטומי עם היסוד (האיזוטופ הנפוץ, למשל ¹²₆C; התלמיד משנה לפי הצורך)",
+    nuclearStates:"הצגת מקשי מצבי הצבירה (s), (l), (g), (aq) במשוואה הגרעינית",
     issueConditions:"בתשובת הייחוס יש תנאי תגובה מעל החץ, אבל מקשי התנאים כבויים: התלמיד לא יוכל לכתוב אותם.",
     checkButton:"להציג לתלמיד כפתור לבדיקת הכתיבה (תחביר וסמלי יסודות; ללא ציון)",
     displayChars:"רוחב חלון המקלדת (תווים בשורה אחת)",
@@ -727,6 +771,8 @@ const TEXT={
       answerType:"סוג תשובה שגוי (למשל נוסחה במקום משוואה)",
       unknownElement:"יסוד לא מוכר",
       substances:"חומר שגוי, חסר או מיותר",
+      massNumbers:"מספר מסה שגוי או חסר, או מספרים חסרים (גרעינית)",
+      atomicNumbers:"מספר אטומי שגוי או חסר (גרעינית)",
       coefficients:"מקדם שגוי",
       scaledCoefficients:"כל המקדמים כפולה של מקדמי הייחוס",
       balance:"אטום לא מאוזן (שלא נובע משגיאה אחרת)",
@@ -768,6 +814,15 @@ const TEXT={
     libraryPublic:"تستخدم هذه الصفحة نسخة المكتبة في GitHub.",
     distinguishIsomers:"اعتبار المتصاوغات مواد مختلفة (المقارنة حسب الصيغة البنائية المكتوبة)",
     conditions:"عرض مفاتيح ظروف التفاعل (العملية): السهم مع شرط، Δ، hν، ‏°C، ‏K",
+    autoSubscript:"نص سفلي تلقائي: الرقم بعد الرمز يصبح نصًا سفليًا تلقائيًا (عند الإيقاف: يختار الطالب النص السفلي بـ _ أو بالمفتاح)",
+    ionKeys:"عرض مفاتيح الأيونات ‏⁺(aq) و‏⁻(aq) (اختصار للشحنة و(aq))",
+    formulaStateKey:"عرض المفتاح (▢) لحالة مكتوبة كصيغة، مثل محلول في مذيب آخر: ⁦I₂(CCl₄)⁩",
+    nuclear:"معادلة نووية: مفاتيح الجسيمات (α، β، β⁺، γ، e⁻، n، p)؛ العدد الكتلي والعدد الذري قبل الرمز",
+    particleLabels:"تعرض مفاتيح الجسيمات",
+    particleLabelsShort:"الرمز فقط: α، β",
+    particleLabelsFull:"الرمز مع الأعداد: ⁴₂α، ⁰₋₁β",
+    autoNuclideNumbers:"إدخال العدد الكتلي والعدد الذري تلقائيًا مع العنصر (النظير الشائع، مثل ¹²₆C؛ يغيّرهما الطالب حسب الحاجة)",
+    nuclearStates:"عرض مفاتيح حالات المادة (s)، (l)، (g)، (aq) في المعادلة النووية",
     issueConditions:"في الإجابة المرجعية ظروف تفاعل فوق السهم، لكن مفاتيح الظروف مُطفأة: لن يتمكن الطالب من كتابتها.",
     checkButton:"عرض زر للطالب لفحص الكتابة (الصياغة ورموز العناصر؛ بدون درجة)",
     displayChars:"عرض نافذة لوحة المفاتيح (عدد الأحرف في سطر واحد)",
@@ -826,6 +881,8 @@ const TEXT={
       answerType:"نوع إجابة خاطئ (مثل صيغة بدل معادلة)",
       unknownElement:"عنصر غير معروف",
       substances:"مادة خاطئة أو ناقصة أو زائدة",
+      massNumbers:"عدد كتلي خاطئ أو مفقود، أو أعداد مفقودة (نووية)",
+      atomicNumbers:"عدد ذري خاطئ أو مفقود (نووية)",
       coefficients:"معامل خاطئ",
       scaledCoefficients:"جميع المعاملات مضاعف لمعاملات الإجابة المرجعية",
       balance:"ذرة غير موزونة (لا تنتج عن خطأ آخر)",
@@ -855,8 +912,9 @@ const DEFAULT_ELEMENTS=["H","C","N","O","Na","Mg","Al","Cl","K","Ca","Fe","Cu","
 const ALL_ELEMENTS=ChemicalGrammar.elements;   // in atomic-number order
 
 /* Rubric categories the teacher can set ("syntax" is fixed by the system: 0). */
-const RUBRIC_CATEGORIES=["answerType","unknownElement","substances","coefficients","scaledCoefficients",
+const RUBRIC_CATEGORIES=["answerType","unknownElement","substances","massNumbers","atomicNumbers","coefficients","scaledCoefficients",
   "balance","states","charges","arrow","conditions","notation"];
+const NUCLEAR_ONLY={massNumbers:true,atomicNumbers:true};   // rubric rows shown only for a nuclear equation
 const PER_ERROR_ONLY_EXTRA={states:true};   // states also has allMissing
 
 /* The sample rubric of chemical-kbd-v4-test.html */
@@ -903,6 +961,13 @@ function newState(){
     language:"he",
     distinguishIsomers:false,
     conditions:true,
+    autoSubscript:true,
+    ionKeys:false,
+    formulaStateKey:false,
+    nuclear:false,
+    particleLabels:"short",
+    autoNuclideNumbers:false,
+    nuclearStates:false,
     checkButton:false,
     displayChars:"",          // keyboard window width in characters; empty = the library's default
     reviewDiv:"",             // id of the teacher's div for the review output; empty = under the question
@@ -993,6 +1058,15 @@ function questionConfig(){
   if(state.elementsMode==="custom") cfg.elements=state.elements.slice();
   if(state.distinguishIsomers) cfg.distinguishIsomers=true;
   if(!state.conditions) cfg.conditions=false;
+  if(!state.autoSubscript) cfg.autoSubscript=false;
+  if(state.ionKeys) cfg.ionKeys=true;
+  if(state.formulaStateKey) cfg.formulaStateKey=true;
+  if(state.nuclear){
+    cfg.nuclear=true;
+    if(state.particleLabels==="full") cfg.particleLabels="full";
+    if(state.autoNuclideNumbers) cfg.autoNuclideNumbers=true;
+    if(state.nuclearStates) cfg.states=true;
+  }
   if(displayChars()) cfg.displayChars=displayChars();
   if(state.reviewDiv) cfg.reviewDiv=state.reviewDiv;
   const rubric=rubricForLibrary();
@@ -1011,6 +1085,13 @@ function applyConfig(cfg){
   s.value=typeof cfg.value==="string"?cfg.value:"";
   s.distinguishIsomers=cfg.distinguishIsomers===true;
   s.conditions=cfg.conditions!==false;
+  s.autoSubscript=cfg.autoSubscript!==false;
+  s.ionKeys=cfg.ionKeys===true;
+  s.formulaStateKey=cfg.formulaStateKey===true;
+  s.nuclear=cfg.nuclear===true;
+  s.particleLabels=cfg.particleLabels==="full"?"full":"short";
+  s.autoNuclideNumbers=cfg.autoNuclideNumbers===true;
+  s.nuclearStates=cfg.nuclear===true&&cfg.states===true;
   s.checkButton=false;             // hidden option: older files that had it on are saved without it
   if(cfg.displayChars>0) s.displayChars=String(cfg.displayChars);
   if(typeof cfg.reviewDiv==="string") s.reviewDiv=cfg.reviewDiv;
@@ -1036,7 +1117,7 @@ function displayChars(){
 function configId(){ return "chemkbd-"+state.questionId; }
 
 /* Written into the code's first comment, to see which version of the code a question has. Change it when chemkbdRun changes. */
-const SNIPPET_VERSION="2026-10-13.1";
+const SNIPPET_VERSION="2026-10-15.3";
 
 /* The language the builder's keyboards show: the student language, or with "system" the interface language. */
 function previewLanguage(){
@@ -1136,6 +1217,15 @@ function makeEditor(hostId,value,onValue){
   const elements=keyboardElements();
   if(elements) options.elements=elements;
   if(!state.conditions) options.conditions=false;
+  if(!state.autoSubscript) options.autoSubscript=false;
+  if(state.ionKeys) options.ionKeys=true;
+  if(state.formulaStateKey) options.formulaStateKey=true;
+  if(state.nuclear){
+    options.nuclear=true;
+    options.particleLabels=state.particleLabels;
+    if(state.autoNuclideNumbers) options.autoNuclideNumbers=true;
+    if(state.nuclearStates) options.states=true;
+  }
   if(displayChars()) options.displayChars=displayChars();
   const keyboard=new ChemicalKeyboard(options);
   oneWindowAtATime(keyboard);
@@ -1368,6 +1458,7 @@ function renderRubric(){
   const body=$("rubricRows");
   body.textContent="";
   RUBRIC_CATEGORIES.forEach(category=>{
+    if(NUCLEAR_ONLY[category]&&!state.nuclear) return;
     const rule=state.rubric[category];
     const tr=document.createElement("tr");
     if(rule.mode==="none") tr.className="off";
@@ -1679,6 +1770,14 @@ function renderSettings(){
   $("libraryUrl").value=state.libraryUrl;
   $("distinguishIsomers").checked=state.distinguishIsomers;
   $("conditions").checked=state.conditions;
+  $("autoSubscript").checked=state.autoSubscript;
+  $("ionKeys").checked=state.ionKeys;
+  $("formulaStateKey").checked=state.formulaStateKey;
+  $("nuclear").checked=state.nuclear;
+  $("particleLabels").value=state.particleLabels;
+  $("autoNuclideNumbers").checked=state.autoNuclideNumbers;
+  $("nuclearStates").checked=state.nuclearStates;
+  $("particleLabelsField").hidden=!state.nuclear;
   $("checkButton").checked=state.checkButton;
   $("displayChars").value=state.displayChars;
   $("reviewDiv").value=state.reviewDiv;
@@ -1798,6 +1897,17 @@ $("libraryUrl").addEventListener("input",e=>{ state.libraryUrl=e.target.value.tr
 $("distinguishIsomers").addEventListener("change",e=>{ state.distinguishIsomers=e.target.checked; changed({try:"sync"}); });
 /* the builder's keyboards show the same keys as the student's: rebuilt */
 $("conditions").addEventListener("change",e=>{ state.conditions=e.target.checked; buildKeyboards(); changed(); });
+$("autoSubscript").addEventListener("change",e=>{ state.autoSubscript=e.target.checked; buildKeyboards(); changed(); });
+$("ionKeys").addEventListener("change",e=>{ state.ionKeys=e.target.checked; buildKeyboards(); changed(); });
+$("formulaStateKey").addEventListener("change",e=>{ state.formulaStateKey=e.target.checked; buildKeyboards(); changed(); });
+$("nuclear").addEventListener("change",e=>{
+  state.nuclear=e.target.checked;
+  $("particleLabelsField").hidden=!state.nuclear;
+  buildKeyboards(); renderRubric(); changed();
+});
+$("particleLabels").addEventListener("change",e=>{ state.particleLabels=e.target.value; buildKeyboards(); changed(); });
+$("autoNuclideNumbers").addEventListener("change",e=>{ state.autoNuclideNumbers=e.target.checked; buildKeyboards(); changed(); });
+$("nuclearStates").addEventListener("change",e=>{ state.nuclearStates=e.target.checked; buildKeyboards(); changed(); });
 $("checkButton").addEventListener("change",e=>{ state.checkButton=e.target.checked; changed(); });
 /* the builder's keyboards get the same window width as the student's: rebuilt */
 $("displayChars").addEventListener("change",e=>{ state.displayChars=e.target.value.trim(); buildKeyboards(); changed(); });

@@ -58,7 +58,9 @@ rubric: {
 | `substances` | `missing-species`, `unexpected-species`, `wrong-atom-count`, `wrong-structure`, `missing-structure`, `wrong-dot-parts`, `unexpected-atom`, `missing-atom` |
 | `coefficients` | `wrong-coefficient` (also a missing coefficient, i.e. 1 instead of n) |
 | `scaledCoefficients` | **new code** `scaled-coefficients`: the equation is balanced, the substances are right, but all coefficients are the same whole-number multiple of the reference (`4H₂ + 2O₂ → 4H₂O` for `2H₂ + O₂ → 2H₂O`). Reported as **one** error; it's a different misunderstanding from a wrong coefficient |
-| `balance` | `unbalanced-atom`, counted only when not explained by a substance or coefficient error (see 5) |
+| `balance` | `unbalanced-atom`, counted only when not explained by a substance or coefficient error (see 5). In a nuclear equation: conservation of mass / atomic numbers (atoms #A / #Z) |
+| `massNumbers` | nuclear: `wrong-mass-number`, `missing-mass-number` (2026-10-15, ENHANCEMENTS-DESIGN.md) |
+| `atomicNumbers` | nuclear: `wrong-atomic-number`, `missing-atomic-number` |
 | `states` | `missing-state`, `wrong-state`, `unexpected-state` |
 | `charges` | `missing-charge`, `wrong-charge`, `unexpected-charge` |
 | `arrow` | `wrong-arrow` |

@@ -12,6 +12,12 @@ built on the **current** library functionality only.
 | Initial student answer (optional, e.g. a partial answer to complete) | `value` |
 | Rubric per category: no penalty / once / per error (+ cap, + `allMissing` for states), or no grading | `rubric` (format of RUBRIC-DESIGN.md) |
 | Isomers as different substances | `distinguishIsomers` |
+| Automatic subscript (on by default; off = the student chooses `_` / `^` or the level keys) - 2026-10-15 | `autoSubscript: false` |
+| Ion keys ⁺(aq) / ⁻(aq), a shortcut for charge + (aq) (off by default) - 2026-10-15 | `ionKeys: true` |
+| Key (▢) for a state written as a formula, I₂(CCl₄) (off by default) - 2026-10-15 | `formulaStateKey: true` |
+| Nuclear equation + particle key labels short / full (off; short) - 2026-10-15; adds the rubric rows mass / atomic numbers | `nuclear: true`, `particleLabels` |
+| Nuclear: numbers entered automatically with an element (off) | `autoNuclideNumbers: true` |
+| Nuclear: show the state keys (off - hidden by default in a nuclear question) | `states: true` |
 | Keyboard window width in characters (empty = standard 32, also the minimum: the first row of keys fits) | `displayChars` (library option) |
 | Review display div: id of a div the teacher puts and styles in the question text | `reviewDiv` (snippet option) |
 | Check button with feedback for the student | snippet option |

@@ -39,6 +39,16 @@
     tipLiquid:"Liquid state (l)",
     tipGas:"Gas state (g)",
     tipAqueous:"Aqueous state (aq)",
+    tipFormulaState:"State written as a formula, e.g. a solution in another solvent: I₂(CCl₄)",
+    tipIonPlus:"Positive ion in solution: charge + and (aq)",
+    tipIonMinus:"Negative ion in solution: charge − and (aq)",
+    tipAlpha:"Alpha particle (a helium-4 nucleus, ⁴₂He)",
+    tipBeta:"Beta particle (an electron, ⁰₋₁e)",
+    tipPositron:"Positron (⁰₊₁e)",
+    tipGamma:"Gamma radiation",
+    tipElectron:"Electron",
+    tipNeutron:"Neutron (¹₀n)",
+    tipProton:"Proton (¹₁p, ¹₁H)",
     tipLeft:"Move the cursor one chemical unit to the left",
     tipRight:"Move the cursor one chemical unit to the right",
     tipDelete:"Delete the chemical unit to the left of the cursor",
@@ -79,6 +89,16 @@
     tipLiquid:" מצב צבירה נוזל (l)",
     tipGas:" מצב צבירה גז (g)",
     tipAqueous:" מצב של תמיסה מימית (aq)",
+    tipFormulaState:"מצב הכתוב כנוסחה, למשל תמיסה בממס אחר: ⁦I₂(CCl₄)⁩",
+    tipIonPlus:"יון חיובי בתמיסה מימית: מטען + ו-(aq)",
+    tipIonMinus:"יון שלילי בתמיסה מימית: מטען − ו-(aq)",
+    tipAlpha:"חלקיק אלפא (גרעין הליום-4, ⁴₂He)",
+    tipBeta:"חלקיק בטא (אלקטרון, ⁰₋₁e)",
+    tipPositron:"פוזיטרון (⁰₊₁e)",
+    tipGamma:"קרינת גמא",
+    tipElectron:"אלקטרון",
+    tipNeutron:"נייטרון (¹₀n)",
+    tipProton:"פרוטון (¹₁p, ¹₁H)",
     tipLeft:"הזזת הסמן יחידה כימית אחת שמאלה",
     tipRight:"הזזת הסמן יחידה כימית אחת ימינה",
     tipDelete:"מחיקת היחידה הכימית שמשמאל לסמן",
@@ -119,6 +139,16 @@
     tipLiquid:"إضافة الحالة السائلة (l)",
     tipGas:"إضافة الحالة الغازية (g)",
     tipAqueous:"إضافة حالة المحلول المائي (aq)",
+    tipFormulaState:"حالة مكتوبة كصيغة، مثل محلول في مذيب آخر: ⁦I₂(CCl₄)⁩",
+    tipIonPlus:"أيون موجب في محلول مائي: الشحنة + و(aq)",
+    tipIonMinus:"أيون سالب في محلول مائي: الشحنة − و(aq)",
+    tipAlpha:"جسيم ألفا (نواة هيليوم-4، ⁴₂He)",
+    tipBeta:"جسيم بيتا (إلكترون، ⁰₋₁e)",
+    tipPositron:"بوزيترون (⁰₊₁e)",
+    tipGamma:"أشعة غاما",
+    tipElectron:"إلكترون",
+    tipNeutron:"نيوترون (¹₀n)",
+    tipProton:"بروتون (¹₁p، ¹₁H)",
     tipLeft:"تحريك المؤشر وحدة كيميائية واحدة إلى اليسار",
     tipRight:"تحريك المؤشر وحدة كيميائية واحدة إلى اليمين",
     tipDelete:"حذف الوحدة الكيميائية الموجودة إلى يسار المؤشر",
@@ -173,7 +203,14 @@ var ERROR_TEXT={
     "wrong-dot-parts":"{species} has the same total atoms as {referenceSpecies}, but the parts joined by the dot are different. The number after the dot counts whole molecules: 5H₂O is five H₂O molecules.",
     "wrong-answer-type":"The expected answer is a chemical {expectedType}, but the student's answer is a chemical {actualType}.",
     "syntax-error":"The answer contains a syntax error: {parserCode}.",
-    "missing-reference-answer":"No reference answer was supplied."
+    "missing-reference-answer":"No reference answer was supplied.",
+    "missing-numbers":"{species} is written without its mass number and atomic number; the reference answer writes them.",
+    "wrong-mass-number":"The mass number of {species} is {actual}, but the reference answer has {expected}.",
+    "missing-mass-number":"The mass number of {species} is missing (written at the top, before the symbol).",
+    "wrong-atomic-number":"The atomic number of {species} is {actual}, but it should be {expected}.",
+    "missing-atomic-number":"The atomic number of {species} is missing (written at the bottom, before the symbol).",
+    "mass-not-conserved":"The mass numbers are not conserved: {left} on the left side and {right} on the right side.",
+    "atomic-number-not-conserved":"The atomic numbers are not conserved: {left} on the left side and {right} on the right side."
   },
   he:{
     studentAnswer:"תשובת התלמיד",
@@ -204,7 +241,14 @@ var ERROR_TEXT={
     "wrong-dot-parts":"ל־{species} יש אותו מספר אטומים כולל כמו ל־{referenceSpecies}, אך החלקים המחוברים בנקודה שונים. המספר אחרי הנקודה סופר מולקולות שלמות: ⁦5H₂O⁩ הן חמש מולקולות ⁦H₂O⁩.",
     "wrong-answer-type":"נדרשת תשובה מסוג {expectedType}, אך תשובת התלמיד היא מסוג {actualType}.",
     "syntax-error":"התשובה מכילה שגיאת תחביר: {parserCode}.",
-    "missing-reference-answer":"לא הוגדרה תשובת ייחוס."
+    "missing-reference-answer":"לא הוגדרה תשובת ייחוס.",
+    "missing-numbers":"{species} כתוב בלי מספר המסה והמספר האטומי; בתשובת הייחוס הם כתובים.",
+    "wrong-mass-number":"מספר המסה של {species} הוא {actual}, אך בתשובת הייחוס הוא {expected}.",
+    "missing-mass-number":"חסר מספר המסה של {species} (נכתב למעלה, לפני הסמל).",
+    "wrong-atomic-number":"המספר האטומי של {species} הוא {actual}, אך הוא צריך להיות {expected}.",
+    "missing-atomic-number":"חסר המספר האטומי של {species} (נכתב למטה, לפני הסמל).",
+    "mass-not-conserved":"מספרי המסה אינם נשמרים: בצד שמאל {left} ובצד ימין {right}.",
+    "atomic-number-not-conserved":"המספרים האטומיים אינם נשמרים: בצד שמאל {left} ובצד ימין {right}."
   },
   ar:{
     studentAnswer:"إجابة الطالب",
@@ -235,7 +279,14 @@ var ERROR_TEXT={
     "wrong-dot-parts":"تحتوي {species} على نفس العدد الكلي من الذرات مثل {referenceSpecies}، لكن الأجزاء المرتبطة بالنقطة مختلفة. الرقم بعد النقطة يعدّ جزيئات كاملة: ⁦5H₂O⁩ هي خمسة جزيئات ⁦H₂O⁩.",
     "wrong-answer-type":"نوع الإجابة المطلوب هو {expectedType}، لكن إجابة الطالب من النوع {actualType}.",
     "syntax-error":"تحتوي الإجابة على خطأ في الصياغة: {parserCode}.",
-    "missing-reference-answer":"لم يتم تحديد إجابة مرجعية."
+    "missing-reference-answer":"لم يتم تحديد إجابة مرجعية.",
+    "missing-numbers":"{species} مكتوب دون العدد الكتلي والعدد الذري؛ الإجابة المرجعية تكتبهما.",
+    "wrong-mass-number":"العدد الكتلي لـ {species} هو {actual}، لكن الإجابة المرجعية تحدد {expected}.",
+    "missing-mass-number":"العدد الكتلي لـ {species} مفقود (يُكتب في الأعلى قبل الرمز).",
+    "wrong-atomic-number":"العدد الذري لـ {species} هو {actual}، لكن يجب أن يكون {expected}.",
+    "missing-atomic-number":"العدد الذري لـ {species} مفقود (يُكتب في الأسفل قبل الرمز).",
+    "mass-not-conserved":"الأعداد الكتلية غير محفوظة: {left} في الطرف الأيسر و{right} في الطرف الأيمن.",
+    "atomic-number-not-conserved":"الأعداد الذرية غير محفوظة: {left} في الطرف الأيسر و{right} في الطرف الأيمن."
   }
 };
 
@@ -274,6 +325,16 @@ var SYNTAX_TEXT={
     en:"a subscript cannot be 0",
     he:"המספר 0 אינו יכול להופיע ככתב תחתי",
     ar:"لا يمكن كتابة الرقم 0 كنص سفلي"
+  },
+  "nuclide-compound":{
+    en:"in a nuclear equation each term is one nucleus or particle (for example ⁦²³⁸₉₂U⁩), not a compound",
+    he:"במשוואה גרעינית כל איבר הוא גרעין אחד או חלקיק אחד (למשל ⁦²³⁸₉₂U⁩), ולא תרכובת",
+    ar:"في المعادلة النووية كل حدّ هو نواة واحدة أو جسيم واحد (مثل ⁦²³⁸₉₂U⁩)، وليس مركبًا"
+  },
+  "invalid-prescript":{
+    en:"the numbers before a symbol must be a mass number (top) and an atomic number (bottom)",
+    he:"המספרים לפני סמל צריכים להיות מספר מסה (למעלה) ומספר אטומי (למטה)",
+    ar:"يجب أن تكون الأرقام قبل الرمز عددًا كتليًا (في الأعلى) وعددًا ذريًا (في الأسفل)"
   },
 };
 
@@ -330,6 +391,8 @@ var GRADE_TEXT={
   answerType:{en:"Answer type",he:"סוג התשובה",ar:"نوع الإجابة"},
   unknownElement:{en:"Unknown element",he:"יסוד לא מוכר",ar:"عنصر غير معروف"},
   substances:{en:"Substances",he:"חומרים",ar:"المواد"},
+  massNumbers:{en:"Mass numbers",he:"מספרי מסה",ar:"الأعداد الكتلية"},
+  atomicNumbers:{en:"Atomic numbers",he:"מספרים אטומיים",ar:"الأعداد الذرية"},
   coefficients:{en:"Coefficients",he:"מקדמים",ar:"المعاملات"},
   scaledCoefficients:{en:"Multiplied coefficients",he:"מקדמים מוכפלים",ar:"معاملات مضاعفة"},
   balance:{en:"Balance",he:"איזון",ar:"الموازنة"},
@@ -403,13 +466,38 @@ function localizedOnSide(side,language){
 
   return entry[language]!==undefined?entry[language]:entry.en;
 }
+/* "⁻" -> {script:"sup", ch:"−"}: reading the numbers of a nuclide label (²³⁸₉₂U, e⁻) */
+var UNSCRIPT=null;
+function unscript(ch){
+  var k;
+  if(!UNSCRIPT){
+    UNSCRIPT={};
+    for(k in SUP_CHARS)if(k!=="-")UNSCRIPT[SUP_CHARS[k]]={script:"sup",ch:k};
+    for(k in SUB_CHARS)if(k!=="-")UNSCRIPT[SUB_CHARS[k]]={script:"sub",ch:k};
+  }
+  return UNSCRIPT[ch]||null;
+}
+
 function formulaTextToLatex(text){
-  var out="",i=0,symbol,digits,ch;
+  var out="",i=0,symbol,digits,ch,u,sup,sub;
 
   text=String(text||"");
 
   while(i<text.length){
     ch=text.charAt(i);
+
+    /* the numbers of a nuclide (²³⁸₉₂U) or a particle's sign (e⁻): one empty base for both */
+    if(unscript(ch)){
+      sup="";
+      sub="";
+      while(i<text.length&&(u=unscript(text.charAt(i)))){
+        if(u.script==="sup")sup+=u.ch;
+        else sub+=u.ch;
+        i++;
+      }
+      out+="{}"+(sup?"^{\\scriptscriptstyle "+sup+"}":"")+(sub?"_{\\scriptscriptstyle "+sub+"}":"");
+      continue;
+    }
 
     if(ch==="·"){
       out+="\\cdot ";
@@ -478,7 +566,10 @@ function replaceTextToken(text,token,value){
 
 function localizedErrorTemplate(error,language){
   var messages=ERROR_TEXT[language]||ERROR_TEXT.en;
-  var text=messages[error.code]||localizedFromTable(NOTE_TEXT,error.code,language);
+  /* nuclear equations: the "atoms" #A and #Z are the conservation of mass and atomic numbers */
+  var code=error.code==="unbalanced-atom"&&error.atom==="#A"?"mass-not-conserved"
+    :error.code==="unbalanced-atom"&&error.atom==="#Z"?"atomic-number-not-conserved":error.code;
+  var text=messages[code]||localizedFromTable(NOTE_TEXT,code,language);
 
   text=replaceTextToken(text,"count",error.count);
   text=replaceTextToken(text,"left",error.left);
@@ -795,7 +886,8 @@ function makeChar(ch, script, pair, kind) {
         text: s,
         script: script,
         start: start,
-        end: i + 1
+        end: i + 1,
+        char: chars[start]      // its first character (a formula state keeps its formula there)
       });
 
       i++;
@@ -1019,6 +1111,180 @@ function makeChar(ch, script, pair, kind) {
     return map;
   }
 
+  /*
+   * NUCLEAR EQUATIONS (design: ENHANCEMENTS-DESIGN.md, section 4)
+   * A nuclide is written with its mass number A (superscript) and atomic number Z (subscript) before
+   * the symbol: ²³⁸₉₂U. Particles: α β γ n p e, with or without their numbers (α = ⁴₂α = ⁴₂He,
+   * β = ⁰₋₁β = ⁰₋₁e = e⁻, β⁺ = ⁰₊₁β = e⁺ the positron, p = ¹₁p = ¹₁H, n = ¹₀n, γ = ⁰₀γ).
+   * A nuclear species gets the composition {"#A": A, "#Z": Z}, so the equation's "atom balance" is the
+   * conservation of mass and atomic numbers, and the identity of a species is its A and Z: equivalent
+   * forms are equal. Parsing does not depend on an option: chemical formulas never start with a
+   * superscript or subscript, and the particle letters can only be typed with the particle keys.
+   */
+  var PARTICLES = { "α": { A: 4, Z: 2 }, "β": { A: 0, Z: -1 }, "γ": { A: 0, Z: 0 },
+                    "n": { A: 1, Z: 0 }, "p": { A: 1, Z: 1 }, "e": { A: 0, Z: -1 } };
+  var SUP_CHARS = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
+                    "+": "⁺", "−": "⁻", "-": "⁻" };
+  var SUB_CHARS = { "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉",
+                    "+": "₊", "−": "₋", "-": "₋" };
+
+  /*
+   * Particle keys of a nuclear question (config.nuclear). full: the numbers inserted with
+   * particleLabels "full". The electron key has no full form; β⁺ is the positron (⁰₊₁β in full form).
+   */
+  var NUCLEAR_KEYS = [
+    { short: "α", symbol: "α", full: { A: "4", Z: "2" }, tip: "tipAlpha" },
+    { short: "β", symbol: "β", full: { A: "0", Z: "−1" }, tip: "tipBeta" },
+    { short: "β⁺", symbol: "β", charge: "+", full: { A: "0", Z: "+1" }, tip: "tipPositron" },
+    { short: "γ", symbol: "γ", full: { A: "0", Z: "0" }, tip: "tipGamma" },
+    { short: "e⁻", symbol: "e", charge: "−", tip: "tipElectron" },
+    { short: "n", symbol: "n", full: { A: "1", Z: "0" }, tip: "tipNeutron" },
+    { short: "p", symbol: "p", full: { A: "1", Z: "1" }, tip: "tipProton" }
+  ];
+
+  /*
+   * Mass numbers entered with an element (config.autoNuclideNumbers), in atomic-number order: the most abundant
+   * isotope; for radioactive elements the one usually taught (U 238, Ra 226, Rn 222, Pu 239, Am 241) or the
+   * longest-lived. Only a starting point - the student changes it (²³⁵U).
+   */
+  var MASS_NUMBERS = [1, 4, 7, 9, 11, 12, 14, 16, 19, 20, 23, 24, 27, 28, 31, 32, 35, 40, 39, 40,
+    45, 48, 51, 52, 55, 56, 59, 58, 63, 64, 69, 74, 75, 80, 79, 84, 85, 88, 89, 90,
+    93, 98, 98, 102, 103, 106, 107, 114, 115, 120, 121, 130, 127, 132, 133, 138, 139, 140, 141, 142,
+    145, 152, 153, 158, 159, 164, 165, 166, 169, 174, 175, 180, 181, 184, 187, 192, 193, 195, 197, 202,
+    205, 208, 209, 210, 210, 222, 223, 226, 227, 232, 231, 238, 237, 239, 241, 247, 247, 251, 252, 257,
+    258, 259, 266, 267, 268, 269, 270, 269, 278, 281, 282, 285, 286, 289, 290, 293, 294, 294];
+
+  function particleLabel(key) {
+    return scriptText(key.full.A, "sup") + scriptText(key.full.Z, "sub") + key.symbol;
+  }
+
+  function atomicNumberOf(symbol) {
+    var k = SYMBOLS.indexOf(symbol);
+    return k < 0 ? null : k + 1;
+  }
+
+  function signedNumber(text) {
+    var m = /^([−+-]?)(\d+)$/.exec(text);
+    if (!m) return null;
+    return (m[1] === "−" || m[1] === "-" ? -1 : 1) * Number(m[2]);
+  }
+
+  /* "238" -> "²³⁸": the written numbers in labels (messages, feedback lines) */
+  function scriptText(text, script) {
+    var map = script === "sup" ? SUP_CHARS : SUB_CHARS, out = "", k;
+    for (k = 0; k < text.length; k++) out += map[text.charAt(k)] || text.charAt(k);
+    return out;
+  }
+
+  /*
+   * A nuclide or particle in tokens[from..to) (charge already removed), or null when this is not one:
+   * prescripts (superscript / subscript tokens) followed by exactly one symbol, or a particle symbol alone.
+   * Inconsistent numbers are not syntax errors but issues, reported when the species is compared
+   * (compareNuclides): the species keeps the identity of its symbol (²³⁸₉₁U is U-238 with a wrong Z),
+   * so one mistake gives one error.
+   */
+  function parseNuclide(tokens, from, to, chargeText) {
+    var k = from, supText = "", subText = "", sym, particle, base, sign, A, Z;
+    var massWritten = null, atomicWritten = null, issues = [], errors = [], composition;
+
+    while (k < to && (tokens[k].script === "sup" || tokens[k].script === "sub")) {
+      if (tokens[k].script === "sup") supText += tokens[k].text;
+      else subText += tokens[k].text;
+      k++;
+    }
+
+    if (k !== to - 1 || tokens[k].script !== "normal") return null;
+
+    sym = tokens[k].text;
+    particle = Object.prototype.hasOwnProperty.call(PARTICLES, sym);
+
+    if (!particle && (!(supText || subText) || !isUpper(sym.charAt(0)))) return null;
+
+    if (supText) {
+      massWritten = isDigits(supText) ? Number(supText) : null;
+      if (massWritten === null) errors.push({ code: "invalid-prescript", range: [tokens[from].start, tokens[k].start] });
+    }
+
+    if (subText) {
+      atomicWritten = signedNumber(subText);
+      if (atomicWritten === null) errors.push({ code: "invalid-prescript", range: [tokens[from].start, tokens[k].start] });
+    }
+
+    if (particle) {
+      base = PARTICLES[sym];
+      A = base.A;
+      Z = base.Z;
+
+      /* β and e: the electron, or the positron with "+" (β⁺, e⁺) or with the atomic number +1 (⁰₊₁β) */
+      if (sym === "β" || sym === "e") {
+        sign = chargeText ? chargeText.charAt(chargeText.length - 1) : "";
+        if (sign === "+") Z = 1;
+        else if (sign === "−" || sign === "-") Z = -1;
+        else if (atomicWritten === 1) Z = 1;
+      }
+
+      if (massWritten !== null && massWritten !== A) issues.push({ code: "wrong-mass-number", expected: A, actual: massWritten });
+    } else {
+      if (!SET[sym]) errors.push({ code: "unknown-element", range: [tokens[k].start, tokens[k].end], value: sym });
+      Z = atomicNumberOf(sym);
+      if (Z === null) Z = atomicWritten !== null ? atomicWritten : 0;
+      A = massWritten;
+    }
+
+    if (atomicWritten !== null && atomicWritten !== Z) issues.push({ code: "wrong-atomic-number", expected: Z, actual: atomicWritten });
+
+    /* the two numbers come together: a mass number needs its atomic number, and the other way round */
+    if (supText && !subText) issues.push({ code: "missing-atomic-number" });
+    if (subText && !supText) issues.push({ code: "missing-mass-number" });
+
+    composition = A === null ? { "#Z": Z } : { "#A": A, "#Z": Z };
+
+    return {
+      nuclear: {
+        symbol: sym, particle: particle, A: A, Z: Z,
+        massWritten: massWritten, atomicWritten: atomicWritten, issues: issues
+      },
+      composition: composition,
+      label: scriptText(supText, "sup") + scriptText(subText, "sub") + sym + (chargeText ? scriptText(chargeText, "sup") : ""),
+      errors: errors
+    };
+  }
+
+  /*
+   * The state value of a formula state: its formula in a fixed order with Unicode sub/superscripts
+   * ("CCl₄", "C₆H₁₄"), so the same formula written in another order is the same state, and the value
+   * reads well in messages. An empty box is no state. Errors inside point at the whole box (range).
+   */
+  function formulaStateOf(content, range) {
+    var tokens = tokenize(content), sp, keys, text = "", k, n, errors = [];
+
+    if (!tokens.length) return { state: null, errors: [] };
+
+    sp = parseSpecies(tokens, 0, tokens.length);
+    for (k = 0; k < sp.errors.length; k++) {
+      errors.push({ code: sp.errors[k].code, value: sp.errors[k].value, range: range.slice() });
+    }
+
+    keys = sortedKeys(sp.composition);
+    for (k = 0; k < keys.length; k++) {
+      n = sp.composition[keys[k]];
+      text += keys[k] + (n === 1 ? "" : scriptText(String(n), "sub"));
+    }
+    if (sp.charge) text += scriptText((Math.abs(sp.charge) === 1 ? "" : String(Math.abs(sp.charge))) + (sp.charge > 0 ? "+" : "−"), "sup");
+
+    return { state: text, errors: errors };
+  }
+
+  /* tokens[from..end) end with a state: a formula state box, or (s) (l) (g) (aq) */
+  function endsWithState(tokens, from, end) {
+    if (end - from >= 1 && tokens[end - 1].char && tokens[end - 1].char.kind === "fstate") return true;
+    return end - from >= 3 &&
+      tokens[end - 3].text === "(" && tokens[end - 3].script === "sub" &&
+      tokens[end - 2].script === "sub" &&
+      (tokens[end - 2].text === "s" || tokens[end - 2].text === "l" || tokens[end - 2].text === "g" || tokens[end - 2].text === "aq") &&
+      tokens[end - 1].text === ")" && tokens[end - 1].script === "sub";
+  }
+
   function parseSpecies(tokens, from, to) {
     var i = from;
     var coefficient = 1;
@@ -1037,20 +1303,28 @@ function makeChar(ch, script, pair, kind) {
       i++;
     }
 
-    if (
-      to - i >= 3 &&
-      tokens[to - 3].text === "(" &&
-      tokens[to - 3].script === "sub" &&
-      tokens[to - 2].script === "sub" &&
-      (
-        tokens[to - 2].text === "s" ||
-        tokens[to - 2].text === "l" || tokens[to - 2].text === "g" || tokens[to - 2].text === "aq"
-      ) &&
-      tokens[to - 1].text === ")" && tokens[to - 1].script === "sub"
-    ) {
-      state = tokens[to - 2].text;
-      stateRange = [tokens[to-3].start,tokens[to-1].end];
-      formulaEnd = to - 3;
+    /*
+     * A charge typed after the state (I₂(CCl₄) then ^−, Na(aq) then ^+) looks exactly like one typed before it -
+     * charge and state share one stacked cluster - so both orders are read the same: the superscript
+     * tokens after a state are part of the charge.
+     */
+    var stateTo = to, trailing = "", t2;
+    while (stateTo - 1 > i && tokens[stateTo - 1].script === "sup") stateTo--;
+    if (stateTo < to && !endsWithState(tokens, i, stateTo)) stateTo = to;
+    for (t2 = stateTo; t2 < to; t2++) trailing += tokens[t2].text;
+    formulaEnd = stateTo;
+
+    /* a state written as a formula, I₂(CCl₄): compared by its formula (atoms and charge) */
+    if (stateTo - i >= 1 && tokens[stateTo - 1].char && tokens[stateTo - 1].char.kind === "fstate") {
+      var formulaState = formulaStateOf(tokens[stateTo - 1].char.condition || [], [tokens[stateTo - 1].start, tokens[stateTo - 1].end]);
+      state = formulaState.state;
+      errors = errors.concat(formulaState.errors);
+      stateRange = [tokens[stateTo - 1].start, tokens[stateTo - 1].end];
+      formulaEnd = stateTo - 1;
+    } else if (endsWithState(tokens, i, stateTo)) {
+      state = tokens[stateTo - 2].text;
+      stateRange = [tokens[stateTo - 3].start, tokens[stateTo - 1].end];
+      formulaEnd = stateTo - 3;
     }
 
     var chargeStart = formulaEnd;
@@ -1062,6 +1336,11 @@ function makeChar(ch, script, pair, kind) {
       chargeText = tokens[j].text + chargeText;
       j--;
     }
+
+    /* the charge's range: the part before the state and / or the part after it */
+    var chargeFrom = chargeStart < formulaEnd ? tokens[chargeStart].start : trailing ? tokens[stateTo].start : 0;
+    var chargeTo = trailing ? tokens[to - 1].end : chargeStart < formulaEnd ? tokens[formulaEnd - 1].end : 0;
+    chargeText += trailing;
 
     if (chargeText) {
       var sign = chargeText.charAt(chargeText.length - 1);
@@ -1076,19 +1355,61 @@ function makeChar(ch, script, pair, kind) {
         if (Number(mag) === 1) {
           notes.push({
             code: "redundant-charge-one",
-            range: [tokens[chargeStart].start, tokens[formulaEnd - 1].end]
+            range: [chargeFrom, chargeTo]
           });
         }
       } else {
         errors.push({
           code: "invalid-charge",
-          range: [tokens[chargeStart].start, tokens[formulaEnd - 1].end]
+          range: [chargeFrom, chargeTo]
         });
       }
 
-      chargeRange = [tokens[chargeStart].start,tokens[formulaEnd-1].end];
+      chargeRange = [chargeFrom, chargeTo];
 
       formulaEnd = chargeStart;
+    }
+
+    /* A nuclide or particle (nuclear equations): its charge sign belongs to the particle (e⁻, β⁺). */
+    var nuclide = i < formulaEnd ? parseNuclide(tokens, i, formulaEnd, chargeText) : null;
+
+    /*
+     * A nuclide followed by more (²³⁸₉₂UO, ²³⁸₉₂U¹⁶₈O): in a nuclear equation each term is one nucleus or
+     * particle. One clear syntax error for the whole term (not "a symbol in an unexpected place"); the term is
+     * read as its first nuclide, so the rest of the comparison stays meaningful.
+     */
+    if (!nuclide && i < formulaEnd && tokens[i].script !== "normal") {
+      var firstSymbol = i;
+      while (firstSymbol < formulaEnd && tokens[firstSymbol].script !== "normal") firstSymbol++;
+      nuclide = firstSymbol < formulaEnd - 1 ? parseNuclide(tokens, i, firstSymbol + 1, "") : null;
+      if (nuclide) {
+        nuclide.errors.push({ code: "nuclide-compound", range: [tokens[i].start, tokens[formulaEnd - 1].end] });
+      }
+    }
+
+    if (nuclide) {
+      for (var q = 0; q < notes.length; q++) notes[q].species = nuclide.label;
+
+      return {
+        type: "species",
+        nuclear: nuclide.nuclear,
+        coefficient: coefficient,
+        formula: [],
+        composition: nuclide.composition,
+        label: nuclide.label,
+        writtenFormula: undefined,
+        hydrateKey: null,
+        hydrateParts: null,
+        charge: 0,
+        state: state,
+        coefficientRange: coefficientRange,
+        formulaRange: [tokens[i].start, tokens[formulaEnd - 1].end],
+        chargeRange: chargeRange,
+        stateRange: stateRange,
+        range: [tokens[from].start, tokens[to - 1].end],
+        errors: errors.concat(nuclide.errors),
+        notes: notes
+      };
     }
 
     var p = parseFormulaTokens(tokens, i, formulaEnd);
@@ -1357,6 +1678,12 @@ function valueTextOf(chars){
   chars=chars||[];
   while(i<chars.length){
     c=chars[i];
+    /* a formula state: "({CCl_{4}})" - the braces tell it from (aq) */
+    if(c.kind==="fstate"){
+      out+="({"+valueTextOf(c.condition)+"})";
+      i++;
+      continue;
+    }
     if(c.kind==="state"){
       out+=c.ch;
       i++;
@@ -1365,7 +1692,7 @@ function valueTextOf(chars){
     if(c.script==="sub"||c.script==="sup"){
       script=c.script;
       run="";
-      while(i<chars.length&&chars[i].script===script&&chars[i].kind!=="state"){
+      while(i<chars.length&&chars[i].script===script&&chars[i].kind!=="state"&&chars[i].kind!=="fstate"){
         run+=chars[i].ch;
         i++;
       }
@@ -1377,6 +1704,20 @@ function valueTextOf(chars){
     i++;
   }
   return out;
+}
+
+/* "({CCl_{4}})": the position of the closing "}" (followed by ")") of the content starting at k, or -1 */
+function formulaStateEnd(s,k){
+  var depth=0;
+
+  for(;k<s.length;k++){
+    if(s.charAt(k)==="{")depth++;
+    else if(s.charAt(k)==="}"){
+      if(depth===0)return s.charAt(k+1)===")"?k:-1;
+      depth--;
+    }
+  }
+  return -1;
 }
 
 function matchValueToken(s,i){
@@ -1428,6 +1769,19 @@ function matchValueToken(s,i){
     }
 
     ch=s.charAt(i);
+
+    /* a formula state "({...})": its own model, inside one box character */
+    if(ch==="("&&s.charAt(i+1)==="{"){
+      j=formulaStateEnd(s,i+2);
+      if(j>=0){
+        token=makeChar("◌","sub",null,"fstate");
+        token.condition=modelFromValue(s.substring(i+2,j)).map(function(x){return makeChar(x.ch,x.script);});
+        chars.push(token);
+        i=j+1;
+        script="normal";
+        continue;
+      }
+    }
 
     if(isArrowChar(ch)){
       chars.push(makeChar(ch,"normal"));
@@ -1557,6 +1911,8 @@ function isStructuralFormula(writtenFormula){
   Plain molecular formulas are still compared by atom counts (CO2 = O2C).
 */
 function speciesFormulaKey(species,options){
+  /* a nuclide or particle is identified by its mass and atomic numbers: ⁴₂He = α */
+  if(species.nuclear)return "N:"+(species.nuclear.A===null?"?":species.nuclear.A)+","+species.nuclear.Z;
   if(options&&options.distinguishIsomers&&isStructuralFormula(species.writtenFormula)){
     return "W:"+species.writtenFormula+chargeKey(species.charge);
   }
@@ -1621,6 +1977,7 @@ function mergeSide(speciesList,options){
     }
 
     m={
+      nuclear:s.nuclear,
       coefficient:s.coefficient,
       composition:s.composition,
       label:s.label,
@@ -1664,6 +2021,7 @@ function canonicalSide(speciesList,divisor,options){
     coefficient=s.coefficient/divisor;
 
     items.push({
+    nuclear:s.nuclear,
     coefficient:coefficient,
     originalCoefficient:s.coefficient,
     composition:copy(s.composition),
@@ -1681,7 +2039,8 @@ function canonicalSide(speciesList,divisor,options){
     atoms:s.atoms,
     occurrences:s.occurrences,
     formulaKey:speciesFormulaKey(s,options),
-    atomSetKey:atomSetKey(s.composition),
+    /* nuclides of the same element are paired (²³⁵U for ²³⁸U: a wrong mass number); particles are not */
+    atomSetKey:s.nuclear?(s.nuclear.particle?"P:"+s.nuclear.symbol+s.nuclear.Z:"E:"+s.nuclear.symbol):atomSetKey(s.composition),
     key:speciesKey(s,coefficient,options)
   });
   }
@@ -1780,7 +2139,8 @@ function stampSpecies(list,from,species,side){
 
   for(i=from;i<list.length;i++){
     list[i].speciesKey=side+":"+speciesLabel(species);
-    list[i].speciesAtoms=sortedKeys(species.composition);
+    /* a nuclide always takes part in both balances, also when its mass number is unknown (U) */
+    list[i].speciesAtoms=species.nuclear?["#A","#Z"]:sortedKeys(species.composition);
   }
 }
 
@@ -2000,6 +2360,81 @@ function compareAtomCounts(student,reference,side,errors){
   }
 }
 
+/*
+  A matched nuclide or particle (nuclear equations): the mass number against the reference, and the
+  student's own written numbers (a wrong atomic number for the symbol, a number written without the
+  other one). Each code once per species.
+*/
+function compareNuclides(student,reference,side,errors){
+  var s=student.nuclear,r=reference.nuclear,reported={},i,issue;
+  var studentRanges=oneTarget(student.formulaRange||student.range,"species");
+  var referenceRanges=oneTarget(reference.formulaRange||reference.range,"species");
+
+  function report(code,expected,actual){
+    if(reported[code])return;
+    reported[code]=true;
+    addError(errors,code,{
+      side:side,
+      species:speciesLabel(student),
+      expected:expected,
+      actual:actual,
+      studentRanges:studentRanges,
+      referenceRanges:referenceRanges
+    });
+  }
+
+  /*
+   * Numbers written in the reference must be written by the student (decided 2026-10-15: they help the
+   * student check the balance). A species has both numbers or none: none at all is "missing-numbers";
+   * only one of them is an issue of the student's own writing (below).
+   */
+  var studentNone=!s||(s.massWritten===null&&s.atomicWritten===null);
+  var referenceHas=!!r&&(r.massWritten!==null||r.atomicWritten!==null);
+
+  if(referenceHas&&studentNone)report("missing-numbers");
+  else if(r&&r.A!==null&&(!s||s.A===null))report("missing-mass-number",r.A);
+  else if(s&&r&&s.A!==null&&r.A!==null&&s.A!==r.A)report("wrong-mass-number",r.A,s.A);
+
+  if(!s)return;
+
+  for(i=0;i<s.issues.length;i++){
+    issue=s.issues[i];
+    report(issue.code,issue.expected,issue.actual);
+  }
+}
+
+/* true when the answer has a nuclide or a particle: the question is a nuclear equation */
+function astIsNuclear(ast){
+  var sides=[ast.reactants||[],ast.products||[]],a,i;
+
+  for(a=0;a<sides.length;a++){
+    for(i=0;i<sides[a].length;i++)if(sides[a][i].nuclear)return true;
+  }
+  return false;
+}
+
+/*
+  In a nuclear equation, a symbol written without its numbers (U) is the nuclide with an unknown mass
+  number - not one atom of U - so it is paired with the reference nuclide and reported as a missing
+  mass number.
+*/
+function nuclearizeAst(ast){
+  var sides=[ast.reactants||[],ast.products||[]],a,i,s,item,Z;
+
+  for(a=0;a<sides.length;a++){
+    for(i=0;i<sides[a].length;i++){
+      s=sides[a][i];
+      if(s.nuclear||s.charge||s.hydrateKey||s.formula.length!==1)continue;
+      item=s.formula[0];
+      if(item.type!=="element"||item.count!==1)continue;
+      Z=atomicNumberOf(item.symbol)||0;
+      s.nuclear={symbol:item.symbol,particle:false,A:null,Z:Z,massWritten:null,atomicWritten:null,issues:[]};
+      s.composition={"#Z":Z};
+      s.formula=[];
+    }
+  }
+}
+
 function findSpeciesMatch(studentSide,referenceSpecies,used){
   var i;
 
@@ -2119,7 +2554,8 @@ function compareSide(studentSide,referenceSide,side,errors,pairs){
     used[index]=true;
     student=studentSide[index];
 
-    compareAtomCounts(student,reference,side,errors);
+    if(student.nuclear||reference.nuclear)compareNuclides(student,reference,side,errors);
+    else compareAtomCounts(student,reference,side,errors);
     compareCharges(student,reference,side,errors);
     compareStates(student,reference,side,errors);
     stampSpecies(errors,from,student,side);
@@ -2445,6 +2881,12 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
   options=options||{};
   var studentAst=studentValue&&studentValue.type?studentValue:analyzeValue(studentValue);
   var referenceAst=referenceValue&&referenceValue.type?referenceValue:analyzeValue(referenceValue);
+  /* a nuclear equation: decided by the reference (or options.nuclear) */
+  var nuclear=options.nuclear===true||astIsNuclear(referenceAst);
+  if(nuclear){
+    nuclearizeAst(studentAst);
+    nuclearizeAst(referenceAst);
+  }
   var studentCanonical=canonicalizeAst(studentAst,options);
   var referenceCanonical=canonicalizeAst(referenceAst,options);
   var studentAtoms=collectAtoms(studentAst);
@@ -2483,7 +2925,8 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
 
   compareConditions(studentAst,referenceAst,errors,formNotes);
 
-  keys=sortedKeys(studentAtoms);
+  /* elements missing / extra in the whole answer: not in a nuclear equation, where elements change */
+  keys=nuclear?[]:sortedKeys(studentAtoms);
 
   for(i=0;i<keys.length;i++){
     atom=keys[i];
@@ -2503,7 +2946,7 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
     }
   }
 
-  keys=sortedKeys(referenceAtoms);
+  keys=nuclear?[]:sortedKeys(referenceAtoms);
 
   for(i=0;i<keys.length;i++){
     atom=keys[i];
@@ -2626,7 +3069,7 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
    the error that caused it. result.score = { total, penalties: [{ category,
    penalty, errorIds, capped }] } - a penalty is listed once for all its errors.
    ============================================================ */
-var RUBRIC_CATEGORIES=["syntax","answerType","unknownElement","substances","coefficients","scaledCoefficients",
+var RUBRIC_CATEGORIES=["syntax","answerType","unknownElement","substances","massNumbers","atomicNumbers","coefficients","scaledCoefficients",
   "balance","states","charges","arrow","conditions","notation"];
 
 var RUBRIC_CATEGORY_OF={
@@ -2636,6 +3079,8 @@ var RUBRIC_CATEGORY_OF={
   "missing-species":"substances","unexpected-species":"substances","wrong-atom-count":"substances",
   "wrong-structure":"substances","missing-structure":"substances","wrong-dot-parts":"substances",
   "unexpected-atom":"substances","missing-atom":"substances",
+  "wrong-mass-number":"massNumbers","missing-mass-number":"massNumbers","missing-numbers":"massNumbers",
+  "wrong-atomic-number":"atomicNumbers","missing-atomic-number":"atomicNumbers",
   "wrong-coefficient":"coefficients",
   "scaled-coefficients":"scaledCoefficients",
   "unbalanced-atom":"balance",
@@ -2648,7 +3093,9 @@ var RUBRIC_CATEGORY_OF={
 };
 
 /* errors that say a student substance itself is wrong */
-var WRONG_SPECIES_CODES=["wrong-atom-count","wrong-structure","missing-structure","wrong-dot-parts"];
+var WRONG_SPECIES_CODES=["wrong-atom-count","wrong-structure","missing-structure","wrong-dot-parts",
+  /* a nuclide with a wrong or missing mass number is a wrong substance: it also explains the mass balance */
+  "wrong-mass-number","missing-mass-number","missing-numbers"];
 
 /*
   Applied in order. An error with one of "codes" is not counted when an
@@ -2865,6 +3312,12 @@ ChemicalKeyboard.prototype.setCorrectAnswer=function(value){
 /*
  * config.conditions: true (default) shows the reaction-condition (process) keys - the arrow with the
  * condition placeholder, Δ, hν, °C, K; false leaves them out.
+ * config.autoSubscript: true (default); false - digits are not made subscripts by themselves (insertDigit).
+ * config.ionKeys: false (default); true adds the shortcut keys ⁺(aq) and ⁻(aq) (insertIon).
+ * config.formulaStateKey: false (default); true adds the key (▢) for a state written as a formula.
+ * config.nuclear: nuclear equation - particle keys (particleLabels "short" / "full");
+ *   autoNuclideNumbers: an element typed at the start of a substance gets its numbers (autoNuclideNumbers).
+ * config.states: show the state keys; default true, false in a nuclear question unless set to true.
  */
 
   function ChemicalKeyboard(config) {
@@ -3068,7 +3521,7 @@ ChemicalKeyboard.prototype.build=function(){
 
   /* Comma: separates parts of the condition ("Fe, 450°C"); active only there. */
   this.commaButton=btn(operatorsRow,",",function(){
-    if(self.cond)self.insertConditionChars([makeChar(",","normal")]);
+    if(self.cond&&!self.condIsFormula())self.insertConditionChars([makeChar(",","normal")]);
   },t.tipComma);
 
   /*
@@ -3097,7 +3550,7 @@ ChemicalKeyboard.prototype.build=function(){
    * Reaction-condition (process) keys: the arrow with the condition placeholder, Δ, hν, °C, K.
    * config.conditions === false leaves them out (only the plain arrows remain).
    */
-  if(this.config.conditions!==false){
+  if(this.config.conditions!==false&&!this.config.nuclear){
     var infoButton=btn(arrowsRow,"",function(){
       self.openCondition();
     },t.tipInfo);
@@ -3130,7 +3583,7 @@ ChemicalKeyboard.prototype.build=function(){
 
   apply(statesRow,{
     display:"grid",
-    gridTemplateColumns:"repeat(4, minmax(52px, 72px))",
+    gridTemplateColumns:"repeat("+(4+(this.config.ionKeys?2:0)+(this.config.formulaStateKey?1:0))+", minmax(52px, 72px))",
     gap:"6px",
     marginBottom:"10px"
   });
@@ -3152,6 +3605,68 @@ ChemicalKeyboard.prototype.build=function(){
   btn(statesRow,"(aq)",function(){
     self.insertState("aq");
   },t.tipAqueous);
+
+  /* config.formulaStateKey: a state written as a formula, I₂(CCl₄) - see insertFormulaState */
+  if(this.config.formulaStateKey){
+    var formulaStateButton=btn(statesRow,"(▢)",function(){
+      self.insertFormulaState();
+    },t.tipFormulaState);
+    removeButtonFocus(formulaStateButton);
+  }
+
+  /*
+   * Nuclear equations (config.nuclear): particle keys instead of the states. config.particleLabels:
+   * "short" (default: α, β ...) or "full" (⁴₂α, ⁰₋₁β ...) - the key inserts what its label shows,
+   * as separate characters (numbers + symbol), so DEL and the arrows work as if typed by hand.
+   */
+  if(this.config.nuclear){
+    var particlesRow=node("div");
+    apply(particlesRow,{display:"flex",flexWrap:"wrap",gap:"6px",marginBottom:"10px"});
+    this.panel.insertBefore(particlesRow,statesRow);
+    NUCLEAR_KEYS.forEach(function(key){
+      var full=self.config.particleLabels==="full"&&key.full,b,stack,top,bottom;
+      b=btn(particlesRow,full?"":key.short,function(){
+        self.insertParticle(key,!!full);
+      },t[key.tip]||key.short,{fontFamily:"'Times New Roman',serif",fontSize:"25px",minWidth:"52px",padding:"0 6px"});
+      if(!full)return;
+      /*
+       * The numbers stacked and right-aligned before the symbol, with the same layout as the typing area
+       * (render): a fixed box with the two lines placed absolutely - a flex column lines up differently
+       * in different browsers and button styles.
+       */
+      stack=node("span","");
+      apply(stack,{display:"inline-block",position:"relative",
+        width:Math.max(key.full.A.length,key.full.Z.length)*.42+"em",height:"1em",verticalAlign:"-.18em",marginRight:"1px"});
+      top=node("span",key.full.A);
+      bottom=node("span",key.full.Z);
+      apply(top,{position:"absolute",right:"0",top:"-.25em",fontSize:"65%",lineHeight:"1",whiteSpace:"nowrap"});
+      apply(bottom,{position:"absolute",right:"0",top:".62em",fontSize:"65%",lineHeight:"1",whiteSpace:"nowrap"});
+      stack.appendChild(top);
+      stack.appendChild(bottom);
+      b.appendChild(stack);
+      b.appendChild(document.createTextNode(key.symbol));
+      b.setAttribute("aria-label",(t[key.tip]||"")+" "+particleLabel(key));
+    });
+  }
+
+  /*
+   * config.states: show the state keys (the row also holds the ion keys and the formula-state key).
+   * Default: shown, except in a nuclear question - where the teacher can still turn them on.
+   */
+  if(this.config.states===false||this.config.nuclear&&this.config.states!==true){
+    statesRow.style.display="none";
+  }
+
+  /* config.ionKeys: shortcuts for a charge + (aq) - see insertIon */
+  if(this.config.ionKeys){
+    btn(statesRow,"⁺(aq)",function(){
+      self.insertIon("+");
+    },t.tipIonPlus);
+
+    btn(statesRow,"⁻(aq)",function(){
+      self.insertIon("−");
+    },t.tipIonMinus);
+  }
 
   /*
    * Lower area: digits on the left,
@@ -3585,10 +4100,10 @@ ChemicalKeyboard.prototype.updateScriptButtons=function(){
     }
 
     /* The comma only belongs in the condition above the arrow. */
-    setButtonEnabled(this.commaButton,!!this.cond);
+    setButtonEnabled(this.commaButton,!!this.cond&&!this.condIsFormula());
 
     /* The minus: a negative charge (superscript) or condition text (−78°C). */
-    setButtonEnabled(this.minusButton,this.script==="sup"||!!this.cond);
+    setButtonEnabled(this.minusButton,this.script==="sup"||!!this.cond||!!this.config.nuclear&&this.script==="sub");
   };
 
 function setButtonEnabled(button,enabled){
@@ -3623,6 +4138,33 @@ function setButtonEnabled(button,enabled){
    condition can be added at any time.
    ============================================================ */
 
+/*
+   FORMULA STATE (config.formulaStateKey; design: ENHANCEMENTS-DESIGN.md, section 1)
+   A state written as a formula, in the state position: I₂(CCl₄). One character of kind "fstate"
+   (ch "◌", lower line) holds the formula in .condition, so it is edited exactly like the condition
+   above an arrow (this.cond = {arrow: its index, pos}): the cursor enters it, the same keys work,
+   Enter / → leave it. Only formulas: no words, commas or condition symbols inside.
+*/
+ChemicalKeyboard.prototype.condIsFormula=function(){
+  return !!this.cond&&!!this.chars[this.cond.arrow]&&this.chars[this.cond.arrow].kind==="fstate";
+};
+
+ChemicalKeyboard.prototype.insertFormulaState=function(){
+  var index,box;
+
+  if(this.mode!=="edit"||this.cond)return;
+
+  box=makeChar("◌","sub",null,"fstate");
+  box.condition=[];
+  index=this.cursor;
+  this.chars.splice(index,0,box);
+  this.cursor=index+1;
+  this.cond={arrow:index,pos:0};
+  this.script="normal";
+  this.navigationScript=false;
+  this.changed();
+};
+
 /* The arrow the condition belongs to: next to the cursor, else the first one. */
 ChemicalKeyboard.prototype.findArrowIndex=function(){
   var i;
@@ -3646,6 +4188,9 @@ ChemicalKeyboard.prototype.openCondition=function(symbol){
   var index,arrow;
 
   if(this.mode!=="edit")return;
+
+  /* inside a formula state the condition keys leave it first (they belong to the arrow) */
+  if(this.condIsFormula())this.closeCondition(1);
 
   if(!this.cond){
     index=this.findArrowIndex();
@@ -3692,14 +4237,20 @@ ChemicalKeyboard.prototype.closeCondition=function(side){
   this.script="normal";
 };
 
+/*
+ * config.autoSubscript: true (default) - a digit after a symbol or ")" becomes a subscript by itself.
+ * false - digits stay at the current level; the student chooses the subscript with "_" or the panel's
+ * subscript key (practising the notation). A capital letter, "+", an arrow and "·" still return to the
+ * normal level, and a charge sign still ends the superscript.
+ */
 ChemicalKeyboard.prototype.insertDigit=function(d){
-  var s=this.script,p,c;
+  var s=this.script,p,c,auto=this.config.autoSubscript!==false;
 
   if(this.cond){
     c=this.conditionChars();
 
     /* V2O5, H2O: a digit after a letter or ")" is a subscript. */
-    if(s==="normal"&&this.cond.pos>0){
+    if(auto&&s==="normal"&&this.cond.pos>0){
       p=c[this.cond.pos-1];
 
       if(isUpper(p.ch)||isLower(p.ch)||p.ch===")"||p.script==="sub"&&isDigit(p.ch)){
@@ -3712,7 +4263,7 @@ ChemicalKeyboard.prototype.insertDigit=function(d){
     return;
   }
 
-  if(s==="normal"&&!this.inSpeciesStart()&&this.cursor>0){
+  if(auto&&s==="normal"&&!this.inSpeciesStart()&&this.cursor>0){
     p=this.chars[this.cursor-1];
 
     if(isUpper(p.ch)||isLower(p.ch)||p.ch===")"||p.script==="sub"&&isDigit(p.ch)){
@@ -3763,18 +4314,66 @@ ChemicalKeyboard.prototype.insertText=function(s,script){
   this.chars.splice.apply(this.chars, [this.cursor,0].concat(a));
 
   this.cursor+=a.length;
+
+  /* nuclear: the numbers of an element typed at the start of a substance (C, then Cl when "l" follows) */
+  if(this.config.nuclear&&this.config.autoNuclideNumbers&&script==="normal"){
+    if(isUpper(s.charAt(0)))this.autoNuclideNumbers(this.cursor-a.length);
+    else if(s.length===1&&isLower(s)&&this.cursor>=2&&isUpper(this.chars[this.cursor-2].ch))this.autoNuclideNumbers(this.cursor-2);
+  }
+
   this.changed();
+};
+
+/*
+ * config.autoNuclideNumbers (nuclear questions): put the mass and atomic numbers of the element whose symbol
+ * starts at symbolIndex before it - or replace numbers that were put there automatically (C -> Cl). Numbers the
+ * student typed or changed are never touched (only characters marked .auto are replaced), and nothing happens
+ * inside a formula (only at the start of a substance: after nothing, "+", an arrow or a coefficient).
+ */
+ChemicalKeyboard.prototype.autoNuclideNumbers=function(symbolIndex){
+  var chars=this.chars,sym=chars[symbolIndex].ch,start=symbolIndex,prev,Z,A,items=[],k,text;
+
+  if(symbolIndex+1<chars.length&&chars[symbolIndex+1].script==="normal"&&isLower(chars[symbolIndex+1].ch))sym+=chars[symbolIndex+1].ch;
+
+  while(start>0&&chars[start-1].auto)start--;
+  prev=start>0?chars[start-1]:null;
+  if(prev&&!(prev.script==="normal"&&(prev.ch==="+"||isArrowChar(prev.ch)||isDigit(prev.ch))))return;
+
+  Z=atomicNumberOf(sym);
+  if(!Z||!SET[sym])return;
+  A=MASS_NUMBERS[Z-1];
+
+  text=String(A);
+  for(k=0;k<text.length;k++)items.push(makeChar(text.charAt(k),"sup"));
+  text=String(Z);
+  for(k=0;k<text.length;k++)items.push(makeChar(text.charAt(k),"sub"));
+  items.forEach(function(c){c.auto=true;});
+
+  chars.splice.apply(chars,[start,symbolIndex-start].concat(items));
+  if(this.cursor>=symbolIndex)this.cursor+=items.length-(symbolIndex-start);
 };
 ChemicalKeyboard.prototype.insertSign = function (sign) {
     /*
      * A minus is a negative charge (superscript) or part of the condition
      * text (−78°C); anywhere else in the formula it is ignored.
      */
-    if ((sign === "−" || sign === "-") && this.script !== "sup" && !this.cond) return;
+    /*
+     * Nuclear equations: a sign at the start of a subscript is the sign of an atomic number (⁰₋₁e, ⁰₊₁β).
+     * Anywhere else a subscript "+" is the plus between substances, as before.
+     */
+    var prev = this.cursor > 0 ? this.chars[this.cursor - 1] : null;
+    var subSign = this.config.nuclear && this.script === "sub" && !this.cond && !(prev && prev.script === "sub");
+
+    if ((sign === "−" || sign === "-") && this.script !== "sup" && !this.cond && !subSign) return;
 
     var mode = this.script === "sup"
         ? "sup"
-        : "normal";
+        : subSign ? "sub" : "normal";
+
+    if (subSign) {
+      this.insertText(sign, "sub");
+      return;
+    }
 
     /*
      * A "+" between substances ends a subscript: in N2+3H2 the 3
@@ -3809,6 +4408,49 @@ ChemicalKeyboard.prototype.insertState = function (state) {
     this.cursor += chars.length;
     this.script = "normal";
 
+    this.changed();
+  };
+
+/*
+ * Ion shortcut keys (config.ionKeys): "⁺(aq)" and "⁻(aq)" after a symbol, e.g. Na → Na⁺(aq).
+ * Only a shortcut: it inserts the same characters as typing the charge sign at the superscript level
+ * and then the (aq) key - a separate charge character and a state - so DEL and the arrows treat them
+ * exactly as typed by hand, and Ca ^2 ⁺(aq) gives Ca²⁺(aq).
+ */
+ChemicalKeyboard.prototype.insertIon = function (sign) {
+    var stateId, text = "(aq)", chars, i;
+
+    if (this.cond) return;
+
+    stateId = this.groupId++;
+    chars = [makeChar(sign === "+" ? "+" : "−", "sup")];
+    for (i = 0; i < text.length; i++) chars.push(makeChar(text.charAt(i), "sub", stateId, "state"));
+
+    this.chars.splice.apply(this.chars, [this.cursor, 0].concat(chars));
+    this.cursor += chars.length;
+    this.script = "normal";
+    this.navigationScript = false;
+    this.changed();
+  };
+
+/* A particle key (config.nuclear): its numbers (full form) and symbol, as separate characters. */
+ChemicalKeyboard.prototype.insertParticle = function (key, full) {
+    var chars = [], k;
+
+    if (this.cond) return;
+
+    if (full && key.full) {
+      for (k = 0; k < key.full.A.length; k++) chars.push(makeChar(key.full.A.charAt(k), "sup"));
+      for (k = 0; k < key.full.Z.length; k++) chars.push(makeChar(key.full.Z.charAt(k), "sub"));
+    }
+
+    chars.push(makeChar(key.symbol, "normal"));
+    if (key.charge && !(full && key.full)) chars.push(makeChar(key.charge, "sup"));
+
+    this.chars.splice.apply(this.chars, [this.cursor, 0].concat(chars));
+    this.cursor += chars.length;
+    this.script = "normal";
+    this.navigationScript = false;
     this.changed();
   };
 
@@ -3895,6 +4537,17 @@ ChemicalKeyboard.prototype.move=function(d){
   near=d<0 ? this.cursor>0?this.chars[this.cursor-1]:null
     :this.cursor<this.chars.length?this.chars[this.cursor]:null;
 
+  /*
+   * Moving left to the start of a superscript / subscript (Na|⁺(aq)): the cursor takes that level, as when
+   * arriving there from the left, so a digit typed there is the charge number (Na²⁺), not an atom count.
+   * Before a charge it is the superscript also after a subscript (SO₄|²⁻: stepping back over the sign).
+   */
+  if(d<0&&this.cursor<this.chars.length){
+    c=this.chars[this.cursor];
+    if(c.kind!=="state"&&c.kind!=="fstate"&&(c.script==="sup"&&(!near||near.script!=="sup")||
+       c.script==="sub"&&(!near||near.script==="normal")))near=c;
+  }
+
   if( near&& near.kind!=="state"&& (near.script==="sub"||near.script==="sup") ){
     this.script=near.script;
     this.navigationScript=true;
@@ -3922,7 +4575,14 @@ ChemicalKeyboard.prototype.del=function(){
       this.cond.pos--;
     }
 
-    if(!c.length){
+    if(!c.length&&this.condIsFormula()){
+      /* an empty formula state is removed with its box */
+      previous=this.cond.arrow;
+      this.chars.splice(previous,1);
+      this.cond=null;
+      this.cursor=previous;
+      this.script="normal";
+    }else if(!c.length){
       this.chars[this.cond.arrow].condition=null;
       this.closeCondition(1);
     }
@@ -3936,6 +4596,19 @@ ChemicalKeyboard.prototype.del=function(){
   }
 
   previous=this.chars[this.cursor-1];
+
+  /* DEL after a formula state goes into it (deleting from its end); an empty one is removed */
+  if(previous.kind==="fstate"){
+    if(previous.condition&&previous.condition.length){
+      this.cond={arrow:this.cursor-1,pos:previous.condition.length};
+    }else{
+      this.chars.splice(--this.cursor,1);
+    }
+    this.script="normal";
+    this.changed();
+    return;
+  }
+
   removedScript=previous.script;
   keepNavigationScript= this.navigationScript&& this.script===removedScript;
   this.navigationScript=false;
@@ -4037,7 +4710,7 @@ ChemicalKeyboard.prototype.key = function (e) {
      * Extra characters allowed only in the condition text:
      * "Fe, 450°C", "200 atm", "conc. H2SO4".
      */
-    if (this.cond && " ,.°()%".indexOf(k) >= 0) {
+    if (this.cond && (this.condIsFormula() ? "()" : " ,.°()%").indexOf(k) >= 0) {
       e.preventDefault();
 
       if (k === "(" || k === ")") this.insertText(k, "normal");
@@ -4076,7 +4749,10 @@ ChemicalKeyboard.prototype.key = function (e) {
        */
       var prev = this.cursor > 0 ? this.chars[this.cursor - 1] : null;
 
-      if (isLower(k) && !this.cond && !(prev && prev.script === "normal" && isUpper(prev.ch))) {
+      /* inside a formula state the same rule, on the formula's own characters */
+      if (this.condIsFormula()) prev = this.cond.pos > 0 ? this.conditionChars()[this.cond.pos - 1] : null;
+
+      if (isLower(k) && (!this.cond || this.condIsFormula()) && !(prev && prev.script === "normal" && isUpper(prev.ch))) {
         return;
       }
 
@@ -4389,7 +5065,13 @@ function appendCharacter(parent,index,mode){
         addCaret(self.display,"normal");
       }
       while(j<this.chars.length){
-        if(this.chars[j].kind==="state"){
+        if(this.chars[j].kind==="state"||this.chars[j].kind==="fstate"){
+          if(this.chars[j].kind==="fstate"){
+            states.push(j);
+            j++;
+            continue;
+          }
+
           pair=this.chars[j].pair;
 
           while(j<this.chars.length&&this.chars[j].kind==="state"&&this.chars[j].pair===pair){
@@ -4423,7 +5105,12 @@ function appendCharacter(parent,index,mode){
         lower.push(states[k]);
       }
 
-      width=Math.max(1,lower.length,upper.length)*.42;
+      /* a formula state is as wide as its formula and parentheses */
+      width=0;
+      for(k=0;k<lower.length;k++){
+        width+=this.chars[lower[k]].kind==="fstate"?Math.max(2,this.chars[lower[k]].condition.length)+2:1;
+      }
+      width=Math.max(1,width,upper.length)*.42;
 
       wrapper=node("span","");
 
@@ -4456,8 +5143,19 @@ function appendCharacter(parent,index,mode){
         whiteSpace:"nowrap"
       });
 
+      /* mass and atomic numbers before a symbol (²³⁸₉₂U): right-aligned against the symbol */
+      if(this.isPrescript(i,j)){
+        apply(subLine,{left:"auto",right:"0",textAlign:"right"});
+        apply(supLine,{left:"auto",right:"0",textAlign:"right"});
+      }
+
       for(k=0;k<lower.length;k++){
-        appendCharacter(subLine,lower[k],"sub");
+        if(this.chars[lower[k]].kind==="fstate"){
+          if(self.mode==="edit"&&self.cursor===lower[k]&&!cursorDrawn&&self.script==="sub")addCaret(subLine,"sub");
+          subLine.appendChild(this.renderFormulaState(lower[k]));
+        }else{
+          appendCharacter(subLine,lower[k],"sub");
+        }
       }
 
       for(k=0;k<upper.length;k++){
@@ -4595,6 +5293,48 @@ ChemicalKeyboard.prototype.renderCondition=function(index,condition){
   return line;
 };
 
+/*
+ * A formula state on the lower line: "(" formula ")", a dashed box while empty. Clicking it enters it
+ * (data-condition-arrow, as for a condition); the caret is drawn here while it is being edited.
+ */
+ChemicalKeyboard.prototype.renderFormulaState=function(index){
+  var content=this.chars[index].condition||[],box=node("span",""),k,ch,color,self=this;
+  var editing=this.mode==="edit"&&this.cond&&this.cond.arrow===index;
+
+  function caret(){
+    var c=node("span","");
+    c.setAttribute("data-chemical-caret","1");
+    apply(c,{display:"inline-block",width:"2px",height:"1em",background:"#1769aa",verticalAlign:"-.12em"});
+    box.appendChild(c);
+  }
+
+  box.setAttribute("data-condition-arrow",index);
+  apply(box,{
+    display:"inline-block",
+    border:content.length?"1px solid transparent":"1px dashed #1769aa",
+    borderRadius:"3px",
+    padding:"0 1px",
+    background:editing?"#eef5fc":"transparent",
+    cursor:this.mode==="edit"?"text":"default"
+  });
+  color=this.isHighlighted(index);
+  if(color)box.style.backgroundColor=color;
+
+  box.appendChild(document.createTextNode("("));
+  if(!content.length)box.appendChild(node("span"," "));
+  for(k=0;k<content.length;k++){
+    if(editing&&self.cond.pos===k)caret();
+    ch=node("span",content[k].ch);
+    if(content[k].script==="sub")apply(ch,{fontSize:"75%",verticalAlign:"sub"});
+    else if(content[k].script==="sup")apply(ch,{fontSize:"75%",verticalAlign:"super"});
+    box.appendChild(ch);
+  }
+  if(editing&&this.cond.pos===content.length)caret();
+  box.appendChild(document.createTextNode(")"));
+
+  return box;
+};
+
 /* LaTeX of a condition: words in \mathrm, sub/sup groups, Δ, hν, °. */
 function conditionToLatex(condition){
   var out="",i,c,run,script;
@@ -4643,8 +5383,19 @@ function conditionToLatex(condition){
   return out;
 }
 
+/*
+ * The script cluster chars[start..end) stands before a symbol at the start of a substance: the mass and
+ * atomic numbers of a nuclide (²³⁸₉₂U, ⁴₂α), not an index or charge of what comes before it.
+ */
+ChemicalKeyboard.prototype.isPrescript=function(start,end){
+  var next=this.chars[end],prev=start>0?this.chars[start-1]:null;
+
+  if(!next||next.script!=="normal"||!(isUpper(next.ch)||Object.prototype.hasOwnProperty.call(PARTICLES,next.ch)))return false;
+  return !prev||prev.script==="normal"&&(prev.ch==="+"||isArrowChar(prev.ch)||isDigit(prev.ch));
+};
+
 ChemicalKeyboard.prototype.toLatex=function(){
-  var out="",i,c,pair,stateText,subText,supText,j;
+  var out="",i,c,pair,stateText,subText,supText,j,formulaStateLatex;
 
   for(i=0;i<this.chars.length;i++){
     c=this.chars[i];
@@ -4658,8 +5409,16 @@ ChemicalKeyboard.prototype.toLatex=function(){
       supText="";
       stateText="";
       j=i;
+      formulaStateLatex="";
 
       while(j<this.chars.length){
+        /* a formula state: its formula in LaTeX, inside the lower group */
+        if(this.chars[j].kind==="fstate"){
+          formulaStateLatex+="("+conditionToLatex(this.chars[j].condition||[])+")";
+          j++;
+          continue;
+        }
+
         if(this.chars[j].kind==="state"){
           pair=this.chars[j].pair;
 
@@ -4690,18 +5449,18 @@ ChemicalKeyboard.prototype.toLatex=function(){
        * Add a shared anchor whenever both a
        * lower and an upper component exist.
        */
-      if((subText||stateText)&&supText){
+      if((subText||stateText||formulaStateLatex)&&supText||this.isPrescript(i,j)){
         out+="{}";
       }
 
-      if(subText||stateText){
+      if(subText||stateText||formulaStateLatex){
         out+="_{\\scriptscriptstyle "+esc(subText);
 
         if(stateText){
           out+="\\mathrm{"+esc(stateText)+"}";
         }
 
-        out+="}";
+        out+=formulaStateLatex+"}";
       }
 
       if(supText){
@@ -4736,6 +5495,11 @@ ChemicalKeyboard.prototype.toLatex=function(){
       var i;
 
       for (i = 0; i < this.chars.length; i++) {
+        if (this.chars[i].kind === "fstate") {
+          s += "(" + conditionText(this.chars[i].condition) + ")";
+          continue;
+        }
+
         s += this.chars[i].ch;
 
         /* Condition after its arrow, in the "→[...]" value form. */
@@ -5245,6 +6009,7 @@ function feedbackText(language,key){
   validate:validateWriting,
   valueText:valueTextOf,
   elements:SYMBOLS.slice(),
-  version:"2.1.0"     // raise with every change, to see in the console which copy a page runs
+  nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
+  version:"2.4.1"     // raise with every change, to see in the console which copy a page runs
 };
 })(window);

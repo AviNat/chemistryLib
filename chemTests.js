@@ -19,6 +19,10 @@
  *   _ ^ norm           subscript / superscript / normal level buttons
  *   · → ⇌ ()           dot, arrows, parentheses pair
  *   (s) (l) (g) (aq)   states
+ *   +(aq) −(aq)        ion shortcut keys (config.ionKeys): charge sign + (aq)
+ *   (F)                formula state key (config.formulaStateKey): I₂(CCl₄), value I_{2}({CCl_{4}})
+ *   α β β⁺ γ e⁻ n p    particle keys of a nuclear keyboard (config.nuclear)
+ * A case may give "config" for the keyboard, e.g. { autoSubscript: false }.
  *   cond Δ hν °C kelvin   condition: open, or open with a symbol
  *   ← →| DEL AC        navigation (→| = move right), delete left, clear all
  *   Enter              the Enter key
@@ -45,6 +49,14 @@ let WATER = "2H_{2}(g)+O_{2}(g)→2H_{2}O(l)";
 let SILVER = "Ag^{+}(aq)+Cl^{-}(aq)→AgCl(s)";
 let LIME = "CaCO_{3}(s)→[Δ]CaO(s)+CO_{2}(g)";
 
+let ALPHA_DECAY = "^{238}_{92}U→^{234}_{90}Th+^{4}_{2}He";
+let BETA_DECAY = "^{14}_{6}C→^{14}_{7}N+^{0}_{−1}e";
+let POSITRON = "^{11}_{6}C→^{11}_{5}B+^{0}_{+1}e";
+let PROTON = "^{14}_{7}N+^{4}_{2}He→^{17}_{8}O+^{1}_{1}p";
+let GAMMA = "^{60}_{27}Co→^{60}_{28}Ni+^{0}_{−1}e+γ";
+let FISSION = "^{1}_{0}n+^{235}_{92}U→^{141}_{56}Ba+^{92}_{36}Kr+3^{1}_{0}n";
+let NUCLEAR_RUBRIC = { syntax: 100, substances: 25, massNumbers: 20, atomicNumbers: 10, coefficients: 10, balance: 10, arrow: 10 };
+
 /* --------------------------------------------------------------
    Test cases. "expect" is the reference result - verify it by eye
    before accepting it (the harness shows the rendered expression).
@@ -58,6 +70,33 @@ let CASES = [
     { group: "Typing", name: "parentheses then subscript", keys: "Ca () O H →| 2", expect: "Ca(OH)_{2}" },
     { group: "Typing", name: "dot: number after it is a multiplier", keys: "Cu S O 4 · 5 H 2 O", expect: "CuSO_{4}·5H_{2}O" },
     { group: "Typing", name: "capital letter leaves the subscript", keys: "H 2 S O 4", expect: "H_{2}SO_{4}" },
+
+    /* Typing without the automatic subscript (config.autoSubscript: false) */
+    { group: "No automatic subscript", name: "digits stay at the normal level", config: { autoSubscript: false },
+      keys: "H 2 O", expect: "H2O" },
+    { group: "No automatic subscript", name: "subscript chosen with _", config: { autoSubscript: false },
+      keys: "2 H _ 2 O", expect: "2H_{2}O" },
+    { group: "No automatic subscript", name: "capital letter still leaves the subscript", config: { autoSubscript: false },
+      keys: "H _ 2 S O _ 4", expect: "H_{2}SO_{4}" },
+    { group: "No automatic subscript", name: "physical keys _ and ^", config: { autoSubscript: false },
+      keys: "S O k:_ 4 k:^ 2 −", expect: "SO_{4}^{2−}" },
+    { group: "No automatic subscript", name: "parentheses: subscript after ) also chosen", config: { autoSubscript: false },
+      keys: "Ca () O H →| _ 2", expect: "Ca(OH)_{2}" },
+
+    /* Ion shortcut keys (config.ionKeys) */
+    { group: "Ion keys", name: "Na then +(aq)", config: { ionKeys: true }, keys: "Na +(aq)", expect: "Na^{+}(aq)" },
+    { group: "Ion keys", name: "Cl then −(aq)", config: { ionKeys: true }, keys: "Cl −(aq)", expect: "Cl^{−}(aq)" },
+    { group: "Ion keys", name: "charge 2 typed first: Ca^2 +(aq)", config: { ionKeys: true }, keys: "Ca ^ 2 +(aq)", expect: "Ca^{2+}(aq)" },
+    { group: "Ion keys", name: "DEL removes the state, then the sign, as if typed", config: { ionKeys: true },
+      keys: "Na +(aq) DEL", expect: "Na^{+}" },
+    { group: "Ion keys", name: "second DEL removes the sign", config: { ionKeys: true }, keys: "Na +(aq) DEL DEL", expect: "Na" },
+    { group: "Ion keys", name: "← jumps over the state, then over the sign", config: { ionKeys: true },
+      keys: "Na +(aq) ← ← K", expect: "NaK^{+}(aq)" },
+    { group: "Ion keys", name: "two ← then a digit: the charge number", config: { ionKeys: true },
+      keys: "Na +(aq) ← ← 2", expect: "Na^{2+}(aq)" },
+    { group: "Ion keys", name: "same for a charge typed by hand", keys: "S O 4 ^ − ← 2", expect: "SO_{4}^{2−}" },
+    { group: "Ion keys", name: "in an equation", config: { ionKeys: true },
+      keys: "Ag +(aq) + Cl −(aq) → Ag Cl (s)", expect: "Ag^{+}(aq)+Cl^{−}(aq)→AgCl(s)" },
 
     /* Typing: equations */
     { group: "Typing: equations", name: "+ ends the subscript, coefficient after it", keys: "N 2 + 3 H 2 → 2 N H 3", expect: "N_{2}+3H_{2}→2NH_{3}" },
@@ -134,7 +173,109 @@ let CASES = [
     { group: "Grade", name: "wrong answer type", student: "H_{2}O", reference: WATER, rubric: SAMPLE_RUBRIC, expect: "score 0: answerType −100" },
     { group: "Grade", name: "syntax error gives 0", student: "2H_{2}(g)+→2H_{2}O(l)", reference: WATER, rubric: SAMPLE_RUBRIC, expect: "score 0: syntax −100" },
     { group: "Grade", name: "category not in the rubric costs nothing", student: "2H_{2}(g)+O_{2}(g)⇌2H_{2}O(l)", reference: WATER, rubric: { coefficients: 10 }, expect: "score 100" },
-    { group: "Grade", name: "wrong substance hides its coefficient", student: "2H_{2}(g)+O_{3}(g)→2H_{2}O(l)", reference: WATER, rubric: SAMPLE_RUBRIC, expect: "score 75: substances −25" }
+    { group: "Grade", name: "wrong substance hides its coefficient", student: "2H_{2}(g)+O_{3}(g)→2H_{2}O(l)", reference: WATER, rubric: SAMPLE_RUBRIC, expect: "score 75: substances −25" },
+
+    /* State written as a formula (ENHANCEMENTS-DESIGN.md, section 1) */
+    { group: "Formula state", name: "typing: box, formula, Enter leaves it", keys: "I 2 (F) C Cl 4 Enter + Br 2",
+      expect: "I_{2}({CCl_{4}})+Br_{2}" },
+    { group: "Formula state", name: "typing: → leaves the box", keys: "I 2 (F) C Cl 4 →| →| + Br 2", expect: "I_{2}({CCl_{4}})+Br_{2}" },
+    { group: "Formula state", name: "DEL after the box goes into it", keys: "I 2 (F) C Cl 4 Enter DEL DEL", expect: "I_{2}({CCl})" },
+    { group: "Formula state", name: "DEL in an empty box removes it", keys: "I 2 (F) DEL", expect: "I_{2}" },
+    { group: "Formula state", name: "physical keys: element letters only, no words or commas", keys: "I 2 (F) k:c k:, k:C k:l k:4",
+      expect: "I_{2}({Cl_{4}})" },
+    { group: "Formula state", name: "value round trip", value: "I_{2}({CCl_{4}})+Br_{2}({C_{6}H_{14}})" },
+    { group: "Formula state", name: "same formula in another order", student: "I_{2}({Cl_{4}C})", reference: "I_{2}({CCl_{4}})", expect: "correct" },
+    { group: "Formula state", name: "another solvent", student: "I_{2}({C_{6}H_{14}})", reference: "I_{2}({CCl_{4}})", expect: "wrong: wrong-state(I2)" },
+    { group: "Formula state", name: "missing", student: "I_{2}", reference: "I_{2}({CCl_{4}})", expect: "wrong: missing-state(I2)" },
+    { group: "Formula state", name: "(aq) instead", student: "I_{2}(aq)", reference: "I_{2}({CCl_{4}})", expect: "wrong: wrong-state(I2)" },
+    { group: "Formula state", name: "unknown element inside", student: "I_{2}({CQ_{4}})", reference: "I_{2}({CCl_{4}})",
+      expect: "wrong: unknown-element(Q), wrong-state(I2)" },
+    { group: "Formula state", name: "typing: charge after the box", keys: "I 3 (F) C Cl 4 Enter ^ −", expect: "I_{3}({CCl_{4}})^{−}" },
+    { group: "Formula state", name: "charge after the box = charge before it", student: "I_{3}({CCl_{4}})^{−}",
+      reference: "I_{3}^{−}({CCl_{4}})", expect: "correct" },
+    { group: "Formula state", name: "charge 2+ after the box", student: "Cu({CH_{3}OH})^{2+}", reference: "Cu^{2+}({CH_{3}OH})", expect: "correct" },
+    { group: "Formula state", name: "wrong charge after the box", student: "Cu({CH_{3}OH})^{+}", reference: "Cu^{2+}({CH_{3}OH})",
+      expect: "wrong: wrong-charge(Cu^+)" },
+    { group: "Formula state", name: "charge after (aq) = before it", student: "Na(aq)^{+}", reference: "Na^{+}(aq)", expect: "correct" },
+    { group: "Formula state", name: "in an equation", student: "Br_{2}({CCl_{4}})+C_{2}H_{4}→C_{2}H_{4}Br_{2}",
+      reference: "Br_{2}({CCl_{4}})+C_{2}H_{4}→C_{2}H_{4}Br_{2}", expect: "correct" },
+
+    /* Nuclear equations (ENHANCEMENTS-DESIGN.md, section 4) */
+    { group: "Nuclear", name: "typing: numbers before the symbol, α key", config: { nuclear: true },
+      keys: "^ 2 3 8 _ 9 2 U → ^ 2 3 4 _ 9 0 Th + α", expect: "^{238}_{92}U→^{234}_{90}Th+α" },
+    { group: "Nuclear", name: "typing: full label inserts the numbers", config: { nuclear: true, particleLabels: "full" },
+      keys: "α + β + β⁺", expect: "^{4}_{2}α+^{0}_{−1}β+^{0}_{+1}β" },
+    { group: "Nuclear", name: "typing: short β⁺ and e⁻ keep their sign", config: { nuclear: true }, keys: "β⁺ + e⁻ + γ", expect: "β^{+}+e^{−}+γ" },
+    { group: "Nuclear", name: "typing: DEL after a full α removes one character at a time", config: { nuclear: true, particleLabels: "full" },
+      keys: "α DEL DEL", expect: "^{4}" },
+    { group: "Nuclear", name: "typing: a sign at the start of a subscript", config: { nuclear: true }, keys: "^ 0 _ − 1 β", expect: "^{0}_{−1}β" },
+    { group: "Nuclear", name: "auto numbers: an element gets its numbers", config: { nuclear: true, autoNuclideNumbers: true },
+      keys: "U → Th + α", expect: "^{238}_{92}U→^{232}_{90}Th+α" },
+    { group: "Nuclear", name: "auto numbers: C then l becomes Cl", config: { nuclear: true, autoNuclideNumbers: true },
+      keys: "C k:l", expect: "^{35}_{17}Cl" },
+    { group: "Nuclear", name: "auto numbers: H then e becomes He", config: { nuclear: true, autoNuclideNumbers: true },
+      keys: "H k:e", expect: "^{4}_{2}He" },
+    { group: "Nuclear", name: "auto numbers: after a coefficient", config: { nuclear: true, autoNuclideNumbers: true },
+      keys: "2 He", expect: "2^{4}_{2}He" },
+    { group: "Nuclear", name: "auto numbers: numbers typed by hand are kept", config: { nuclear: true, autoNuclideNumbers: true },
+      keys: "^ 2 3 5 _ 9 2 U", expect: "^{235}_{92}U" },
+    { group: "Nuclear", name: "auto numbers: a changed number is kept (C then l)", config: { nuclear: true, autoNuclideNumbers: true },
+      keys: "C ← 5 →| k:l", expect: "^{12}_{65}Cl" },
+    { group: "Nuclear", name: "auto numbers: off by default", config: { nuclear: true }, keys: "U", expect: "U" },
+    { group: "Nuclear", name: "typing: coefficient of neutrons", config: { nuclear: true, particleLabels: "full" }, keys: "3 n", expect: "3^{1}_{0}n" },
+    { group: "Nuclear", name: "value round trip", value: "^{238}_{92}U→^{234}_{90}Th+^{4}_{2}α" },
+    { group: "Nuclear", name: "value round trip: beta and neutrons", value: "^{1}_{0}n+^{235}_{92}U→^{141}_{56}Ba+^{92}_{36}Kr+3^{1}_{0}n+^{0}_{−1}β" },
+    { group: "Nuclear", name: "identical", student: ALPHA_DECAY, reference: ALPHA_DECAY, expect: "correct" },
+    /* numbers written in the reference must be written by the student; equivalent forms with numbers are equal */
+    { group: "Nuclear", name: "α without numbers for ⁴₂He", student: "^{238}_{92}U→^{234}_{90}Th+α", reference: ALPHA_DECAY,
+      expect: "wrong: missing-numbers(α)" },
+    { group: "Nuclear", name: "⁴₂α for ⁴₂He", student: "^{238}_{92}U→^{234}_{90}Th+^{4}_{2}α", reference: ALPHA_DECAY, expect: "correct" },
+    { group: "Nuclear", name: "⁰₋₁β for ⁰₋₁e", student: "^{14}_{6}C→^{14}_{7}N+^{0}_{−1}β", reference: BETA_DECAY, expect: "correct" },
+    { group: "Nuclear", name: "e⁻ without numbers for ⁰₋₁e", student: "^{14}_{6}C→^{14}_{7}N+e^{−}", reference: BETA_DECAY,
+      expect: "wrong: missing-numbers(e⁻)" },
+    { group: "Nuclear", name: "⁰₊₁β for ⁰₊₁e (positron)", student: "^{11}_{6}C→^{11}_{5}B+^{0}_{+1}β", reference: POSITRON, expect: "correct" },
+    { group: "Nuclear", name: "reference without numbers: α accepted", student: "^{238}_{92}U→^{234}_{90}Th+α",
+      reference: "^{238}_{92}U→^{234}_{90}Th+α", expect: "correct" },
+    { group: "Nuclear", name: "reference without numbers: ⁴₂He accepted", student: "^{238}_{92}U→^{234}_{90}Th+^{4}_{2}He",
+      reference: "^{238}_{92}U→^{234}_{90}Th+α", expect: "correct" },
+    { group: "Nuclear", name: "reference without numbers: β⁺ for the positron", student: "^{11}_{6}C→^{11}_{5}B+β^{+}",
+      reference: "^{11}_{6}C→^{11}_{5}B+e^{+}", expect: "correct" },
+    { group: "Nuclear", name: "β for a positron is wrong", student: "^{11}_{6}C→^{11}_{5}B+β", reference: POSITRON,
+      expect: "wrong: unbalanced-atom(#Z), missing-species(⁰₊₁e), unexpected-species(β)" },
+    { group: "Nuclear", name: "¹₁H for ¹₁p", student: "^{14}_{7}N+^{4}_{2}He→^{17}_{8}O+^{1}_{1}H", reference: PROTON, expect: "correct" },
+    { group: "Nuclear", name: "wrong mass number", student: "^{238}_{92}U→^{235}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      expect: "wrong: unbalanced-atom(#A), wrong-mass-number(²³⁵₉₀Th)" },
+    { group: "Nuclear", name: "wrong atomic number (identity kept)", student: "^{238}_{91}U→^{234}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      expect: "wrong: wrong-atomic-number(²³⁸₉₁U)" },
+    { group: "Nuclear", name: "mass number without atomic number", student: "^{238}U→^{234}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      expect: "wrong: missing-atomic-number(²³⁸U)" },
+    { group: "Nuclear", name: "symbol without numbers", student: "U→^{234}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      expect: "wrong: unbalanced-atom(#A), missing-numbers(U)" },
+    { group: "Nuclear", name: "atomic number without mass number", student: "_{92}U→^{234}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      expect: "wrong: unbalanced-atom(#A), missing-mass-number(₉₂U)" },
+    { group: "Nuclear", name: "grade: numbers missing hides the mass balance", student: "U→^{234}_{90}Th+^{4}_{2}He",
+      reference: ALPHA_DECAY, rubric: NUCLEAR_RUBRIC, expect: "score 80: massNumbers −20" },
+    { group: "Nuclear", name: "γ missing is an error", student: "^{60}_{27}Co→^{60}_{28}Ni+^{0}_{−1}e", reference: GAMMA,
+      expect: "wrong: missing-species(γ)" },
+    { group: "Nuclear", name: "α missing", student: "^{238}_{92}U→^{234}_{90}Th", reference: ALPHA_DECAY,
+      expect: "wrong: unbalanced-atom(#A), unbalanced-atom(#Z), missing-species(⁴₂He)" },
+    { group: "Nuclear", name: "a compound with a nuclide is a syntax error", student: "^{238}_{92}UO→^{234}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      expect: "wrong: syntax-error" },
+    { group: "Nuclear", name: "two nuclides in one term is a syntax error", student: "^{238}_{92}U^{16}_{8}O→^{234}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      expect: "wrong: syntax-error" },
+    { group: "Nuclear", name: "grade: compound with a nuclide gives 0", student: "^{238}_{92}UO→^{234}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      rubric: NUCLEAR_RUBRIC, expect: "score 0: syntax −100" },
+    { group: "Nuclear", name: "⇌ is valid writing; the reference decides", student: "^{238}_{92}U⇌^{234}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      expect: "wrong: wrong-arrow" },
+    { group: "Nuclear", name: "grade: wrong mass number hides the mass balance", student: "^{238}_{92}U→^{235}_{90}Th+^{4}_{2}He",
+      reference: ALPHA_DECAY, rubric: NUCLEAR_RUBRIC, expect: "score 80: massNumbers −20" },
+    { group: "Nuclear", name: "grade: wrong neutron coefficient hides the balance", student: "^{1}_{0}n+^{235}_{92}U→^{141}_{56}Ba+^{92}_{36}Kr+2^{1}_{0}n",
+      reference: FISSION, rubric: NUCLEAR_RUBRIC, expect: "score 90: coefficients −10" },
+    { group: "Nuclear", name: "grade: missing α hides the balance", student: "^{238}_{92}U→^{234}_{90}Th", reference: ALPHA_DECAY,
+      rubric: NUCLEAR_RUBRIC, expect: "score 75: substances −25" },
+    { group: "Nuclear", name: "grade: wrong atomic number", student: "^{238}_{91}U→^{234}_{90}Th+^{4}_{2}He", reference: ALPHA_DECAY,
+      rubric: NUCLEAR_RUBRIC, expect: "score 90: atomicNumbers −10" },
+    { group: "Nuclear", name: "chemical equations are unchanged", student: WATER, reference: WATER, expect: "correct" }
 ];
 
 /* --------------------------------------------------------------
@@ -186,6 +327,9 @@ let KEY_ACTIONS = {
     "(l)": function (k) { k.insertState("l"); },
     "(g)": function (k) { k.insertState("g"); },
     "(aq)": function (k) { k.insertState("aq"); },
+    "(F)": function (k) { k.insertFormulaState(); },
+    "+(aq)": function (k) { k.insertIon("+"); },
+    "−(aq)": function (k) { k.insertIon("−"); },
     "cond": function (k) { k.openCondition(); },
     "Δ": function (k) { k.openCondition("Δ"); },
     "hν": function (k) { k.openCondition("hν"); },
@@ -202,8 +346,17 @@ function physicalKey(k, key) {
     k.key({ key: key, preventDefault: function () {}, stopPropagation: function () {} });
 }
 
+/* particle keys of a nuclear keyboard, by their short label: α β β⁺ γ e⁻ n p */
+function particleKey(k, label) {
+    let key = ChemicalGrammar.nuclearKeys.filter(function (x) { return x.short === label; })[0];
+    if (!key) return false;
+    k.insertParticle(key, k.config.particleLabels === "full");
+    return true;
+}
+
 function pressKey(k, key) {
     if (/^[0-9]$/.test(key)) return k.insertDigit(key);
+    if (k.config.nuclear && particleKey(k, key)) return;
     if (key.indexOf("k:") === 0 && key.length > 2) return physicalKey(k, key.slice(2));
     if (Object.prototype.hasOwnProperty.call(KEY_ACTIONS, key)) return KEY_ACTIONS[key](k);
     if (ChemicalGrammar.elements.indexOf(key) >= 0) return k.insertText(key, "normal");
@@ -227,7 +380,7 @@ function caseKind(testCase) {
 /* The input column of the harness */
 function caseInput(testCase) {
     switch (caseKind(testCase)) {
-        case "keys": return testCase.keys;
+        case "keys": return testCase.keys + (testCase.config ? "\nconfig: " + JSON.stringify(testCase.config) : "");
         case "value": return testCase.value;
         default: return "student: " + testCase.student + "\nreference: " + testCase.reference +
             (testCase.options ? "\noptions: " + JSON.stringify(testCase.options) : "") +
@@ -255,7 +408,10 @@ function run(KeyboardClass, host) {
 
         try {
             if (kind === "keys" || kind === "value") {
-                k = new KeyboardClass({ divId: div.id, language: "en", mode: "edit", value: "" });
+                let config = { divId: div.id, language: "en", mode: "edit", value: "" };
+                let key;
+                for (key in testCase.config || {}) config[key] = testCase.config[key];
+                k = new KeyboardClass(config);
 
                 if (kind === "keys") {
                     testCase.keys.split(/\s+/).filter(Boolean).forEach(function (key) { pressKey(k, key); });

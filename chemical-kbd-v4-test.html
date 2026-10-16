@@ -44,6 +44,9 @@ window.MathJax={tex:{inlineMath:[["\\(","\\)"]]},svg:{fontCache:"global"}};
 var editor=new ChemicalKeyboard({
   divId:"editor",language:"he",mode:"edit",
   elements:["H","C","N","O","Na","Cl","Ca","Fe","Ag","Cu","S"],
+  // molecule keys (MOLECULES-DESIGN.md): each key types its formula; remove the list to see the panel without them
+  molecules:["H_{2}O","CO_{2}","O_{2}","SO_{4}^{2-}",
+    {formula:"(OH)",name:{he:"הידרוקסיד",en:"hydroxide",ar:"هيدروكسيد"}},"NH_{4}^{+}"],
   correctAnswer:"2Fe_{2}O_{3}(s)→4FeO(s)+O_{2}(g)",
   // grading rubric (see RUBRIC-DESIGN.md); remove it to check without grading
   rubric:{

@@ -16,8 +16,9 @@
   Nothing in this page may contain the text of a script tag except the real tags (write it as
   "<"+"script" in code): page previewers such as htmlpreview.github.io find the scripts by
   searching for that text, and would cut the code at the wrong place.
-  The student-side code in the snippet is chemkbdRun (below), copied with toString(), so the
-  "Try it as a student" section runs exactly the code that Moodle will run.
+  The student-side code is in the library (ChemicalKeyboard.runQuestion, since 2026-10-16); the snippet only
+  queues the question and loads the library, with no < > & in its script (Moodle may escape them).
+  "Try it as a student" runs the same library code that Moodle will run.
 -->
 <script>
 /*
@@ -176,7 +177,7 @@ table.rubric .na{color:#a5b0bc}
     <label class="check"><input type="checkbox" id="autoNuclideNumbers"><span data-t="autoNuclideNumbers"></span></label>
     <label class="check"><input type="checkbox" id="nuclearStates"><span data-t="nuclearStates"></span></label>
   </div>
-  <!-- hidden (2026-10-10): the keyboard's validation icon replaces the check button; the code stays in chemkbdRun -->
+  <!-- hidden (2026-10-10): the keyboard's validation icon replaces the check button; the code stays in the library's runQuestion -->
   <label class="check" hidden><input type="checkbox" id="checkButton"><span data-t="checkButton"></span></label>
   <label class="field"><span data-t="displayChars"></span>
     <input type="number" id="displayChars" min="32" max="120" step="1" placeholder="32">
@@ -242,6 +243,19 @@ table.rubric .na{color:#a5b0bc}
     <div class="hint"><span data-t="elementsOrder"></span> <span data-t="dragHint"></span></div>
     <div class="chips" id="chips"></div>
   </div>
+</section>
+
+<section>
+  <h2 data-t="secMolecules"></h2>
+  <div class="hint" data-t="moleculesHint"></div>
+  <div id="moleculeHost" class="kbd-host"></div>
+  <div class="row">
+    <label class="field"><span data-t="moleculeName"></span> <input type="text" id="moleculeName"></label>
+    <button type="button" id="addMolecule" data-t="addMolecule"></button>
+  </div>
+  <div id="moleculeStatus" class="status"></div>
+  <div class="hint" data-t="moleculesOrder"></div>
+  <div class="chips" id="moleculeChips"></div>
 </section>
 
 <section>
@@ -313,259 +327,7 @@ function loadKeyboardLibrary(sources,done,failed){
   }
 }
 </script>
-<script>
-/* ================================================================
-   Student-side code. It is copied into every snippet with toString(),
-   so it must stay self-contained ES5 (it runs inside Moodle).
-   host: an element with an id; cfg: the question configuration.
-   Returns { keyboard, feedback: [reference keyboard of the review page] } (feedback may be empty).
-   ================================================================ */
-function chemkbdRun(host,cfg){
-  /*
-   * The student language. "system": the language Moodle shows the page in, so one copy of the
-   * question serves all languages - window.studentLanguage when a script on the page sets it
-   * (e.g. through Moodle's multilang filter), otherwise <html lang="..."> which Moodle sets to the
-   * user's current language ("he", "ar", "en", "en_us"...); anything else is English.
-   */
-  function supported(code){
-    code=String(code||"").replace(/['"\s]/g,"").toLowerCase().slice(0,2);
-    return code==="he"||code==="ar"||code==="en"?code:"";
-  }
-  var lang=cfg.language==="system"
-    ?(supported(window.studentLanguage)||supported(document.documentElement.lang)||"en")
-    :(supported(cfg.language)||"en");
-  var CHECK={en:"Check the writing",he:"בדיקת הכתיבה",ar:"فحص الكتابة"};
-  var WRITTEN_OK={en:"No writing problems were found.",he:"לא נמצאו בעיות בכתיבה.",ar:"لم يتم العثور على مشكلات في الكتابة."};
-  var base=host.id;
-  var options,keyboard,button,summary,details,referenceTitle,referenceDiv,feedback=[];
 
-  function make(tag,suffix,css){
-    var e=document.createElement(tag);
-    if(suffix)e.id=base+"-"+suffix;
-    if(css)e.style.cssText=css;
-    return e;
-  }
-
-  /* the texts (feedback, titles) follow the student language; the formulas are always left to right */
-  host.textContent="";
-  host.dir=lang==="en"?"ltr":"rtl";
-  var FORMULA_CSS="direction:ltr;text-align:left";
-
-  /* ids of the parts: from the host's id, made unique if another keyboard on the page already uses them */
-  if(document.getElementById(base+"-keyboard"))base+="-"+(window.__chemkbdRuns=(window.__chemkbdRuns||1)+1);
-
-  var keyboardDiv=make("div","keyboard",FORMULA_CSS);
-  keyboardDiv.dir="ltr";
-  host.appendChild(keyboardDiv);
-
-  options={
-    divId:keyboardDiv.id,
-    language:lang,
-    mode:"edit",
-    correctAnswer:cfg.correctAnswer||"",
-    value:cfg.value||""
-  };
-  if(cfg.elementsMode==="none")options.elements=[];
-  else if(cfg.elementsMode==="custom")options.elements=(cfg.elements||[]).slice();
-  if(cfg.rubric)options.rubric=cfg.rubric;
-  if(cfg.distinguishIsomers)options.distinguishIsomers=true;
-  if(cfg.conditions===false)options.conditions=false;     // no reaction-condition (process) keys
-  if(cfg.autoSubscript===false)options.autoSubscript=false; // the student chooses subscripts with _ or the key
-  if(cfg.ionKeys)options.ionKeys=true;                    // shortcut keys ⁺(aq) and ⁻(aq)
-  if(cfg.formulaStateKey)options.formulaStateKey=true;    // key for a state written as a formula, I₂(CCl₄)
-  if(cfg.nuclear){                                        // nuclear equation: particle keys
-    options.nuclear=true;
-    if(cfg.particleLabels==="full")options.particleLabels="full";
-    if(cfg.autoNuclideNumbers)options.autoNuclideNumbers=true;
-    if(cfg.states===true)options.states=true;             // state keys in a nuclear question
-  }
-  if(cfg.displayChars>0)options.displayChars=cfg.displayChars;   // keyboard window width, in characters
-
-  /*
-   * Connection to the STACK question (cfg.stack). On every change the keyboard writes into inputs
-   * of the same question, and hides them:
-   *   scoreInput:  the score from 0 to 1 (rubric score / 100; without a rubric 1 = correct, 0 = not);
-   *                the PRT gives it as the mark
-   *   answerInput: the answer as value text (H_{2}O, SO_{4}^{2-}); Moodle keeps it, and the
-   *                keyboard starts from it when the page is shown again
-   * An empty answer empties both, so STACK sees an unanswered question.
-   * STACK names its inputs "q<usage>:<slot>_ans1", so an input is found by the end of its name.
-   */
-  function findInput(name){
-    if(!name)return null;
-    var que=host.closest&&host.closest(".que");
-    return (que||document).querySelector("input[name$='_"+name+"'],textarea[name$='_"+name+"']");
-  }
-  function setInput(field,value){
-    var e,i,types=["input","change"];
-    if(!field||field.value===value)return;
-    field.value=value;
-    for(i=0;i<types.length;i++){
-      try{e=new Event(types[i],{bubbles:true});}catch(x){e=document.createEvent("Event");e.initEvent(types[i],true,true);}
-      field.dispatchEvent(e);
-    }
-  }
-
-  /*
-   * answerInput holds "answer || score% | feedback | feedback ...": the answer (read back by the
-   * keyboard) and, after " || ", the feedback the student got, for Moodle's response history.
-   * Quotes and backslashes are left out of the feedback (STACK string input).
-   */
-  var FEEDBACK_SEPARATOR=" || ";
-  function savedAnswer(text){
-    var i=text.indexOf(FEEDBACK_SEPARATOR);
-    return i>=0?text.slice(0,i):text;
-  }
-  function feedbackLine(result){
-    var parts=[],i,items=result.errors.concat(result.notes||[]);
-    if(result.score)parts.push(result.score.total+"%");
-    else if(result.correct)parts.push(ChemicalGrammar.feedbackText(lang,"correct"));
-    for(i=0;i<items.length;i++){
-      if(items[i].suppressedBy)continue;      // not counted: caused by another error
-      if(items[i].description)parts.push(items[i].description);
-    }
-    return parts.join(" | ").replace(/["\\⁦-⁩]/g,"");
-  }
-  function compare(ast){
-    return ChemicalGrammar.compare(ast,cfg.correctAnswer||"",lang,
-      {rubric:cfg.rubric||null,distinguishIsomers:cfg.distinguishIsomers===true});
-  }
-
-  var stack=cfg.stack||{};
-  var scoreInput=findInput(stack.scoreInput);
-  var answerInput=findInput(stack.answerInput);
-  if(window.console&&((stack.scoreInput&&!scoreInput)||(stack.answerInput&&!answerInput))){
-    console.warn("Chemical keyboard "+base+": STACK input not found:",
-      stack.scoreInput&&!scoreInput?stack.scoreInput:"",stack.answerInput&&!answerInput?stack.answerInput:"");
-  }
-  /* review page (after the attempt is submitted): Moodle shows the inputs read-only */
-  var review=[scoreInput,answerInput].some(function(f){return f&&(f.readOnly||f.disabled);});
-
-  /*
-   * The teacher's review div (cfg.reviewDiv, an id): a div the teacher puts in the question text and
-   * styles (size, place, font size, color). The review output goes into it, and the formulas take
-   * its font size. Looked up in the same question first (ids repeat when a question is shown twice).
-   * Hidden while answering, so an empty styled box is not seen. Without it the output stays in host.
-   */
-  var out=host,reviewDiv=null;
-  if(cfg.reviewDiv){
-    var que=host.closest&&host.closest(".que");
-    reviewDiv=(que&&que.querySelector("[id='"+cfg.reviewDiv+"']"))||document.getElementById(cfg.reviewDiv);
-    if(!reviewDiv&&window.console)console.warn("Chemical keyboard "+base+": review div not found:",cfg.reviewDiv);
-  }
-  if(reviewDiv&&!review)reviewDiv.style.display="none";
-
-  if(scoreInput)scoreInput.style.display="none";
-  if(answerInput){
-    answerInput.style.display="none";
-    if(answerInput.value)options.value=savedAnswer(answerInput.value);
-  }
-
-  /*
-   * Review (after submission): the student's answer, read-only - nothing can change any more.
-   * What else is shown is set in the builder (cfg.review, each true unless set to false):
-   *   grade:     the score line (with a rubric) or correct / number of issues (without)
-   *   reference: the reference answer, marked; when false the student's answer is not marked
-   *              either, because the marking gives the answer away
-   *   details:   the detailed evaluation (the penalty lines of the rubric / the list of errors)
-   */
-  if(review){
-    var show=cfg.review||{};
-    var showGrade=show.grade!==false,showReference=show.reference!==false,showDetails=show.details!==false;
-
-    options.mode="readonly-errors";
-    if(reviewDiv){
-      out=reviewDiv;
-      out.textContent="";
-      out.dir=host.dir;
-      out.appendChild(keyboardDiv);
-      options.fontSize="inherit";
-    }
-    keyboard=new ChemicalKeyboard(options);
-    if(options.value){
-      var reviewResult=keyboard.compare();
-      if(showReference)keyboard.setComparisonFeedback(reviewResult,"student",options.value);
-
-      /* renderComparison fills both parts; only the parts that are switched on are put on the page */
-      summary=make("div","summary","margin-top:8px;font-weight:bold");
-      details=make("div","details");
-      ChemicalGrammar.renderComparison(reviewResult,lang,summary,details);
-      if(showGrade)out.appendChild(summary);
-      if(showDetails)out.appendChild(details);
-
-      if(showReference){
-        referenceTitle=make("div",null,"font-weight:bold;margin:12px 0 4px");
-        referenceTitle.textContent=ChemicalGrammar.feedbackText(lang,"referenceAnswer");
-        referenceDiv=make("div","reference",FORMULA_CSS);
-        referenceDiv.dir="ltr";
-        out.appendChild(referenceTitle);
-        out.appendChild(referenceDiv);
-        feedback.push(new ChemicalKeyboard({divId:referenceDiv.id,language:lang,mode:"readonly-errors",value:"",
-          fontSize:options.fontSize}));
-        feedback[0].setComparisonFeedback(reviewResult,"reference",cfg.correctAnswer||"");
-      }
-    }
-    return {keyboard:keyboard,feedback:feedback};
-  }
-
-  if(scoreInput||answerInput){
-    options.onChange=function(r){
-      var result,score;
-      if(!r.model.length){
-        setInput(answerInput,"");
-        setInput(scoreInput,"");
-        return;
-      }
-      result=compare(r.ast);
-      score=result.score?result.score.total/100:(result.correct?1:0);
-      /* r.valueText: the answer in the value notation the keyboard reads back exactly (library 2.1.0) */
-      setInput(answerInput,r.valueText+FEEDBACK_SEPARATOR+feedbackLine(result));
-      setInput(scoreInput,String(Math.round(score*10000)/10000));
-    };
-  }
-
-  keyboard=new ChemicalKeyboard(options);
-
-  /*
-   * Check button while answering: the WRITING only - syntax errors and symbols that are not
-   * elements - never the grade or anything that compares with the reference (that is for Moodle's
-   * own Check and the review page). The answer is compared with itself, so the only errors left
-   * are those of the writing; unbalanced atoms are left out (balancing is part of the task).
-   */
-  var WRITING_CODES=["syntax-error","unknown-element"];
-  if(cfg.checkButton){
-    button=make("button","check","margin-top:8px;padding:5px 14px;font-size:16px;cursor:pointer");
-    button.type="button";
-    button.textContent=CHECK[lang];
-    summary=make("div","summary","margin-top:8px");
-    host.appendChild(button);
-    host.appendChild(summary);
-
-    button.addEventListener("click",function(){
-      var ast=keyboard.getAST(),problems=[],errors,i;
-      summary.textContent="";
-      if(!keyboard.getModel().length)return;
-      errors=ChemicalGrammar.compare(ast,ast,lang,{}).errors;
-      for(i=0;i<errors.length;i++){
-        if(WRITING_CODES.indexOf(errors[i].code)>=0&&problems.indexOf(errors[i].description)<0)problems.push(errors[i].description);
-      }
-      if(!problems.length){
-        summary.style.color="#18742a";
-        summary.textContent=WRITTEN_OK[lang];
-        return;
-      }
-      summary.style.color="#a12622";
-      for(i=0;i<problems.length;i++){
-        var line=document.createElement("div");
-        line.textContent=problems[i];
-        summary.appendChild(line);
-      }
-    });
-  }
-
-  return {keyboard:keyboard,feedback:feedback};
-}
-</script>
 <script>
 /* librarySource: the entry of LIBRARY_SOURCES that loaded */
 function startBuilder(librarySource){
@@ -633,6 +395,16 @@ const TEXT={
     elementsOrder:"Panel order (click an element to remove it).",
     dragHint:"Drag to change the order.",
     noElements:"No elements selected.",
+    secMolecules:"Molecule keys (optional)",
+    moleculesHint:"Keys that type a whole formula: a molecule, an ion or a group (H₂O, SO₄²⁻, (SO₄)). Type the formula with the keyboard below and add it. The key types the characters, so the student can still edit them. A few keys per question (4-8); a key may give the answer away.",
+    moleculeName:"Name (optional, shown when pointing at the key)",
+    addMolecule:"Add the key",
+    moleculesOrder:"Click a key to remove it; drag it to change the order.",
+    moleculesNone:"No molecule keys.",
+    moleculeEmpty:"Type a formula first.",
+    moleculeInvalid:"The formula is not written correctly:",
+    moleculeDuplicate:"This key is already in the list.",
+    moleculeGivesAway:"These keys appear in the reference answer and may give it away:",
     secReference:"Reference answer",
     keyboardHint:"Click the box to open the keyboard.",
     referenceEmpty:"Enter the reference answer.",
@@ -743,6 +515,16 @@ const TEXT={
     elementsOrder:"הסדר בלוח (לחיצה על יסוד מסירה אותו).",
     dragHint:"גרירה משנה את הסדר.",
     noElements:"לא נבחרו יסודות.",
+    secMolecules:"מקשי מולקולות (רשות)",
+    moleculesHint:"מקשים שמקלידים נוסחה שלמה: מולקולה, יון או קבוצה (H₂O, ‏SO₄²⁻, ‏(SO₄)). הקלידו את הנוסחה במקלדת שלמטה והוסיפו אותה. המקש מקליד את התווים, כך שהתלמיד יכול לערוך אותם. מעט מקשים בכל שאלה (4-8); מקש עלול לגלות את התשובה.",
+    moleculeName:"שם (רשות, מוצג כשמצביעים על המקש)",
+    addMolecule:"הוספת המקש",
+    moleculesOrder:"לחיצה על מקש מסירה אותו; גרירה משנה את הסדר.",
+    moleculesNone:"אין מקשי מולקולות.",
+    moleculeEmpty:"יש להקליד נוסחה קודם.",
+    moleculeInvalid:"הנוסחה אינה כתובה נכון:",
+    moleculeDuplicate:"המקש כבר נמצא ברשימה.",
+    moleculeGivesAway:"המקשים האלה מופיעים בתשובת הייחוס ועלולים לגלות אותה:",
     secReference:"תשובת הייחוס",
     keyboardHint:"לחיצה על התיבה פותחת את המקלדת.",
     referenceEmpty:"יש להזין את תשובת הייחוס.",
@@ -853,6 +635,16 @@ const TEXT={
     elementsOrder:"الترتيب في اللوحة (انقر على عنصر لإزالته).",
     dragHint:"اسحب لتغيير الترتيب.",
     noElements:"لم يتم اختيار عناصر.",
+    secMolecules:"مفاتيح الجزيئات (اختياري)",
+    moleculesHint:"مفاتيح تكتب صيغة كاملة: جزيء أو أيون أو مجموعة (H₂O، ‏SO₄²⁻، ‏(SO₄)). اكتب الصيغة بلوحة المفاتيح أدناه وأضفها. المفتاح يكتب الرموز، لذا يستطيع الطالب تعديلها. مفاتيح قليلة لكل سؤال (4-8)؛ قد يكشف المفتاح الإجابة.",
+    moleculeName:"الاسم (اختياري، يظهر عند الإشارة إلى المفتاح)",
+    addMolecule:"إضافة المفتاح",
+    moleculesOrder:"النقر على مفتاح يزيله؛ السحب يغيّر الترتيب.",
+    moleculesNone:"لا توجد مفاتيح جزيئات.",
+    moleculeEmpty:"اكتب صيغة أولًا.",
+    moleculeInvalid:"الصيغة غير مكتوبة بشكل صحيح:",
+    moleculeDuplicate:"هذا المفتاح موجود في القائمة.",
+    moleculeGivesAway:"تظهر هذه المفاتيح في الإجابة المرجعية وقد تكشفها:",
     secReference:"الإجابة المرجعية",
     keyboardHint:"انقر على المربع لفتح لوحة المفاتيح.",
     referenceEmpty:"أدخل الإجابة المرجعية.",
@@ -968,6 +760,7 @@ function newState(){
     particleLabels:"short",
     autoNuclideNumbers:false,
     nuclearStates:false,
+    molecules:[],             // molecule keys: [{formula, name}] (MOLECULES-DESIGN.md)
     checkButton:false,
     displayChars:"",          // keyboard window width in characters; empty = the library's default
     reviewDiv:"",             // id of the teacher's div for the review output; empty = under the question
@@ -1067,6 +860,7 @@ function questionConfig(){
     if(state.autoNuclideNumbers) cfg.autoNuclideNumbers=true;
     if(state.nuclearStates) cfg.states=true;
   }
+  if(state.molecules.length) cfg.molecules=moleculesForLibrary();
   if(displayChars()) cfg.displayChars=displayChars();
   if(state.reviewDiv) cfg.reviewDiv=state.reviewDiv;
   const rubric=rubricForLibrary();
@@ -1091,6 +885,9 @@ function applyConfig(cfg){
   s.nuclear=cfg.nuclear===true;
   s.particleLabels=cfg.particleLabels==="full"?"full":"short";
   s.autoNuclideNumbers=cfg.autoNuclideNumbers===true;
+  s.molecules=(Array.isArray(cfg.molecules)?cfg.molecules:[]).map(m=>
+    typeof m==="string"?{formula:m,name:""}:m&&typeof m.formula==="string"?{formula:m.formula,name:typeof m.name==="string"?m.name:""}:null
+  ).filter(m=>m&&m.formula);
   s.nuclearStates=cfg.nuclear===true&&cfg.states===true;
   s.checkButton=false;             // hidden option: older files that had it on are saved without it
   if(cfg.displayChars>0) s.displayChars=String(cfg.displayChars);
@@ -1116,8 +913,8 @@ function displayChars(){
 
 function configId(){ return "chemkbd-"+state.questionId; }
 
-/* Written into the code's first comment, to see which version of the code a question has. Change it when chemkbdRun changes. */
-const SNIPPET_VERSION="2026-10-15.3";
+/* Written into the code's first comment, to see which version of the code a question has. Change it when the snippet changes (the student-side code itself is in the library: ChemicalKeyboard.runQuestion). */
+const SNIPPET_VERSION="2026-10-16.2";
 
 /* The language the builder's keyboards show: the student language, or with "system" the interface language. */
 function previewLanguage(){
@@ -1130,42 +927,36 @@ const SCRIPT_CLOSE="<"+"/script>";
 
 function snippet(){
   const id=configId();
-  const json=JSON.stringify(questionConfig(),null,1).replace(/</g,"\\u003c");
+  /* the JSON never contains < > & (a Moodle server or filter may turn them into &lt; &gt; &amp;) */
+  const json=JSON.stringify(questionConfig(),null,1)
+    .replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026");
+  /*
+   * The student-side code is in the library (ChemicalKeyboard.runQuestion). The script below only queues the
+   * question and loads the library once per page, and is written WITHOUT the characters < > & - Moodle may
+   * escape them inside a pasted script (found 2026-10-16), which broke the code when it was all in the snippet.
+   */
+  const loader=[
+    "(function(){",
+    "var id="+JSON.stringify(id)+",url="+JSON.stringify(state.libraryUrl)+";",
+    "var queue=window.__chemkbdQuestions=window.__chemkbdQuestions||[];",
+    "queue.push({id:id,script:document.currentScript});",
+    "if(window.ChemicalKeyboard){if(window.ChemicalKeyboard.startQueuedQuestions){window.ChemicalKeyboard.startQueuedQuestions();}return;}",
+    "if(window.__chemkbdLoading){return;}",
+    "window.__chemkbdLoading=true;",
+    "var s=document.createElement(\"script\");",
+    "s.src=url;",
+    "s.onerror=function(){if(window.console){console.error(\"[chemkbd \"+id+\"] the library could not be loaded: \"+url);}};",
+    "document.head.appendChild(s);",
+    "})();"
+  ].join("\n");
+  if(/[<>&]/.test(loader)) throw new Error("the snippet's script must not contain < > &");
   return [
     "<!-- Chemical keyboard question \""+state.questionId+"\" (code version "+SNIPPET_VERSION+"). Created with the chemical keyboard question builder:",
     "     to change it, open the saved file in the builder. Do not edit by hand. -->",
     "<div id=\""+id+"\"></div>",
     SCRIPT_OPEN+" type=\"application/json\" id=\""+id+"-config\">"+json+SCRIPT_CLOSE,
     SCRIPT_OPEN+">",
-    "(function(){",
-    "var HOST_ID="+JSON.stringify(id)+",LIBRARY_URL="+JSON.stringify(state.libraryUrl)+";",
-    "var SCRIPT=document.currentScript;",
-    chemkbdRun.toString(),
-    "/* this copy's own element with the given id: the nearest one before this script (another copy of the code may use the same id) */",
-    "function own(id){",
-    "  for(var e=SCRIPT&&SCRIPT.previousElementSibling;e;e=e.previousElementSibling){if(e.id===id)return e;}",
-    "  return document.getElementById(id);",
-    "}",
-    "/* the STACK inputs come after this code in the question text: start only when the whole page is read */",
-    "function start(){",
-    "  if(document.readyState===\"loading\"){document.addEventListener(\"DOMContentLoaded\",start);return;}",
-    "  var copies=document.querySelectorAll(\"[id='\"+HOST_ID+\"']\").length;",
-    "  if(copies>1&&window.console)console.warn(\"[chemkbd \"+HOST_ID+\"] \"+copies+\" keyboards on this page have the id \"+HOST_ID+\": the code was pasted more than once, or two questions have the same question id\");",
-    "  try{chemkbdRun(own(HOST_ID),JSON.parse(own(HOST_ID+\"-config\").textContent));}",
-    "  catch(e){if(window.console)console.error(\"[chemkbd \"+HOST_ID+\"] failed:\",e);}",
-    "}",
-    "/* the library is loaded once for all the keyboard questions on the page */",
-    "if(window.ChemicalKeyboard){start();return;}",
-    "var queue=window.__chemkbdQueue=window.__chemkbdQueue||[];",
-    "queue.push(start);",
-    "if(window.__chemkbdLoading)return;",
-    "window.__chemkbdLoading=true;",
-    "var script=document.createElement(\"script\");",
-    "script.src=LIBRARY_URL;",
-    "script.onload=function(){while(queue.length)queue.shift()();};",
-    "script.onerror=function(){if(window.console)console.error(\"[chemkbd \"+HOST_ID+\"] the library could not be loaded:\",LIBRARY_URL);};",
-    "document.head.appendChild(script);",
-    "})();",
+    loader,
     SCRIPT_CLOSE
   ].join("\n");
 }
@@ -1200,7 +991,7 @@ function keyboardElements(){
 
 /* Only one keyboard window open at a time: opening one closes the others. */
 function openKeyboards(){
-  return [referenceKeyboard,initialKeyboard,tryRun&&tryRun.keyboard].filter(Boolean);
+  return [referenceKeyboard,initialKeyboard,moleculeKeyboard,tryRun&&tryRun.keyboard].filter(Boolean);
 }
 function oneWindowAtATime(keyboard){
   const show=keyboard.show;
@@ -1220,6 +1011,7 @@ function makeEditor(hostId,value,onValue){
   if(!state.autoSubscript) options.autoSubscript=false;
   if(state.ionKeys) options.ionKeys=true;
   if(state.formulaStateKey) options.formulaStateKey=true;
+  if(state.molecules.length) options.molecules=moleculesForLibrary();
   if(state.nuclear){
     options.nuclear=true;
     options.particleLabels=state.particleLabels;
@@ -1237,10 +1029,15 @@ function buildKeyboards(){
   removeKeyboard(referenceKeyboard);
   removeKeyboard(initialKeyboard);
   referenceKeyboard=makeEditor("referenceHost",state.correctAnswer,v=>{
-    state.correctAnswer=v; clearReferenceCheck(); changed({try:"sync"});
+    state.correctAnswer=v; clearReferenceCheck(); renderMolecules(); changed({try:"sync"});
   });
   initialKeyboard=makeEditor("initialHost",state.value,v=>{
     state.value=v; changed(); buildTry();   // the student starts from the initial answer
+  });
+  removeKeyboard(moleculeKeyboard);
+  moleculeKeyboard=makeEditor("moleculeHost",moleculeDraft,v=>{
+    moleculeDraft=v;
+    $("moleculeStatus").classList.remove("bad");
   });
   building=false;
   buildTry();
@@ -1255,7 +1052,7 @@ function buildTry(){
   delete cfg.stack;          // no STACK inputs on this page
   cfg.language=previewLanguage();
   building=true;
-  tryRun=chemkbdRun($("tryHost"),cfg);
+  tryRun=ChemicalKeyboard.runQuestion($("tryHost"),cfg);   // the same library code Moodle runs
   building=false;
   oneWindowAtATime(tryRun.keyboard);
 }
@@ -1347,7 +1144,7 @@ function renderElements(){
     const chip=document.createElement("span");
     chip.className="chip";
     chip.textContent=symbol;
-    chipPointer(chip,symbol,index);
+    chipPointer(chip,index,{container:"chips",list:state.elements,click:()=>toggleElement(symbol),moved:elementsChanged});
     chips.appendChild(chip);
   });
 }
@@ -1358,11 +1155,12 @@ function renderElements(){
  * in the list - the marker shows where the element goes. Removing is on "click" (also sent by
  * assistive tools); the click the browser may send at the end of a drag is ignored.
  */
-function chipPointer(chip,symbol,index){
+/* opts: { container: id of the chips' parent, list: the array the chips show, click(), moved() } */
+function chipPointer(chip,index,opts){
   let justDragged=false;
   chip.addEventListener("click",()=>{
     if(justDragged){ justDragged=false; return; }
-    toggleElement(symbol);
+    opts.click();
   });
   chip.addEventListener("pointerdown",e=>{
     if(e.button!==0) return;
@@ -1377,8 +1175,8 @@ function chipPointer(chip,symbol,index){
       }
       if(!dragging) return;
       chip.style.transform="translate("+(ev.clientX-startX)+"px,"+(ev.clientY-startY)+"px)";
-      target=chipDropIndex(chip,ev.clientX,ev.clientY);
-      chipDropMarker(chip,target);
+      target=chipDropIndex(opts.container,chip,ev.clientX,ev.clientY);
+      chipDropMarker(opts.container,chip,target);
     };
     const end=ev=>{
       chip.removeEventListener("pointermove",move);
@@ -1389,11 +1187,11 @@ function chipPointer(chip,symbol,index){
       setTimeout(()=>{ justDragged=false; },0);              // only the click that follows at once
       chip.classList.remove("dragging");
       chip.style.transform="";
-      chipDropMarker(chip,null);
+      chipDropMarker(opts.container,chip,null);
       if(target===null||ev.type!=="pointerup") return;
-      state.elements.splice(index,1);
-      state.elements.splice(target,0,symbol);
-      elementsChanged();
+      const item=opts.list.splice(index,1)[0];
+      opts.list.splice(target,0,item);
+      opts.moved();
     };
     chip.addEventListener("pointermove",move);
     chip.addEventListener("pointerup",end);
@@ -1402,8 +1200,8 @@ function chipPointer(chip,symbol,index){
 }
 
 /* Where the dragged chip goes: its index in the list without it, from the pointer position (reading order, left to right). */
-function chipDropIndex(dragged,x,y){
-  const others=[...$("chips").querySelectorAll(".chip")].filter(c=>c!==dragged);
+function chipDropIndex(container,dragged,x,y){
+  const others=[...$(container).querySelectorAll(".chip")].filter(c=>c!==dragged);
   for(let i=0;i<others.length;i++){
     const r=others[i].getBoundingClientRect();
     if(y<r.top) return i;                                   // a row above this chip
@@ -1413,12 +1211,71 @@ function chipDropIndex(dragged,x,y){
 }
 
 /* The marker: a bar before the chip the dragged one will be put before (or after the last chip). */
-function chipDropMarker(dragged,target){
-  const others=[...$("chips").querySelectorAll(".chip")].filter(c=>c!==dragged);
+function chipDropMarker(container,dragged,target){
+  const others=[...$(container).querySelectorAll(".chip")].filter(c=>c!==dragged);
   others.forEach((c,i)=>{
     c.classList.toggle("drop-before",target===i);
     c.classList.toggle("drop-after",target===others.length&&i===others.length-1);
   });
+}
+
+/* ================================================================
+   Molecule keys (MOLECULES-DESIGN.md): the teacher types a formula with the keyboard and adds it
+   ================================================================ */
+let moleculeKeyboard=null;
+let moleculeDraft="";
+
+/* library format: "H_{2}O", or {formula, name} when a name is given */
+function moleculesForLibrary(){
+  return state.molecules.map(m=>m.name?{formula:m.formula,name:m.name}:m.formula);
+}
+
+function moleculesChanged(){
+  renderMolecules();
+  buildKeyboards();          // the keys appear in the keyboards of this page too
+  changed();
+}
+
+function addMolecule(){
+  const formula=moleculeDraft.trim();
+  const status=$("moleculeStatus");
+  status.className="status";
+  if(!formula){ status.textContent=t("moleculeEmpty"); status.classList.add("bad"); return; }
+  const problems=ChemicalGrammar.validate(formula,teacherLanguage);
+  if(problems.length){ status.textContent=t("moleculeInvalid")+" "+problems.join(" "); status.classList.add("bad"); return; }
+  if(state.molecules.some(m=>m.formula===formula)){ status.textContent=t("moleculeDuplicate"); status.classList.add("bad"); return; }
+  state.molecules.push({formula:formula,name:$("moleculeName").value.trim()});
+  moleculeDraft="";
+  $("moleculeName").value="";
+  status.textContent="";
+  moleculesChanged();
+}
+
+function renderMolecules(){
+  const chips=$("moleculeChips");
+  chips.textContent="";
+  if(!state.molecules.length){
+    const empty=document.createElement("span");
+    empty.className="empty";
+    empty.textContent=t("moleculesNone");
+    chips.appendChild(empty);
+  }
+  state.molecules.forEach((m,index)=>{
+    const chip=document.createElement("span");
+    chip.className="chip";
+    chip.dir="ltr";
+    chip.textContent=ChemicalGrammar.plainFormula(m.formula)+(m.name?" — "+m.name:"");
+    chipPointer(chip,index,{container:"moleculeChips",list:state.molecules,
+      click:()=>{ state.molecules.splice(index,1); moleculesChanged(); },moved:moleculesChanged});
+    chips.appendChild(chip);
+  });
+  /* keys that appear in the reference answer may give it away (no automatic "add" - design, section 6) */
+  const inReference=state.molecules.filter(m=>state.correctAnswer.indexOf(m.formula)>=0);
+  const status=$("moleculeStatus");
+  if(!status.classList.contains("bad")){
+    status.textContent=inReference.length?t("moleculeGivesAway")+" "+inReference.map(m=>ChemicalGrammar.plainFormula(m.formula)).join(", "):"";
+    status.className=inReference.length?"status info":"status";
+  }
 }
 
 /* Element symbols in an answer (reaction conditions in [...] and states are skipped). */
@@ -1686,7 +1543,7 @@ function renderOutput(){
  * Model answers for the STACK inputs, to copy into the STACK question:
  *   score input:  1
  *   answer input: what it holds for a correct answer - the reference, " || ", and its feedback
- *                 (same format and language as chemkbdRun writes: savedAnswer / feedbackLine there),
+ *                 (same format and language as the library's runQuestion writes: savedAnswer / feedbackLine there),
  *                 as a quoted string, because it is a String input.
  */
 function stackModelAnswer(){
@@ -1799,6 +1656,7 @@ function renderAll(){
   renderTexts();
   renderSettings();
   renderElements();
+  renderMolecules();
   renderRubric();
   renderReferenceStatus();
   renderIssues();
@@ -1927,6 +1785,7 @@ document.querySelectorAll("input[name=elementsMode]").forEach(radio=>{
   });
 });
 /* From the default set or "none" this switches to a custom panel: the current panel plus the missing elements. */
+$("addMolecule").addEventListener("click",addMolecule);
 $("addFromReference").addEventListener("click",()=>{
   if(state.elementsMode!=="custom") state.elements=(panelElements()||[]).slice();
   state.elementsMode="custom";

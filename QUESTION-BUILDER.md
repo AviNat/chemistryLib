@@ -41,6 +41,26 @@ built on the **current** library functionality only.
   `getValue()`, which drops the sub/sup levels.
 - "Try it as a student" runs the same student-side code as the snippet (`chemkbdRun`, copied with `toString()`).
 
+## Snippet without < > & (2026-10-16, library 2.6.0, snippet 2026-10-16.2)
+
+In Moodle the pasted code arrived in the browser with `<` turned into `&lt;` (`for(i=0;i&lt;types.length;i++)`), also
+after switching the editor to plain text - so the conversion happens when the server builds the page (a text filter
+or the format), not in the editor. TinyMCE also rewrites STACK question HTML when a question is opened for editing
+(reported by other Moodle sites; STACK warns that raw `<script>` depends on the Moodle version).
+
+Fix: the student-side code moved from the snippet into the library - `ChemicalKeyboard.runQuestion(host, cfg)`
+(it was `chemkbdRun`, copied into every snippet with `toString()`). The snippet is now the box, the JSON
+configuration (with `<` `>` `&` written as `<` `>` `&`) and a short loader with **no `<` `>` `&`**
+(the builder refuses to produce one that has them): it pushes `{id, script}` to `window.__chemkbdQuestions` and loads
+the library once per page; `ChemicalKeyboard.startQueuedQuestions` starts each question when the page is read. The
+library also undoes `&lt; &gt; &amp; &quot;` in the configuration text before parsing it.
+- Snippets made before keep their own code and still work (their queue `__chemkbdQueue` is also run by the library
+  when a new snippet loaded it first).
+- Changes of the student-side code now reach Moodle with a library release - no copying of questions.
+- "Try it as a student" in the builder runs `ChemicalKeyboard.runQuestion` - the same code as Moodle.
+- Questions pasted before must be copied again once (their code contains `<`).
+- Advice for teachers: edit STACK questions with the plain-text or Atto editor (TinyMCE rewrites the HTML).
+
 ## Output / file
 - The saved `.txt` **is** the Moodle snippet: a `div`, the configuration as JSON in
   `<script type="application/json" id="chemkbd-<id>-config">`, and a script that loads the library (once per page)

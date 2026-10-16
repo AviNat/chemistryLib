@@ -3318,6 +3318,7 @@ ChemicalKeyboard.prototype.setCorrectAnswer=function(value){
  * config.nuclear: nuclear equation - particle keys (particleLabels "short" / "full");
  *   autoNuclideNumbers: an element typed at the start of a substance gets its numbers (autoNuclideNumbers).
  * config.states: show the state keys; default true, false in a nuclear question unless set to true.
+ * config.molecules: molecule keys (see insertMolecule); default none.
  */
 
   function ChemicalKeyboard(config) {
@@ -3780,14 +3781,27 @@ ChemicalKeyboard.prototype.build=function(){
 
   atomsGrid=node("div");
 
-  /* 3 columns: the default set fits in fewer rows (and room is left for molecule keys later, MOLECULES-DESIGN.md) */
+  /*
+   * 6 grid columns: elements take 2 (3 per row), molecule keys take 3 (2 per row, wider labels like Cr₂O₇²⁻).
+   * Molecule keys (config.molecules, MOLECULES-DESIGN.md) come first, at the top of the panel; each types the
+   * characters of its formula (insertMolecule) - not one unit.
+   */
   apply(atomsGrid,{
     display:"grid",
-    gridTemplateColumns:"repeat(3, 1fr)",
+    gridTemplateColumns:"repeat(6, 1fr)",
     gap:"6px"
   });
 
   atomsPanel.appendChild(atomsGrid);
+
+  this.moleculeKeys=moleculeKeysFrom(this.config.molecules);
+  this.moleculeKeys.forEach(function(key){
+    var b=btn(atomsGrid,"",function(){self.insertMolecule(key.formula);},
+      moleculeTooltip(key,self.language),
+      {width:"100%",minWidth:"0",gridColumn:"span 3",padding:"0 2px",whiteSpace:"nowrap",overflow:"hidden",fontSize:"16px"});
+    if(key.label)b.textContent=key.label;
+    else b.appendChild(formulaNodes(key.formula));
+  });
 
   common=this.config.elements||COMMON;
   var nameIndex=this.language==="he"?1:this.language==="ar"?2:0;
@@ -3801,7 +3815,7 @@ ChemicalKeyboard.prototype.build=function(){
         sym,
         function(){self.insertText(sym,"normal");},
         tooltip,
-        {width:"100%",minWidth:"0"}
+        {width:"100%",minWidth:"0",gridColumn:"span 2"}
       );
     })(common[i]);
   }
@@ -3813,7 +3827,7 @@ ChemicalKeyboard.prototype.build=function(){
     t.tipAllElements,
     {
       width:"100%",
-      gridColumn:"1 / span 3",
+      gridColumn:"1 / -1",
       fontSize:"15px"
     }
   );
@@ -4453,6 +4467,87 @@ ChemicalKeyboard.prototype.insertParticle = function (key, full) {
     this.navigationScript = false;
     this.changed();
   };
+
+/*
+ * MOLECULE KEYS (config.molecules; design: MOLECULES-DESIGN.md)
+ * config.molecules: ["H_{2}O", "SO_{4}^{2-}", { formula: "(SO_{4})", label: "(SO₄)", name: { en: "sulfate" } }]
+ * - formulas in the value notation. A key types the characters of its formula, exactly as if the student had
+ * typed them: no new kind of object, so comparison, grading and the saved answer are unchanged, and the
+ * inserted formula is edited character by character (decided 2026-10-16: a sequence of symbols, not one unit -
+ * the same as the ion keys).
+ */
+function moleculeKeysFrom(list){
+  return (Array.isArray(list)?list:[]).map(function(item){
+    if(typeof item==="string")return item?{formula:item,label:"",name:null}:null;
+    if(item&&item.formula)return {formula:String(item.formula),label:item.label||"",name:item.name||null};
+    return null;
+  }).filter(Boolean);
+}
+
+/* "H_{2}O" -> "H₂O": the formula as plain text (tooltips, builder chips) */
+function plainFormula(formula){
+  return modelFromValue(formula).map(function(c){
+    if(c.kind==="fstate")return "("+(c.condition||[]).map(function(x){return x.script==="normal"?x.ch:scriptText(x.ch,x.script);}).join("")+")";
+    return c.script==="normal"||c.kind==="state"?c.ch:scriptText(c.ch,c.script);
+  }).join("");
+}
+
+function moleculeTooltip(key,language){
+  var name=typeof key.name==="string"?key.name:key.name?(key.name[language]||key.name.en||""):"";
+  return plainFormula(key.formula)+(name?" — "+name:"");
+}
+
+/* The formula drawn for a key label: subscripts and charges as small lowered / raised text. */
+function formulaNodes(formula){
+  var box=document.createElement("span"),chars=modelFromValue(formula),i,c,s;
+  for(i=0;i<chars.length;i++){
+    c=chars[i];
+    s=document.createElement("span");
+    s.textContent=c.kind==="fstate"?"("+(c.condition||[]).map(function(x){return x.ch;}).join("")+")":c.ch;
+    if(c.script==="sub"||c.script==="sup"){
+      s.style.fontSize="70%";
+      s.style.verticalAlign=c.script==="sub"?"-.25em":".45em";
+    }
+    box.appendChild(s);
+  }
+  return box;
+}
+
+ChemicalKeyboard.prototype.insertMolecule=function(formula){
+  var src=modelFromValue(formula),out=[],pairs={},i,c,box;
+
+  if(this.mode!=="edit")return;
+
+  for(i=0;i<src.length;i++){
+    c=src[i];
+    if(c.kind==="state"||c.kind==="fstate"){
+      if(this.cond)continue;                  // no states inside a condition or a formula state
+      if(c.kind==="fstate"){
+        box=makeChar("◌","sub",null,"fstate");
+        box.condition=(c.condition||[]).map(function(x){return makeChar(x.ch,x.script);});
+        out.push(box);
+        continue;
+      }
+      if(!pairs[c.pair])pairs[c.pair]=this.groupId++;
+      out.push(makeChar(c.ch,"sub",pairs[c.pair],"state"));
+      continue;
+    }
+    out.push(makeChar(c.ch,c.script));
+  }
+
+  if(!out.length)return;
+  this.navigationScript=false;
+  this.script="normal";
+
+  if(this.cond){
+    this.insertConditionChars(out);
+    return;
+  }
+
+  this.chars.splice.apply(this.chars,[this.cursor,0].concat(out));
+  this.cursor+=out.length;
+  this.changed();
+};
 
   ChemicalKeyboard.prototype.insertPair = function () {
       var p = this.groupId++;
@@ -5995,6 +6090,316 @@ function feedbackText(language,key){
   var interfaceText=T[language]||T.en;
   return messages[key]||interfaceText[key]||ERROR_TEXT.en[key]||T.en[key]||key;
 }
+
+/* ================================================================
+   QUESTIONS ON A PAGE (the Moodle snippet of the question builder, QUESTION-BUILDER.md)
+
+   The student-side code lives here, in the library - not in the pasted snippet (2026-10-16): a Moodle
+   server or text filter may turn "<", ">" and "&" inside a pasted script into &lt; &gt; &amp;, which breaks
+   any JavaScript that uses them. The snippet is now only a box, the configuration (JSON) and a few lines
+   without those characters that queue the question and load the library:
+
+     window.__chemkbdQuestions.push({ id: "chemkbd-q1", script: document.currentScript })
+
+   startQueuedQuestions (run when the library loads, and by every later snippet) starts each queued question
+   when the page is fully read. A side effect: changes of the student-side code reach Moodle with a library
+   release, without copying the questions again.
+   ================================================================ */
+
+/* undo HTML escaping that a server or filter may have done to the configuration text */
+function decodeEntities(text){
+  return String(text)
+    .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,"\"").replace(/&#0?39;/g,"'").replace(/&amp;/g,"&");
+}
+
+function startQueuedQuestions(){
+  var queue=global.__chemkbdQuestions||[];
+  function go(){
+    var item;
+    while(queue.length){
+      item=queue.shift();
+      if(item&&item.id)startQuestion(item.id,item.script);
+    }
+  }
+  /* the STACK inputs come after the code in the question text: start when the whole page is read */
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);
+  else go();
+}
+
+function startQuestion(id,script){
+  /* this copy's own element with the given id: the nearest one before its script (another copy may use the same id) */
+  function own(x){
+    var e;
+    for(e=script&&script.previousElementSibling;e;e=e.previousElementSibling){if(e.id===x)return e;}
+    return document.getElementById(x);
+  }
+  var copies=document.querySelectorAll("[id='"+id+"']").length,host,configElement;
+  if(copies>1&&global.console)console.warn("[chemkbd "+id+"] "+copies+" keyboards on this page have the id "+id+
+    ": the code was pasted more than once, or two questions have the same question id");
+  try{
+    host=own(id);
+    configElement=own(id+"-config");
+    if(!host||!configElement)throw new Error("the question box or its configuration is missing");
+    runQuestion(host,JSON.parse(decodeEntities(configElement.textContent)));
+  }catch(e){
+    if(global.console)console.error("[chemkbd "+id+"] failed:",e);
+  }
+}
+
+/*
+ * One question: host - an element with an id; cfg - the question configuration (the builder's JSON).
+ * Returns { keyboard, feedback: [reference keyboard of the review page] } (feedback may be empty).
+ * Moved here from the builder (where it was chemkbdRun, copied into every snippet).
+ */
+function runQuestion(host,cfg){
+  /*
+   * The student language. "system": the language Moodle shows the page in, so one copy of the
+   * question serves all languages - window.studentLanguage when a script on the page sets it
+   * (e.g. through Moodle's multilang filter), otherwise <html lang="..."> which Moodle sets to the
+   * user's current language ("he", "ar", "en", "en_us"...); anything else is English.
+   */
+  function supported(code){
+    code=String(code||"").replace(/['"\s]/g,"").toLowerCase().slice(0,2);
+    return code==="he"||code==="ar"||code==="en"?code:"";
+  }
+  var lang=cfg.language==="system"
+    ?(supported(global.studentLanguage)||supported(document.documentElement.lang)||"en")
+    :(supported(cfg.language)||"en");
+  var CHECK={en:"Check the writing",he:"בדיקת הכתיבה",ar:"فحص الكتابة"};
+  var WRITTEN_OK={en:"No writing problems were found.",he:"לא נמצאו בעיות בכתיבה.",ar:"لم يتم العثور على مشكلات في الكتابة."};
+  var base=host.id;
+  var options,keyboard,button,summary,details,referenceTitle,referenceDiv,feedback=[];
+
+  function make(tag,suffix,css){
+    var e=document.createElement(tag);
+    if(suffix)e.id=base+"-"+suffix;
+    if(css)e.style.cssText=css;
+    return e;
+  }
+
+  /* the texts (feedback, titles) follow the student language; the formulas are always left to right */
+  host.textContent="";
+  host.dir=lang==="en"?"ltr":"rtl";
+  var FORMULA_CSS="direction:ltr;text-align:left";
+
+  /* ids of the parts: from the host's id, made unique if another keyboard on the page already uses them */
+  if(document.getElementById(base+"-keyboard"))base+="-"+(global.__chemkbdRuns=(global.__chemkbdRuns||1)+1);
+
+  var keyboardDiv=make("div","keyboard",FORMULA_CSS);
+  keyboardDiv.dir="ltr";
+  host.appendChild(keyboardDiv);
+
+  options={
+    divId:keyboardDiv.id,
+    language:lang,
+    mode:"edit",
+    correctAnswer:cfg.correctAnswer||"",
+    value:cfg.value||""
+  };
+  if(cfg.elementsMode==="none")options.elements=[];
+  else if(cfg.elementsMode==="custom")options.elements=(cfg.elements||[]).slice();
+  if(cfg.rubric)options.rubric=cfg.rubric;
+  if(cfg.distinguishIsomers)options.distinguishIsomers=true;
+  if(cfg.conditions===false)options.conditions=false;     // no reaction-condition (process) keys
+  if(cfg.autoSubscript===false)options.autoSubscript=false; // the student chooses subscripts with _ or the key
+  if(cfg.ionKeys)options.ionKeys=true;                    // shortcut keys ⁺(aq) and ⁻(aq)
+  if(cfg.formulaStateKey)options.formulaStateKey=true;    // key for a state written as a formula, I₂(CCl₄)
+  if(cfg.molecules)options.molecules=cfg.molecules;       // molecule keys (they type the formula's characters)
+  if(cfg.nuclear){                                        // nuclear equation: particle keys
+    options.nuclear=true;
+    if(cfg.particleLabels==="full")options.particleLabels="full";
+    if(cfg.autoNuclideNumbers)options.autoNuclideNumbers=true;
+    if(cfg.states===true)options.states=true;             // state keys in a nuclear question
+  }
+  if(cfg.displayChars>0)options.displayChars=cfg.displayChars;   // keyboard window width, in characters
+
+  /*
+   * Connection to the STACK question (cfg.stack). On every change the keyboard writes into inputs
+   * of the same question, and hides them:
+   *   scoreInput:  the score from 0 to 1 (rubric score / 100; without a rubric 1 = correct, 0 = not);
+   *                the PRT gives it as the mark
+   *   answerInput: the answer as value text (H_{2}O, SO_{4}^{2-}); Moodle keeps it, and the
+   *                keyboard starts from it when the page is shown again
+   * An empty answer empties both, so STACK sees an unanswered question.
+   * STACK names its inputs "q<usage>:<slot>_ans1", so an input is found by the end of its name.
+   */
+  function findInput(name){
+    if(!name)return null;
+    var que=host.closest&&host.closest(".que");
+    return (que||document).querySelector("input[name$='_"+name+"'],textarea[name$='_"+name+"']");
+  }
+  function setInput(field,value){
+    var e,i,types=["input","change"];
+    if(!field||field.value===value)return;
+    field.value=value;
+    for(i=0;i<types.length;i++){
+      try{e=new Event(types[i],{bubbles:true});}catch(x){e=document.createEvent("Event");e.initEvent(types[i],true,true);}
+      field.dispatchEvent(e);
+    }
+  }
+
+  /*
+   * answerInput holds "answer || score% | feedback | feedback ...": the answer (read back by the
+   * keyboard) and, after " || ", the feedback the student got, for Moodle's response history.
+   * Quotes and backslashes are left out of the feedback (STACK string input).
+   */
+  var FEEDBACK_SEPARATOR=" || ";
+  function savedAnswer(text){
+    var i=text.indexOf(FEEDBACK_SEPARATOR);
+    return i>=0?text.slice(0,i):text;
+  }
+  function feedbackLine(result){
+    var parts=[],i,items=result.errors.concat(result.notes||[]);
+    if(result.score)parts.push(result.score.total+"%");
+    else if(result.correct)parts.push(global.ChemicalGrammar.feedbackText(lang,"correct"));
+    for(i=0;i<items.length;i++){
+      if(items[i].suppressedBy)continue;      // not counted: caused by another error
+      if(items[i].description)parts.push(items[i].description);
+    }
+    return parts.join(" | ").replace(/["\\⁦-⁩]/g,"");
+  }
+  function compare(ast){
+    return global.ChemicalGrammar.compare(ast,cfg.correctAnswer||"",lang,
+      {rubric:cfg.rubric||null,distinguishIsomers:cfg.distinguishIsomers===true});
+  }
+
+  var stack=cfg.stack||{};
+  var scoreInput=findInput(stack.scoreInput);
+  var answerInput=findInput(stack.answerInput);
+  if(global.console&&((stack.scoreInput&&!scoreInput)||(stack.answerInput&&!answerInput))){
+    console.warn("Chemical keyboard "+base+": STACK input not found:",
+      stack.scoreInput&&!scoreInput?stack.scoreInput:"",stack.answerInput&&!answerInput?stack.answerInput:"");
+  }
+  /* review page (after the attempt is submitted): Moodle shows the inputs read-only */
+  var review=[scoreInput,answerInput].some(function(f){return f&&(f.readOnly||f.disabled);});
+
+  /*
+   * The teacher's review div (cfg.reviewDiv, an id): a div the teacher puts in the question text and
+   * styles (size, place, font size, color). The review output goes into it, and the formulas take
+   * its font size. Looked up in the same question first (ids repeat when a question is shown twice).
+   * Hidden while answering, so an empty styled box is not seen. Without it the output stays in host.
+   */
+  var out=host,reviewDiv=null;
+  if(cfg.reviewDiv){
+    var que=host.closest&&host.closest(".que");
+    reviewDiv=(que&&que.querySelector("[id='"+cfg.reviewDiv+"']"))||document.getElementById(cfg.reviewDiv);
+    if(!reviewDiv&&global.console)console.warn("Chemical keyboard "+base+": review div not found:",cfg.reviewDiv);
+  }
+  if(reviewDiv&&!review)reviewDiv.style.display="none";
+
+  if(scoreInput)scoreInput.style.display="none";
+  if(answerInput){
+    answerInput.style.display="none";
+    if(answerInput.value)options.value=savedAnswer(answerInput.value);
+  }
+
+  /*
+   * Review (after submission): the student's answer, read-only - nothing can change any more.
+   * What else is shown is set in the builder (cfg.review, each true unless set to false):
+   *   grade:     the score line (with a rubric) or correct / number of issues (without)
+   *   reference: the reference answer, marked; when false the student's answer is not marked
+   *              either, because the marking gives the answer away
+   *   details:   the detailed evaluation (the penalty lines of the rubric / the list of errors)
+   */
+  if(review){
+    var show=cfg.review||{};
+    var showGrade=show.grade!==false,showReference=show.reference!==false,showDetails=show.details!==false;
+
+    options.mode="readonly-errors";
+    if(reviewDiv){
+      out=reviewDiv;
+      out.textContent="";
+      out.dir=host.dir;
+      out.appendChild(keyboardDiv);
+      options.fontSize="inherit";
+    }
+    keyboard=new ChemicalKeyboard(options);
+    if(options.value){
+      var reviewResult=keyboard.compare();
+      if(showReference)keyboard.setComparisonFeedback(reviewResult,"student",options.value);
+
+      /* renderComparison fills both parts; only the parts that are switched on are put on the page */
+      summary=make("div","summary","margin-top:8px;font-weight:bold");
+      details=make("div","details");
+      global.ChemicalGrammar.renderComparison(reviewResult,lang,summary,details);
+      if(showGrade)out.appendChild(summary);
+      if(showDetails)out.appendChild(details);
+
+      if(showReference){
+        referenceTitle=make("div",null,"font-weight:bold;margin:12px 0 4px");
+        referenceTitle.textContent=global.ChemicalGrammar.feedbackText(lang,"referenceAnswer");
+        referenceDiv=make("div","reference",FORMULA_CSS);
+        referenceDiv.dir="ltr";
+        out.appendChild(referenceTitle);
+        out.appendChild(referenceDiv);
+        feedback.push(new ChemicalKeyboard({divId:referenceDiv.id,language:lang,mode:"readonly-errors",value:"",
+          fontSize:options.fontSize}));
+        feedback[0].setComparisonFeedback(reviewResult,"reference",cfg.correctAnswer||"");
+      }
+    }
+    return {keyboard:keyboard,feedback:feedback};
+  }
+
+  if(scoreInput||answerInput){
+    options.onChange=function(r){
+      var result,score;
+      if(!r.model.length){
+        setInput(answerInput,"");
+        setInput(scoreInput,"");
+        return;
+      }
+      result=compare(r.ast);
+      score=result.score?result.score.total/100:(result.correct?1:0);
+      /* r.valueText: the answer in the value notation the keyboard reads back exactly (library 2.1.0) */
+      setInput(answerInput,r.valueText+FEEDBACK_SEPARATOR+feedbackLine(result));
+      setInput(scoreInput,String(Math.round(score*10000)/10000));
+    };
+  }
+
+  keyboard=new ChemicalKeyboard(options);
+
+  /*
+   * Check button while answering: the WRITING only - syntax errors and symbols that are not
+   * elements - never the grade or anything that compares with the reference (that is for Moodle's
+   * own Check and the review page). The answer is compared with itself, so the only errors left
+   * are those of the writing; unbalanced atoms are left out (balancing is part of the task).
+   */
+  var WRITING_CODES_CHECK=["syntax-error","unknown-element"];
+  if(cfg.checkButton){
+    button=make("button","check","margin-top:8px;padding:5px 14px;font-size:16px;cursor:pointer");
+    button.type="button";
+    button.textContent=CHECK[lang];
+    summary=make("div","summary","margin-top:8px");
+    host.appendChild(button);
+    host.appendChild(summary);
+
+    button.addEventListener("click",function(){
+      var ast=keyboard.getAST(),problems=[],errors,i,line;
+      summary.textContent="";
+      if(!keyboard.getModel().length)return;
+      errors=global.ChemicalGrammar.compare(ast,ast,lang,{}).errors;
+      for(i=0;i<errors.length;i++){
+        if(WRITING_CODES_CHECK.indexOf(errors[i].code)>=0&&problems.indexOf(errors[i].description)<0)problems.push(errors[i].description);
+      }
+      if(!problems.length){
+        summary.style.color="#18742a";
+        summary.textContent=WRITTEN_OK[lang];
+        return;
+      }
+      summary.style.color="#a12622";
+      for(i=0;i<problems.length;i++){
+        line=document.createElement("div");
+        line.textContent=problems[i];
+        summary.appendChild(line);
+      }
+    });
+  }
+
+  return {keyboard:keyboard,feedback:feedback};
+}
+
+  ChemicalKeyboard.runQuestion=runQuestion;
+  ChemicalKeyboard.startQueuedQuestions=startQueuedQuestions;
   global.ChemicalKeyboard = ChemicalKeyboard;
 
   global.ChemicalGrammar={
@@ -6010,6 +6415,23 @@ function feedbackText(language,key){
   valueText:valueTextOf,
   elements:SYMBOLS.slice(),
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
-  version:"2.4.1"     // raise with every change, to see in the console which copy a page runs
+  plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
+  version:"2.6.0"     // raise with every change, to see in the console which copy a page runs
 };
+
+/* questions queued by snippets before the library was loaded */
+startQueuedQuestions();
+/*
+ * Snippets made before 2026-10-16 carry their own code and queue start functions in __chemkbdQueue; the
+ * snippet that loads the library runs them on load. When a new snippet loaded the library first, nobody
+ * else would run them: run them here (each runs once - the queue is emptied).
+ */
+(function(){
+  var old=global.__chemkbdQueue;
+  function go(){ while(old&&old.length){ var f=old.shift(); if(typeof f==="function")f(); } }
+  if(old&&old.length){
+    if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);
+    else go();
+  }
+})();
 })(window);

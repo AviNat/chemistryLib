@@ -1,7 +1,7 @@
 # Chemical keyboard: molecule keys (design)
 
-Status: **design phase**, nothing implemented. Decided on 2026-10-09. Base: `chemical-keyboard-v4.js` (library 2.0.5)
-and the question builder (`QUESTION-BUILDER.md`).
+Status: **implemented 2026-10-16** (library 2.5.0, builder snippet 2026-10-16.1) with the teacher's own keys; the
+built-in sets (section 3) wait for the curriculum expert. Designed 2026-10-09. See "Implemented" at the end.
 
 ## 1. Goal
 
@@ -20,10 +20,10 @@ Rejected: an indivisible token (needs parser and comparison changes, cannot be e
 the typed formula, so it gains nothing but a one-press undo); typing names (`water`) (a text field, clashes with symbols,
 three languages).
 
-### Delete as a block (decided)
-The inserted characters form a **block**: one DEL right after it removes the whole block, like a two-letter element.
-Once the student edits inside the block (insert or delete a character in it), the block is dissolved and DEL removes
-one element at a time. After a page reload there are no blocks (the saved answer is plain text) - harmless.
+### ~~Delete as a block~~ - replaced 2026-10-16: a sequence of symbols
+**Changed by the user (2026-10-16):** the inserted formula is a sequence of symbols, not a unit - DEL removes one
+character at a time and the arrows step through it, exactly as if typed (the same rule as the ion keys ⁺(aq) / ⁻(aq)).
+Two-letter elements stay one unit as always.
 
 ### Insertion rules
 The same rules as typing: after a coefficient (2 + H₂O = 2H₂O), after `·` (·5 + H₂O), inside the condition above the
@@ -80,9 +80,30 @@ A "Molecule keys" section after the element keys:
 
 ## 7. Open (waiting for the curriculum expert)
 
-1. **Electrons:** redox half-equations need e⁻ (Fe³⁺ + e⁻ → Fe²⁺). Likely answer: add `e^{-}`. The grammar and the
-   comparison do not accept it today (lowercase `e` is not an element) - a grammar change, not just a key.
+1. **Electrons:** redox half-equations need e⁻ (Fe³⁺ + e⁻ → Fe²⁺). Since 2026-10-15 the grammar reads e⁻ as a
+   particle (nuclear equations), but a reference with e⁻ then makes the comparison **nuclear** (conservation of
+   mass / atomic numbers instead of atoms and charge) - wrong for redox. Needs its own decision: e⁻ in a chemical
+   equation = an electron that counts in the charge balance.
 2. **The built-in sets** (section 3): which molecules, ions and groups the curriculum needs.
-3. **Later: particles for nuclear / physics equations** - γ, and probably α, β⁻, β⁺, n, p, e⁻. Another category of
+3. ~~Later: particles for nuclear / physics equations~~ - done 2026-10-15 (ENHANCEMENTS-DESIGN.md, section 4).
+   Original note: **particles for nuclear / physics equations** - γ, and probably α, β⁻, β⁺, n, p, e⁻. Another category of
    "elements"; nuclear notation also needs mass and atomic numbers before the symbol (²³⁸₉₂U), a larger grammar change.
    Electrons (item 1) should be designed so that this category can be added later.
+
+## 8. Implemented (2026-10-16, library 2.5.0)
+
+- `config.molecules`: formulas in the value notation, or `{ formula, label, name }` (`name` a string or
+  `{ en, he, ar }`). Default: none.
+- `insertMolecule(formula)` types the characters with their levels; states are kept (a new state group), and left
+  out inside the condition above the arrow or a formula state. Works after a coefficient, after `·`, inside the
+  condition (V₂O₅).
+- Panel (changed 2026-10-16, library 2.5.1, the user's original idea): the molecule keys are **at the top of the
+  element panel, 2 per row**, the elements below them 3 per row - one 6-column grid (a molecule key spans 3, an
+  element 2). The keyboard window keeps its width; the panel grows downward. Labels drawn with small
+  sub/superscripts; tooltip = formula + name.
+- Builder: section "Molecule keys (optional)" after the element keys - the teacher types a formula with the keyboard,
+  an optional name, "Add the key" (checked with `ChemicalGrammar.validate`; duplicates refused). Chips: click removes,
+  drag reorders (the element chips' code, generalised). A note lists the keys that appear in the reference answer
+  ("may give it away"); no automatic add. The keys also appear in the builder's own keyboards.
+- Not yet: the built-in sets by domain (section 3) - waiting for the curriculum expert.
+- Tests: group "Molecule keys" in `chemTests.js` (key `M:formula`), 152 / 152 pass.

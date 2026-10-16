@@ -22,6 +22,7 @@
  *   +(aq) −(aq)        ion shortcut keys (config.ionKeys): charge sign + (aq)
  *   (F)                formula state key (config.formulaStateKey): I₂(CCl₄), value I_{2}({CCl_{4}})
  *   α β β⁺ γ e⁻ n p    particle keys of a nuclear keyboard (config.nuclear)
+ *   M:H_{2}O           a molecule key (config.molecules) with its formula
  * A case may give "config" for the keyboard, e.g. { autoSubscript: false }.
  *   cond Δ hν °C kelvin   condition: open, or open with a symbol
  *   ← →| DEL AC        navigation (→| = move right), delete left, clear all
@@ -174,6 +175,19 @@ let CASES = [
     { group: "Grade", name: "syntax error gives 0", student: "2H_{2}(g)+→2H_{2}O(l)", reference: WATER, rubric: SAMPLE_RUBRIC, expect: "score 0: syntax −100" },
     { group: "Grade", name: "category not in the rubric costs nothing", student: "2H_{2}(g)+O_{2}(g)⇌2H_{2}O(l)", reference: WATER, rubric: { coefficients: 10 }, expect: "score 100" },
     { group: "Grade", name: "wrong substance hides its coefficient", student: "2H_{2}(g)+O_{3}(g)→2H_{2}O(l)", reference: WATER, rubric: SAMPLE_RUBRIC, expect: "score 75: substances −25" },
+
+    /* Molecule keys (MOLECULES-DESIGN.md): the key types the characters */
+    { group: "Molecule keys", name: "after a coefficient", keys: "2 M:H_{2}O", expect: "2H_{2}O" },
+    { group: "Molecule keys", name: "DEL removes one character (a sequence, not one unit)", keys: "M:H_{2}O DEL", expect: "H_{2}" },
+    { group: "Molecule keys", name: "an ion: DEL removes the sign", keys: "M:SO_{4}^{2-} DEL", expect: "SO_{4}^{2}" },
+    { group: "Molecule keys", name: "a group, then its count", keys: "Al 2 M:(SO_{4}) 3", expect: "Al_{2}(SO_{4})_{3}" },
+    { group: "Molecule keys", name: "in an equation", keys: "M:CH_{4} + 2 M:O_{2} → M:CO_{2} + 2 M:H_{2}O",
+      expect: "CH_{4}+2O_{2}→CO_{2}+2H_{2}O" },
+    { group: "Molecule keys", name: "inside the condition above the arrow", keys: "→ cond M:V_{2}O_{5}", expect: "→[V_{2}O_{5}]" },
+    { group: "Molecule keys", name: "with a state", keys: "M:NaCl(aq)", expect: "NaCl(aq)" },
+    { group: "Molecule keys", name: "the state is left out inside the condition", keys: "→ cond M:NaCl(aq)", expect: "→[NaCl]" },
+    { group: "Molecule keys", name: "the inserted formula can be edited inside", keys: "M:H_{2}O ← DEL 3", expect: "H_{3}O" },
+    { group: "Molecule keys", name: "and continued", keys: "M:H_{2}O 2", expect: "H_{2}O_{2}" },
 
     /* State written as a formula (ENHANCEMENTS-DESIGN.md, section 1) */
     { group: "Formula state", name: "typing: box, formula, Enter leaves it", keys: "I 2 (F) C Cl 4 Enter + Br 2",
@@ -357,6 +371,7 @@ function particleKey(k, label) {
 function pressKey(k, key) {
     if (/^[0-9]$/.test(key)) return k.insertDigit(key);
     if (k.config.nuclear && particleKey(k, key)) return;
+    if (key.indexOf("M:") === 0) return k.insertMolecule(key.slice(2));
     if (key.indexOf("k:") === 0 && key.length > 2) return physicalKey(k, key.slice(2));
     if (Object.prototype.hasOwnProperty.call(KEY_ACTIONS, key)) return KEY_ACTIONS[key](k);
     if (ChemicalGrammar.elements.indexOf(key) >= 0) return k.insertText(key, "normal");

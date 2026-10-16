@@ -97,7 +97,7 @@ library also undoes `&lt; &gt; &amp; &quot;` in the configuration text before pa
   adds a div to the question text and styles it (size, place, font size, color), e.g.
   `<div id="q1-review" style="font-size:18px; max-width:600px"></div>`. On the review page the student's answer, grade,
   evaluation and reference answer go into it, and the formulas take its font size (the library's read-only
-  `config.fontSize: "inherit"`, library 2.0.8; without it 28px). Looked up in the same `.que` first. Hidden while
+  `config.fontSize: "inherit"`, library 2.0.8; without it 24px - 28px until library 2.6.3, too big next to the 22px typing area of the keyboard window). Looked up in the same `.que` first. Hidden while
   answering, so an empty styled box isn't seen. Not found → output under the question as before (console warning).
   The formula boxes keep their own border, white background, padding and minimum height.
 - `ans2` does not need a PRT: it is saved and restored without one (confirmed in Moodle 2026-10-08).

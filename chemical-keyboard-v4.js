@@ -3408,9 +3408,10 @@ ChemicalKeyboard.prototype.build=function(){
     /*
      * The keyboard window's typing area is smaller, so longer formulas fit on one line (see buildPopupWindow).
      * Read-only displays: config.fontSize (any CSS value) when given - "inherit" takes the size from the
-     * host div, so a page can style it (size, color, place) - otherwise 28px.
+     * host div, so a page can style it (size, color, place) - otherwise DISPLAY_FONT_SIZE (24px; was 28px
+     * until 2026-10-16 - too big next to the 22px typing area).
      */
-    fontSize:this.mode==="edit"?TYPING_FONT_SIZE+"px":(this.config.fontSize||"28px"),
+    fontSize:this.mode==="edit"?TYPING_FONT_SIZE+"px":(this.config.fontSize||DISPLAY_FONT_SIZE+"px"),
     background:"#fff",
     boxSizing:"border-box",
     outline:"none",
@@ -3946,7 +3947,7 @@ ChemicalKeyboard.prototype.buildRenderedElement=function(){
     borderRadius:"8px",
     background:"#fff",
     boxSizing:"border-box",
-    fontSize:"28px",
+    fontSize:DISPLAY_FONT_SIZE+"px",     // the formula box on the page: the same size as the read-only displays
     lineHeight:"1.35",
     overflow:"visible",
     cursor:"pointer"
@@ -4010,6 +4011,8 @@ ChemicalKeyboard.prototype.buildEmbeddedWindow=function(root){
  * up to the comma, fits on one line.
  */
 var TYPING_FONT_SIZE=22,CHAR_WIDTH_EM=0.6,DISPLAY_CHARS=32;
+/* the formula box on the page and the read-only displays (feedback, reference answer) */
+var DISPLAY_FONT_SIZE=24;
 
 ChemicalKeyboard.prototype.buildPopupWindow=function(root,t){
   var self=this,header,title,close,
@@ -6429,7 +6432,7 @@ function runQuestion(host,cfg){
   elements:SYMBOLS.slice(),
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
-  version:"2.6.2"     // raise with every change, to see in the console which copy a page runs
+  version:"2.6.3"     // raise with every change, to see in the console which copy a page runs
 };
 
 /* questions queued by snippets before the library was loaded */

@@ -166,6 +166,7 @@ table.rubric .na{color:#a5b0bc}
   <label class="check"><input type="checkbox" id="autoSubscript"><span data-t="autoSubscript"></span></label>
   <label class="check"><input type="checkbox" id="ionKeys"><span data-t="ionKeys"></span></label>
   <label class="check"><input type="checkbox" id="formulaStateKey"><span data-t="formulaStateKey"></span></label>
+  <label class="check"><input type="checkbox" id="lipids"><span data-t="lipids"></span></label>
   <label class="check"><input type="checkbox" id="nuclear"><span data-t="nuclear"></span></label>
   <div id="particleLabelsField" style="margin-inline-start:26px">
     <label class="field"><span data-t="particleLabels"></span>
@@ -372,6 +373,7 @@ const TEXT={
     particleLabelsFull:"the symbol with its numbers: ⁴₂α, ⁰₋₁β",
     autoNuclideNumbers:"Enter the mass and atomic numbers automatically with an element (the most common isotope, e.g. ¹²₆C; the student changes them as needed)",
     nuclearStates:"Show the state keys (s), (l), (g), (aq) in the nuclear equation",
+    lipids:"Fatty acids / triglycerides: shorthand C18:1(ω9)cis, structural formula, TG(...); keys :, ω, cis, trans, =, TG and the groups COOH, CH₃, CH₂, CH=CH",
     issueConditions:"The reference answer has reaction conditions above the arrow, but the condition keys are off: the student cannot write them.",
     checkButton:"Show the student a button that checks the writing (syntax and element symbols; no grade)",
     displayChars:"Keyboard window width (characters on one line)",
@@ -442,6 +444,12 @@ const TEXT={
       substances:"Wrong, missing or extra substance",
       massNumbers:"Mass number wrong or missing, or numbers missing (nuclear)",
       atomicNumbers:"Wrong or missing atomic number (nuclear)",
+      lipidCarbons:"Chain length - number of carbons (fatty acids)",
+      lipidDoubleBonds:"Number of double bonds (fatty acids)",
+      lipidOmega:"Position ω and configuration cis/trans (fatty acids)",
+      lipidStructure:"Structure of the chain in a structural formula (fatty acids)",
+      lipidFattyAcids:"Missing or extra fatty acid in a triglyceride",
+      lipidNotation:"Letter case: C, cis (fatty acids)",
       coefficients:"Wrong coefficient",
       scaledCoefficients:"All coefficients a multiple of the reference",
       balance:"Unbalanced atom (not caused by another error)",
@@ -492,6 +500,7 @@ const TEXT={
     particleLabelsFull:"את הסמל עם המספרים: ⁴₂α, ⁰₋₁β",
     autoNuclideNumbers:"הכנסה אוטומטית של מספר המסה והמספר האטומי עם היסוד (האיזוטופ הנפוץ, למשל ¹²₆C; התלמיד משנה לפי הצורך)",
     nuclearStates:"הצגת מקשי מצבי הצבירה (s), (l), (g), (aq) במשוואה הגרעינית",
+    lipids:"חומצות שומן / טריגליצרידים: רישום מקוצר ⁦C18:1(ω9)cis⁩, נוסחת מבנה, ⁦TG(...)⁩; מקשים :, ω, cis, trans, =, TG והקבוצות COOH, CH₃, CH₂, CH=CH",
     issueConditions:"בתשובת הייחוס יש תנאי תגובה מעל החץ, אבל מקשי התנאים כבויים: התלמיד לא יוכל לכתוב אותם.",
     checkButton:"להציג לתלמיד כפתור לבדיקת הכתיבה (תחביר וסמלי יסודות; ללא ציון)",
     displayChars:"רוחב חלון המקלדת (תווים בשורה אחת)",
@@ -562,6 +571,12 @@ const TEXT={
       substances:"חומר שגוי, חסר או מיותר",
       massNumbers:"מספר מסה שגוי או חסר, או מספרים חסרים (גרעינית)",
       atomicNumbers:"מספר אטומי שגוי או חסר (גרעינית)",
+      lipidCarbons:"אורך השרשרת - מספר הפחמנים (חומצות שומן)",
+      lipidDoubleBonds:"מספר הקשרים הכפולים (חומצות שומן)",
+      lipidOmega:"מיקום ω ותצורת cis/trans (חומצות שומן)",
+      lipidStructure:"מבנה השרשרת בנוסחת מבנה (חומצות שומן)",
+      lipidFattyAcids:"חומצת שומן חסרה או מיותרת בטריגליצריד",
+      lipidNotation:"אותיות גדולות/קטנות: C, cis (חומצות שומן)",
       coefficients:"מקדם שגוי",
       scaledCoefficients:"כל המקדמים כפולה של מקדמי הייחוס",
       balance:"אטום לא מאוזן (שלא נובע משגיאה אחרת)",
@@ -612,6 +627,7 @@ const TEXT={
     particleLabelsFull:"الرمز مع الأعداد: ⁴₂α، ⁰₋₁β",
     autoNuclideNumbers:"إدخال العدد الكتلي والعدد الذري تلقائيًا مع العنصر (النظير الشائع، مثل ¹²₆C؛ يغيّرهما الطالب حسب الحاجة)",
     nuclearStates:"عرض مفاتيح حالات المادة (s)، (l)، (g)، (aq) في المعادلة النووية",
+    lipids:"الأحماض الدهنية / الغليسريدات الثلاثية: الرمز المختصر ⁦C18:1(ω9)cis⁩، الصيغة البنائية، ⁦TG(...)⁩؛ المفاتيح :، ω، cis، trans، =، TG والمجموعات COOH، CH₃، CH₂، CH=CH",
     issueConditions:"في الإجابة المرجعية ظروف تفاعل فوق السهم، لكن مفاتيح الظروف مُطفأة: لن يتمكن الطالب من كتابتها.",
     checkButton:"عرض زر للطالب لفحص الكتابة (الصياغة ورموز العناصر؛ بدون درجة)",
     displayChars:"عرض نافذة لوحة المفاتيح (عدد الأحرف في سطر واحد)",
@@ -682,6 +698,12 @@ const TEXT={
       substances:"مادة خاطئة أو ناقصة أو زائدة",
       massNumbers:"عدد كتلي خاطئ أو مفقود، أو أعداد مفقودة (نووية)",
       atomicNumbers:"عدد ذري خاطئ أو مفقود (نووية)",
+      lipidCarbons:"طول السلسلة - عدد ذرات الكربون (أحماض دهنية)",
+      lipidDoubleBonds:"عدد الروابط الثنائية (أحماض دهنية)",
+      lipidOmega:"الموقع ω والترتيب cis/trans (أحماض دهنية)",
+      lipidStructure:"بنية السلسلة في الصيغة البنائية (أحماض دهنية)",
+      lipidFattyAcids:"حمض دهني مفقود أو زائد في الغليسريد الثلاثي",
+      lipidNotation:"الأحرف الكبيرة/الصغيرة: C، cis (أحماض دهنية)",
       coefficients:"معامل خاطئ",
       scaledCoefficients:"جميع المعاملات مضاعف لمعاملات الإجابة المرجعية",
       balance:"ذرة غير موزونة (لا تنتج عن خطأ آخر)",
@@ -711,9 +733,20 @@ const DEFAULT_ELEMENTS=["H","C","N","O","Na","Mg","Al","Cl","K","Ca","Fe","Cu","
 const ALL_ELEMENTS=ChemicalGrammar.elements;   // in atomic-number order
 
 /* Rubric categories the teacher can set ("syntax" is fixed by the system: 0). */
-const RUBRIC_CATEGORIES=["answerType","unknownElement","substances","massNumbers","atomicNumbers","coefficients","scaledCoefficients",
+const RUBRIC_CATEGORIES=["answerType","unknownElement","substances","massNumbers","atomicNumbers",
+  "lipidCarbons","lipidDoubleBonds","lipidOmega","lipidStructure","lipidFattyAcids","lipidNotation","coefficients","scaledCoefficients",
   "balance","states","charges","arrow","conditions","notation"];
 const NUCLEAR_ONLY={massNumbers:true,atomicNumbers:true};   // rubric rows shown only for a nuclear equation
+/* rubric rows of a fatty-acid question, and their values when the option is turned on (a third per part - bagrut) */
+const LIPID_ONLY={lipidCarbons:true,lipidDoubleBonds:true,lipidOmega:true,lipidStructure:true,lipidFattyAcids:true,lipidNotation:true};
+const LIPID_DEFAULT_RULES={
+  lipidCarbons:{mode:"once",value:33,max:"",allMissing:""},
+  lipidDoubleBonds:{mode:"once",value:33,max:"",allMissing:""},
+  lipidOmega:{mode:"once",value:34,max:"",allMissing:""},
+  lipidStructure:{mode:"once",value:20,max:"",allMissing:""},
+  lipidFattyAcids:{mode:"each",value:33,max:100,allMissing:""},
+  lipidNotation:{mode:"once",value:10,max:"",allMissing:""}
+};
 const PER_ERROR_ONLY_EXTRA={states:true};   // states also has allMissing
 
 /* The sample rubric of chemical-kbd-v4-test.html */
@@ -764,6 +797,7 @@ function newState(){
     ionKeys:false,
     formulaStateKey:false,
     nuclear:false,
+    lipids:false,
     particleLabels:"short",
     autoNuclideNumbers:false,
     nuclearStates:false,
@@ -861,6 +895,7 @@ function questionConfig(){
   if(!state.autoSubscript) cfg.autoSubscript=false;
   if(state.ionKeys) cfg.ionKeys=true;
   if(state.formulaStateKey) cfg.formulaStateKey=true;
+  if(state.lipids) cfg.lipids=true;
   if(state.nuclear){
     cfg.nuclear=true;
     if(state.particleLabels==="full") cfg.particleLabels="full";
@@ -891,6 +926,7 @@ function applyConfig(cfg){
   s.ionKeys=cfg.ionKeys===true;
   s.formulaStateKey=cfg.formulaStateKey===true;
   s.nuclear=cfg.nuclear===true;
+  s.lipids=cfg.lipids===true;
   s.particleLabels=cfg.particleLabels==="full"?"full":"short";
   s.autoNuclideNumbers=cfg.autoNuclideNumbers===true;
   s.molecules=(Array.isArray(cfg.molecules)?cfg.molecules:[]).map(m=>
@@ -922,7 +958,7 @@ function displayChars(){
 function configId(){ return "chemkbd-"+state.questionId; }
 
 /* Written into the code's first comment, to see which version of the code a question has. Change it when the snippet changes (the student-side code itself is in the library: ChemicalKeyboard.runQuestion). */
-const SNIPPET_VERSION="2026-10-16.4";
+const SNIPPET_VERSION="2026-10-16.5";
 
 /* The language the builder's keyboards show: the student language, or with "system" the interface language. */
 function previewLanguage(){
@@ -1022,6 +1058,7 @@ function makeEditor(hostId,value,onValue){
   if(state.ionKeys) options.ionKeys=true;
   if(state.formulaStateKey) options.formulaStateKey=true;
   if(state.molecules.length) options.molecules=moleculesForLibrary();
+  if(state.lipids) options.lipids=true;
   if(state.nuclear){
     options.nuclear=true;
     options.particleLabels=state.particleLabels;
@@ -1326,6 +1363,7 @@ function renderRubric(){
   body.textContent="";
   RUBRIC_CATEGORIES.forEach(category=>{
     if(NUCLEAR_ONLY[category]&&!state.nuclear) return;
+    if(LIPID_ONLY[category]&&!state.lipids) return;
     const rule=state.rubric[category];
     const tr=document.createElement("tr");
     if(rule.mode==="none") tr.className="off";
@@ -1443,7 +1481,7 @@ function checkReference(){
   }
 
   const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,teacherLanguage,
-    {distinguishIsomers:state.distinguishIsomers});
+    {distinguishIsomers:state.distinguishIsomers,lipids:state.lipids});
   const problems=result.errors.filter(e=>REFERENCE_CHECK_CODES.indexOf(e.code)>=0);
   const texts=[];
   problems.forEach(e=>{ if(texts.indexOf(e.description)<0) texts.push(e.description); });
@@ -1506,7 +1544,7 @@ function renderReferenceElements(){
 /* Syntax errors and unknown elements of the reference answer, in the teacher's language. */
 function referenceProblems(){
   if(!state.correctAnswer) return [];
-  const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,teacherLanguage,{});
+  const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,teacherLanguage,{lipids:state.lipids});
   const texts=[];
   result.errors.forEach(e=>{
     if((e.code==="syntax-error"||e.code==="unknown-element")&&texts.indexOf(e.description)<0) texts.push(e.description);
@@ -1559,7 +1597,7 @@ function renderOutput(){
 function stackModelAnswer(){
   /* with "system" the feedback text is in the preview language: STACK never compares with it, it only needs a model answer */
   const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,previewLanguage(),
-    {rubric:rubricForLibrary(),distinguishIsomers:state.distinguishIsomers});
+    {rubric:rubricForLibrary(),distinguishIsomers:state.distinguishIsomers,lipids:state.lipids});
   const parts=[];
   if(result.score) parts.push(result.score.total+"%");
   else if(result.correct) parts.push(ChemicalGrammar.feedbackText(previewLanguage(),"correct"));
@@ -1641,6 +1679,7 @@ function renderSettings(){
   $("ionKeys").checked=state.ionKeys;
   $("formulaStateKey").checked=state.formulaStateKey;
   $("nuclear").checked=state.nuclear;
+  $("lipids").checked=state.lipids;
   $("particleLabels").value=state.particleLabels;
   $("autoNuclideNumbers").checked=state.autoNuclideNumbers;
   $("nuclearStates").checked=state.nuclearStates;
@@ -1772,6 +1811,14 @@ $("nuclear").addEventListener("change",e=>{
   state.nuclear=e.target.checked;
   $("particleLabelsField").hidden=!state.nuclear;
   buildKeyboards(); renderRubric(); changed();
+});
+/* fatty acids: their rubric rows get the default values (a third per part) when they are still "no penalty" */
+$("lipids").addEventListener("change",e=>{
+  state.lipids=e.target.checked;
+  if(state.lipids) Object.keys(LIPID_DEFAULT_RULES).forEach(c=>{
+    if(state.rubric[c].mode==="none") state.rubric[c]=Object.assign({},LIPID_DEFAULT_RULES[c]);
+  });
+  buildKeyboards(); renderRubric(); rubricChanged();
 });
 $("particleLabels").addEventListener("change",e=>{ state.particleLabels=e.target.value; buildKeyboards(); changed(); });
 $("autoNuclideNumbers").addEventListener("change",e=>{ state.autoNuclideNumbers=e.target.checked; buildKeyboards(); changed(); });

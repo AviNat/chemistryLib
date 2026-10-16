@@ -50,6 +50,11 @@ let WATER = "2H_{2}(g)+O_{2}(g)→2H_{2}O(l)";
 let SILVER = "Ag^{+}(aq)+Cl^{-}(aq)→AgCl(s)";
 let LIME = "CaCO_{3}(s)→[Δ]CaO(s)+CO_{2}(g)";
 
+let OLEIC = "C18:1(ω9)cis";
+let OLEIC_CONDENSED = "CH_{3}(CH_{2})_{7}CH=CH(CH_{2})_{7}COOH";
+let LIPID_RUBRIC = { syntax: 100, answerType: 100, lipidCarbons: 33, lipidDoubleBonds: 33, lipidOmega: 34,
+    lipidStructure: 20, lipidFattyAcids: { each: 33, max: 100 }, lipidNotation: 10 };
+
 let ALPHA_DECAY = "^{238}_{92}U→^{234}_{90}Th+^{4}_{2}He";
 let BETA_DECAY = "^{14}_{6}C→^{14}_{7}N+^{0}_{−1}e";
 let POSITRON = "^{11}_{6}C→^{11}_{5}B+^{0}_{+1}e";
@@ -188,6 +193,62 @@ let CASES = [
     { group: "Molecule keys", name: "the state is left out inside the condition", keys: "→ cond M:NaCl(aq)", expect: "→[NaCl]" },
     { group: "Molecule keys", name: "the inserted formula can be edited inside", keys: "M:H_{2}O ← DEL 3", expect: "H_{3}O" },
     { group: "Molecule keys", name: "and continued", keys: "M:H_{2}O 2", expect: "H_{2}O_{2}" },
+
+    /* Fatty acids and triglycerides (LIPIDS-DESIGN.md) */
+    { group: "Lipids", name: "typing: shorthand, numbers at the normal level", config: { lipids: true },
+      keys: "C 1 8 k:: 1 () ω 9 →| cis", expect: "C18:1(ω9)cis" },
+    { group: "Lipids", name: "typing: condensed formula, subscripts after H and )", config: { lipids: true },
+      keys: "C H 3 () C H 2 →| 7 C H = C H () C H 2 →| 7 C O O H", expect: "CH_{3}(CH_{2})_{7}CH=CH(CH_{2})_{7}COOH" },
+    { group: "Lipids", name: "typing: triglyceride", config: { lipids: true },
+      keys: "TG C 1 6 k:: 0 k:, C 1 8 k:: 1 ω 9 cis", expect: "TG(C16:0,C18:1ω9cis)" },
+    { group: "Lipids", name: "typing: physical keys", config: { lipids: true },
+      keys: "k:C k:1 k:8 k:: k:2 k:( k:w k:6 k:) k:c k:i k:s", expect: "C18:2(w6)cis" },
+    { group: "Lipids", name: "typing: group keys", config: { lipids: true },
+      keys: "M:CH_{3} () M:CH_{2} →| 1 4 M:COOH", expect: "CH_{3}(CH_{2})_{14}COOH" },
+    { group: "Lipids", name: "shorthand: identical", student: OLEIC, reference: OLEIC, expect: "correct" },
+    { group: "Lipids", name: "shorthand: w for ω", student: "C18:1(w9)cis", reference: OLEIC, expect: "correct" },
+    { group: "Lipids", name: "shorthand: no parentheses", student: "C18:1ω9cis", reference: OLEIC, expect: "correct" },
+    { group: "Lipids", name: "shorthand: cis before ω", student: "C18:1cis(ω9)", reference: OLEIC, expect: "correct" },
+    { group: "Lipids", name: "shorthand: ω and configuration forgotten", student: "C18:1", reference: OLEIC,
+      expect: "wrong: missing-omega-configuration" },
+    { group: "Lipids", name: "shorthand: ω and cis on a saturated acid", student: "C16:0(w3)cis", reference: "C16:0",
+      expect: "wrong: saturated-with-omega" },
+    { group: "Lipids", name: "shorthand: letter case", student: "c18:1(W9)Cis", reference: OLEIC, expect: "wrong: letter-case" },
+    { group: "Lipids", name: "shorthand: carbons wrong, ω right", student: "C16:1(ω9)cis", reference: OLEIC,
+      expect: "wrong: wrong-carbon-count" },
+    { group: "Lipids", name: "grade: one part of three wrong", student: "C16:1(ω9)cis", reference: OLEIC, rubric: LIPID_RUBRIC,
+      expect: "score 67: lipidCarbons −33" },
+    { group: "Lipids", name: "shorthand: two double bonds, wrong ω", student: "C18:2(ω3)cis", reference: "C18:2(ω6)cis",
+      expect: "wrong: wrong-omega-position" },
+    { group: "Lipids", name: "shorthand: trans for cis", student: "C18:1(ω9)trans", reference: OLEIC, expect: "wrong: wrong-configuration" },
+    { group: "Lipids", name: "condensed: identical", student: OLEIC_CONDENSED, reference: OLEIC_CONDENSED, options: { lipids: true },
+      expect: "correct" },
+    { group: "Lipids", name: "condensed: written from the COOH end", student: "HOOC(CH_{2})_{7}CH=CH(CH_{2})_{7}CH_{3}",
+      reference: OLEIC_CONDENSED, options: { lipids: true }, expect: "correct" },
+    { group: "Lipids", name: "condensed: CH2 groups written out", student: "CH_{3}(CH_{2})_{6}CH_{2}CH=CHCH_{2}(CH_{2})_{6}COOH",
+      reference: OLEIC_CONDENSED, options: { lipids: true }, expect: "correct" },
+    { group: "Lipids", name: "condensed: saturated for oleic", student: "CH_{3}(CH_{2})_{14}COOH", reference: OLEIC_CONDENSED,
+      options: { lipids: true }, expect: "wrong: wrong-carbon-count, wrong-double-bond-count" },
+    { group: "Lipids", name: "condensed: single bond CH-CH", student: "CH_{3}(CH_{2})_{7}CH-CH(CH_{2})_{7}COOH", reference: OLEIC_CONDENSED,
+      options: { lipids: true }, expect: "wrong: wrong-double-bond-count, wrong-hydrogens, wrong-hydrogens" },
+    { group: "Lipids", name: "condensed: double bond elsewhere", student: "CH_{3}(CH_{2})_{5}CH=CH(CH_{2})_{9}COOH", reference: OLEIC_CONDENSED,
+      options: { lipids: true }, expect: "wrong: wrong-double-bond-position" },
+    { group: "Lipids", name: "condensed: linoleic, two double bonds", student: "CH_{3}(CH_{2})_{4}CH=CHCH_{2}CH=CH(CH_{2})_{7}COOH",
+      reference: "CH_{3}(CH_{2})_{4}CH=CHCH_{2}CH=CH(CH_{2})_{7}COOH", options: { lipids: true }, expect: "correct" },
+    { group: "Lipids", name: "format: condensed for shorthand", student: OLEIC_CONDENSED, reference: OLEIC, options: { lipids: true },
+      expect: "wrong: wrong-lipid-format" },
+    { group: "Lipids", name: "grade: wrong format gives 0", student: OLEIC_CONDENSED, reference: OLEIC, options: { lipids: true },
+      rubric: LIPID_RUBRIC, expect: "score 0: answerType −100" },
+    { group: "Lipids", name: "TG: order free", student: "TG(C18:1ω9cis, C16:0, C16:0)", reference: "TG(C16:0, C16:0, C18:1w9cis)",
+      expect: "correct" },
+    { group: "Lipids", name: "TG: one fatty acid wrong", student: "TG(C16:0, C16:0, C18:0)", reference: "TG(C16:0, C16:0, C18:1w9cis)",
+      expect: "wrong: wrong-double-bond-count, missing-omega-configuration" },
+    { group: "Lipids", name: "TG: two fatty acids", student: "TG(C16:0, C18:1ω9cis)", reference: "TG(C16:0, C16:0, C18:1w9cis)",
+      expect: "wrong: missing-fatty-acid, wrong-fatty-acid-count" },
+    { group: "Lipids", name: "TG: academic notation", student: "TG54:3", reference: "TG(C16:0, C16:0, C18:1w9cis)",
+      expect: "wrong: academic-tg-notation" },
+    { group: "Lipids", name: "a chemical formula with COOH is not a lipid without the option", student: "CH_{3}COOH",
+      reference: "CH_{3}COOH", expect: "correct" },
 
     /* State written as a formula (ENHANCEMENTS-DESIGN.md, section 1) */
     { group: "Formula state", name: "typing: box, formula, Enter leaves it", keys: "I 2 (F) C Cl 4 Enter + Br 2",
@@ -342,6 +403,11 @@ let KEY_ACTIONS = {
     "(g)": function (k) { k.insertState("g"); },
     "(aq)": function (k) { k.insertState("aq"); },
     "(F)": function (k) { k.insertFormulaState(); },
+    "ω": function (k) { k.insertText("ω", "normal"); },
+    "cis": function (k) { k.insertText("cis", "normal"); },
+    "trans": function (k) { k.insertText("trans", "normal"); },
+    "=": function (k) { k.insertText("=", "normal"); },
+    "TG": function (k) { k.insertText("TG", "normal"); k.insertPair(); },
     "+(aq)": function (k) { k.insertIon("+"); },
     "−(aq)": function (k) { k.insertIon("−"); },
     "cond": function (k) { k.openCondition(); },

@@ -40,6 +40,12 @@
     tipGas:"Gas state (g)",
     tipAqueous:"Aqueous state (aq)",
     tipFormulaState:"State written as a formula, e.g. a solution in another solvent: I₂(CCl₄)",
+    tipColon:"Colon of the shorthand: carbons : double bonds (C18:1)",
+    tipOmega:"ω: the position of the first double bond from the methyl end (ω9)",
+    tipCis:"cis configuration",
+    tipTrans:"trans configuration",
+    tipDoubleBond:"Double bond in a structural formula (CH=CH)",
+    tipTriglyceride:"Triglyceride: TG(fatty acid, fatty acid, fatty acid)",
     tipIonPlus:"Positive ion in solution: charge + and (aq)",
     tipIonMinus:"Negative ion in solution: charge − and (aq)",
     tipAlpha:"Alpha particle (a helium-4 nucleus, ⁴₂He)",
@@ -90,6 +96,12 @@
     tipGas:" מצב צבירה גז (g)",
     tipAqueous:" מצב של תמיסה מימית (aq)",
     tipFormulaState:"מצב הכתוב כנוסחה, למשל תמיסה בממס אחר: ⁦I₂(CCl₄)⁩",
+    tipColon:"נקודתיים של הרישום המקוצר: פחמנים : קשרים כפולים (⁦C18:1⁩)",
+    tipOmega:"ω: מיקום הקשר הכפול הראשון מהקצה המתילי (⁦ω9⁩)",
+    tipCis:"תצורת cis",
+    tipTrans:"תצורת trans",
+    tipDoubleBond:"קשר כפול בנוסחת מבנה (⁦CH=CH⁩)",
+    tipTriglyceride:"טריגליצריד: ⁦TG(חומצת שומן, חומצת שומן, חומצת שומן)⁩",
     tipIonPlus:"יון חיובי בתמיסה מימית: מטען + ו-(aq)",
     tipIonMinus:"יון שלילי בתמיסה מימית: מטען − ו-(aq)",
     tipAlpha:"חלקיק אלפא (גרעין הליום-4, ⁴₂He)",
@@ -140,6 +152,12 @@
     tipGas:"إضافة الحالة الغازية (g)",
     tipAqueous:"إضافة حالة المحلول المائي (aq)",
     tipFormulaState:"حالة مكتوبة كصيغة، مثل محلول في مذيب آخر: ⁦I₂(CCl₄)⁩",
+    tipColon:"النقطتان في الرمز المختصر: الكربون : الروابط الثنائية (⁦C18:1⁩)",
+    tipOmega:"ω: موقع الرابطة الثنائية الأولى من طرف الميثيل (⁦ω9⁩)",
+    tipCis:"الترتيب cis",
+    tipTrans:"الترتيب trans",
+    tipDoubleBond:"رابطة ثنائية في صيغة بنائية (⁦CH=CH⁩)",
+    tipTriglyceride:"غليسريد ثلاثي: ⁦TG(حمض دهني، حمض دهني، حمض دهني)⁩",
     tipIonPlus:"أيون موجب في محلول مائي: الشحنة + و(aq)",
     tipIonMinus:"أيون سالب في محلول مائي: الشحنة − و(aq)",
     tipAlpha:"جسيم ألفا (نواة هيليوم-4، ⁴₂He)",
@@ -210,7 +228,28 @@ var ERROR_TEXT={
     "wrong-atomic-number":"The atomic number of {species} is {actual}, but it should be {expected}.",
     "missing-atomic-number":"The atomic number of {species} is missing (written at the bottom, before the symbol).",
     "mass-not-conserved":"The mass numbers are not conserved: {left} on the left side and {right} on the right side.",
-    "atomic-number-not-conserved":"The atomic numbers are not conserved: {left} on the left side and {right} on the right side."
+    "atomic-number-not-conserved":"The atomic numbers are not conserved: {left} on the left side and {right} on the right side.",
+    "wrong-lipid-format":"This question requires {expectedFormat}, not {actualFormat}.",
+    "wrong-lipid-format/empty":"An answer in {expectedFormat} is required.",
+    "academic-tg-notation":"In high-school chemistry a triglyceride is written with its three fatty acids, for example: TG(C16:0, C16:0, C16:0).",
+    "wrong-carbon-count":"{in}The number of carbon atoms is {actual}, but the correct answer has {expected}.",
+    "wrong-carbon-count/omega-ok":"{in}The position of the double bond (ω) is right, but the total number of carbon atoms in the chain is wrong ({actual} instead of {expected}). Check the length of the acid again.",
+    "wrong-double-bond-count":"{in}The number of double bonds is {actual}, but the correct answer has {expected}.",
+    "wrong-double-bond-count/saturated":"{in}You wrote a saturated acid, but this acid has {expected} double bond(s) (CH=CH).",
+    "wrong-omega-position":"{in}The double bond is at ω{actual}, but the correct answer has ω{expected}.",
+    "wrong-double-bond-position":"{in}The double bond is at another place in the chain (counted from the methyl end: ω{actual} instead of ω{expected}).",
+    "missing-omega":"{in}The position of the double bond (ω) is missing.",
+    "missing-configuration":"{in}The configuration of the double bond (cis/trans) is missing.",
+    "missing-omega-configuration":"{in}You forgot the position of the double bond (ω) and its configuration (cis/trans).",
+    "wrong-configuration":"{in}The configuration is {actual}, but the correct answer has {expected}.",
+    "saturated-with-omega":"{in}Note: a saturated acid (0 double bonds) has no double bonds, so ω and cis/trans have no meaning.",
+    "letter-case":"Write the symbols correctly: a capital C for carbon, and the configuration in small letters (cis).",
+    "missing-carboxyl":"The carboxyl group (COOH) at the end of the chain is missing.",
+    "missing-methyl-end":"The methyl group (CH₃) at the end of the chain is missing.",
+    "wrong-hydrogens":"Carbon number {position} from the methyl end has {actual} hydrogen atoms; with its bonds it needs {expected}.",
+    "wrong-fatty-acid-count":"A triglyceride is made of three fatty acids, but you wrote {actual}.",
+    "missing-fatty-acid":"The fatty acid {fattyAcid} is missing from the triglyceride.",
+    "extra-fatty-acid":"The fatty acid {fattyAcid} is not part of the correct triglyceride."
   },
   he:{
     studentAnswer:"תשובת התלמיד",
@@ -248,7 +287,28 @@ var ERROR_TEXT={
     "wrong-atomic-number":"המספר האטומי של {species} הוא {actual}, אך הוא צריך להיות {expected}.",
     "missing-atomic-number":"חסר המספר האטומי של {species} (נכתב למטה, לפני הסמל).",
     "mass-not-conserved":"מספרי המסה אינם נשמרים: בצד שמאל {left} ובצד ימין {right}.",
-    "atomic-number-not-conserved":"המספרים האטומיים אינם נשמרים: בצד שמאל {left} ובצד ימין {right}."
+    "atomic-number-not-conserved":"המספרים האטומיים אינם נשמרים: בצד שמאל {left} ובצד ימין {right}.",
+    "wrong-lipid-format":"נדרשת כתיבה ב{expectedFormat} ולא ב{actualFormat}.",
+    "wrong-lipid-format/empty":"נדרשת תשובה ב{expectedFormat}.",
+    "academic-tg-notation":"במגמת כימיה בתיכון יש לרשום טריגליצריד בצורה המפרטת את שלוש החומצות, למשל: ⁦TG(C16:0, C16:0, C16:0)⁩.",
+    "wrong-carbon-count":"{in}מספר אטומי הפחמן הוא {actual}, אך בתשובה הנכונה {expected}.",
+    "wrong-carbon-count/omega-ok":"{in}מיקום הקשר הכפול מסוג אומגה (ω) הוגדר נכון, אך חלה טעות בספירת סך אטומי הפחמן בשרשרת ({actual} במקום {expected}). בדוק שוב את אורך החומצה.",
+    "wrong-double-bond-count":"{in}מספר הקשרים הכפולים הוא {actual}, אך בתשובה הנכונה {expected}.",
+    "wrong-double-bond-count/saturated":"{in}רשמת חומצה רוויה, אך החומצה מכילה {expected} קשרים כפולים (⁦CH=CH⁩).",
+    "wrong-omega-position":"{in}הקשר הכפול נמצא ב־⁦ω{actual}⁩, אך בתשובה הנכונה ⁦ω{expected}⁩.",
+    "wrong-double-bond-position":"{in}הקשר הכפול נמצא במקום אחר בשרשרת (נספר מהקצה המתילי: ⁦ω{actual}⁩ במקום ⁦ω{expected}⁩).",
+    "missing-omega":"{in}חסר מיקום הקשר הכפול (ω).",
+    "missing-configuration":"{in}חסר המבנה המרחבי של הקשר הכפול (cis/trans).",
+    "missing-omega-configuration":"{in}שכחת לציין את מיקום הקשר הכפול (ω) ואת המבנה המרחבי שלו (cis/trans).",
+    "wrong-configuration":"{in}התצורה היא {actual}, אך בתשובה הנכונה {expected}.",
+    "saturated-with-omega":"{in}שים לב: בחומצה רוויה (0 קשרים כפולים) אין קשרים כפולים, ולכן אין משמעות לסימון אומגה או cis/trans.",
+    "letter-case":"הקפד על כתיבה נכונה של סימנים כימיים: C גדולה עבור פחמן, וסימון המבנה באותיות קטנות (cis).",
+    "missing-carboxyl":"בנוסחת המבנה חסרה הקבוצה הקרבוקסילית (COOH) בקצה השרשרת.",
+    "missing-methyl-end":"בנוסחת המבנה חסרה הקבוצה המתילית (⁦CH₃⁩) בקצה השרשרת.",
+    "wrong-hydrogens":"לפחמן מספר {position} מהקצה המתילי יש {actual} אטומי מימן; עם הקשרים שלו הוא צריך {expected}.",
+    "wrong-fatty-acid-count":"טריגליצריד בנוי משלוש חומצות שומן, אך רשמת {actual}.",
+    "missing-fatty-acid":"חסרה בטריגליצריד חומצת השומן {fattyAcid}.",
+    "extra-fatty-acid":"חומצת השומן {fattyAcid} אינה חלק מהטריגליצריד הנכון."
   },
   ar:{
     studentAnswer:"إجابة الطالب",
@@ -286,7 +346,28 @@ var ERROR_TEXT={
     "wrong-atomic-number":"العدد الذري لـ {species} هو {actual}، لكن يجب أن يكون {expected}.",
     "missing-atomic-number":"العدد الذري لـ {species} مفقود (يُكتب في الأسفل قبل الرمز).",
     "mass-not-conserved":"الأعداد الكتلية غير محفوظة: {left} في الطرف الأيسر و{right} في الطرف الأيمن.",
-    "atomic-number-not-conserved":"الأعداد الذرية غير محفوظة: {left} في الطرف الأيسر و{right} في الطرف الأيمن."
+    "atomic-number-not-conserved":"الأعداد الذرية غير محفوظة: {left} في الطرف الأيسر و{right} في الطرف الأيمن.",
+    "wrong-lipid-format":"يتطلب هذا السؤال {expectedFormat}، وليس {actualFormat}.",
+    "wrong-lipid-format/empty":"المطلوب إجابة بـ{expectedFormat}.",
+    "academic-tg-notation":"في كيمياء المدرسة الثانوية يُكتب الغليسريد الثلاثي بأحماضه الدهنية الثلاثة، مثلًا: ⁦TG(C16:0, C16:0, C16:0)⁩.",
+    "wrong-carbon-count":"{in}عدد ذرات الكربون هو {actual}، لكن الإجابة الصحيحة فيها {expected}.",
+    "wrong-carbon-count/omega-ok":"{in}موقع الرابطة الثنائية (ω) صحيح، لكن العدد الكلي لذرات الكربون في السلسلة خاطئ ({actual} بدلًا من {expected}). تحقق من طول الحمض مرة أخرى.",
+    "wrong-double-bond-count":"{in}عدد الروابط الثنائية هو {actual}، لكن الإجابة الصحيحة فيها {expected}.",
+    "wrong-double-bond-count/saturated":"{in}كتبت حمضًا مشبعًا، لكن هذا الحمض فيه {expected} رابطة ثنائية (⁦CH=CH⁩).",
+    "wrong-omega-position":"{in}الرابطة الثنائية في ⁦ω{actual}⁩، لكن الإجابة الصحيحة ⁦ω{expected}⁩.",
+    "wrong-double-bond-position":"{in}الرابطة الثنائية في مكان آخر من السلسلة (العدّ من طرف الميثيل: ⁦ω{actual}⁩ بدلًا من ⁦ω{expected}⁩).",
+    "missing-omega":"{in}موقع الرابطة الثنائية (ω) مفقود.",
+    "missing-configuration":"{in}الترتيب الفراغي للرابطة الثنائية (cis/trans) مفقود.",
+    "missing-omega-configuration":"{in}نسيت كتابة موقع الرابطة الثنائية (ω) وترتيبها الفراغي (cis/trans).",
+    "wrong-configuration":"{in}الترتيب الفراغي هو {actual}، لكن الإجابة الصحيحة {expected}.",
+    "saturated-with-omega":"{in}انتبه: الحمض المشبع (0 روابط ثنائية) لا يحتوي على روابط ثنائية، لذا لا معنى لكتابة ω أو cis/trans.",
+    "letter-case":"اكتب الرموز بشكل صحيح: C كبيرة للكربون، والترتيب الفراغي بأحرف صغيرة (cis).",
+    "missing-carboxyl":"مجموعة الكربوكسيل (COOH) في طرف السلسلة مفقودة.",
+    "missing-methyl-end":"مجموعة الميثيل (⁦CH₃⁩) في طرف السلسلة مفقودة.",
+    "wrong-hydrogens":"ذرة الكربون رقم {position} من طرف الميثيل لها {actual} ذرات هيدروجين؛ مع روابطها تحتاج إلى {expected}.",
+    "wrong-fatty-acid-count":"الغليسريد الثلاثي مكوّن من ثلاثة أحماض دهنية، لكنك كتبت {actual}.",
+    "missing-fatty-acid":"الحمض الدهني {fattyAcid} مفقود من الغليسريد الثلاثي.",
+    "extra-fatty-acid":"الحمض الدهني {fattyAcid} ليس جزءًا من الغليسريد الثلاثي الصحيح."
   }
 };
 
@@ -325,6 +406,11 @@ var SYNTAX_TEXT={
     en:"a subscript cannot be 0",
     he:"המספר 0 אינו יכול להופיע ככתב תחתי",
     ar:"لا يمكن كتابة الرقم 0 كنص سفلي"
+  },
+  "invalid-lipid":{
+    en:"this is not a valid notation of a fatty acid or a triglyceride",
+    he:"זה אינו רישום תקין של חומצת שומן או של טריגליצריד",
+    ar:"هذا ليس رمزًا صحيحًا لحمض دهني أو لغليسريد ثلاثي"
   },
   "nuclide-compound":{
     en:"in a nuclear equation each term is one nucleus or particle (for example ⁦²³⁸₉₂U⁩), not a compound",
@@ -392,6 +478,12 @@ var GRADE_TEXT={
   unknownElement:{en:"Unknown element",he:"יסוד לא מוכר",ar:"عنصر غير معروف"},
   substances:{en:"Substances",he:"חומרים",ar:"المواد"},
   massNumbers:{en:"Mass numbers",he:"מספרי מסה",ar:"الأعداد الكتلية"},
+  lipidCarbons:{en:"Chain length (carbons)",he:"אורך השרשרת (פחמנים)",ar:"طول السلسلة (الكربون)"},
+  lipidDoubleBonds:{en:"Number of double bonds",he:"מספר הקשרים הכפולים",ar:"عدد الروابط الثنائية"},
+  lipidOmega:{en:"Position (ω) and configuration",he:"מיקום (ω) ותצורה",ar:"الموقع (ω) والترتيب الفراغي"},
+  lipidStructure:{en:"Structure of the chain",he:"מבנה השרשרת",ar:"بنية السلسلة"},
+  lipidFattyAcids:{en:"Fatty acids of the triglyceride",he:"חומצות השומן בטריגליצריד",ar:"أحماض الغليسريد الثلاثي"},
+  lipidNotation:{en:"Writing of the symbols",he:"כתיבת הסימנים",ar:"كتابة الرموز"},
   atomicNumbers:{en:"Atomic numbers",he:"מספרים אטומיים",ar:"الأعداد الذرية"},
   coefficients:{en:"Coefficients",he:"מקדמים",ar:"المعاملات"},
   scaledCoefficients:{en:"Multiplied coefficients",he:"מקדמים מוכפלים",ar:"معاملات مضاعفة"},
@@ -569,7 +661,17 @@ function localizedErrorTemplate(error,language){
   /* nuclear equations: the "atoms" #A and #Z are the conservation of mass and atomic numbers */
   var code=error.code==="unbalanced-atom"&&error.atom==="#A"?"mass-not-conserved"
     :error.code==="unbalanced-atom"&&error.atom==="#Z"?"atomic-number-not-conserved":error.code;
+  /* a message variant of the same error code (fatty acids: "wrong-carbon-count/omega-ok") */
+  if(error.textKey&&messages[error.textKey])code=error.textKey;
   var text=messages[code]||localizedFromTable(NOTE_TEXT,code,language);
+
+  /* fatty acids: "In C16:1(ω9)cis: " inside a triglyceride; the formats; a carbon's position */
+  var IN={en:"In {fa}: ",he:"ב־{fa}: ",ar:"في {fa}: "};
+  text=replaceTextToken(text,"in",error.fattyAcid?replaceTextToken(IN[language]||IN.en,"fa","⁦"+error.fattyAcid+"⁩"):"");
+  if(error.fattyAcid!==undefined)text=replaceTextToken(text,"fattyAcid","⁦"+error.fattyAcid+"⁩");
+  if(error.expectedFormat)text=replaceTextToken(text,"expectedFormat",localizedFromTable(LIPID_FORMAT_NAMES,error.expectedFormat,language));
+  if(error.actualFormat)text=replaceTextToken(text,"actualFormat",localizedFromTable(LIPID_FORMAT_NAMES,error.actualFormat,language));
+  if(error.position!==undefined)text=replaceTextToken(text,"position",error.position);
 
   text=replaceTextToken(text,"count",error.count);
   text=replaceTextToken(text,"left",error.left);
@@ -1591,7 +1693,9 @@ function makeChar(ch, script, pair, kind) {
       range:[0,chars.length],
       errors: errors,
       notes: notes,          // style remarks, never affect validity
-      valid: errors.length === 0
+      valid: errors.length === 0,
+      /* the characters as plain text, one per character (fatty-acid notations are read from it: LIPIDS-DESIGN.md) */
+      text: chars.map(function (c) { return c.kind === "fstate" ? "◌" : String(c.ch).charAt(0); }).join("")
     };
   }
 // ANALYZER
@@ -1734,7 +1838,19 @@ function matchValueToken(s,i){
 
   function modelFromValue(value){
   var chars=[],s=String(value||""),script="normal",explicit=s.indexOf("_{")>=0||s.indexOf("^{")>=0;
-  var i,ch,prev,stateId=1,j,len,insideMathRoman=0,token;
+  var i,ch,prev,stateId=1,j,len,insideMathRoman=0,token,lipid=lipidShaped(s);
+
+  /*
+   * A fatty-acid shorthand or triglyceride written as plain text (C18:1(ω9)cis, TG(C16:0, ...)): a digit
+   * after the C that starts a term, or after ω / w, is a number at the normal level, not a subscript
+   * (the same rule as typing in a fatty-acid question, insertDigit).
+   */
+  function lipidNumber(list){
+    var p=list[list.length-1],pp=list.length>1?list[list.length-2]:null;
+    if(!lipid)return false;
+    if("ωwW".indexOf(p.ch)>=0)return true;
+    return p.ch==="C"&&(!pp||pp.ch==="("||pp.ch===","||pp.ch===" ");
+  }
 
   /*
    * If the arrow just added (its last character is at position k)
@@ -1810,7 +1926,7 @@ function matchValueToken(s,i){
     if(!explicit&&isDigit(ch)&&script==="normal"&&chars.length){
       prev=chars[chars.length-1];
 
-      if(isUpper(prev.ch)||isLower(prev.ch)||prev.ch===")"){
+      if((isUpper(prev.ch)||isLower(prev.ch)||prev.ch===")")&&!lipidNumber(chars)){
         script="sub";
       }
     }
@@ -2858,6 +2974,317 @@ ChemicalKeyboard.prototype.setComparisonFeedback=function(result,answer,value){
                                 (order and brackets), for questions whose
                                 substances have isomers. Default false.
 */
+/* ============================================================
+   FATTY ACIDS AND TRIGLYCERIDES (LIPIDS-DESIGN.md; decided with the user 2026-10-16, bagrut rules)
+
+   Three formats, told apart by their shape:
+     shorthand     C18:1(ω9)cis - C X : Y, then the ω position (w accepted, parentheses optional) and cis/trans
+                   in any order; with several double bonds only the first ω position and one cis (C18:2(ω6)cis)
+     condensed     CH3(CH2)7CH=CH(CH2)7COOH - read as a chain of carbons from the CH3 end, either direction
+     triglyceride  TG(C16:0, C18:1ω9cis, C18:0) - three fatty acids in shorthand, order free
+   The answer must be in the reference's format (else 0 with a format message). A fatty acid is compared as three
+   independent parts, each its own rubric category: carbons (X), double bonds (Y), the ω position with cis/trans.
+   ============================================================ */
+
+/* the answer is a fatty-acid shorthand or a triglyceride (detected without options.lipids) */
+function lipidShaped(text){
+  var t=String(text||"").replace(/\s+/g,"");
+  return /^TG[(\d]/i.test(t)||/^C\d+:/i.test(t);
+}
+
+/* text without spaces, with the position of every remaining character in the original text */
+function lipidStream(text){
+  var s="",idx=[],i;
+  text=String(text||"");
+  for(i=0;i<text.length;i++){
+    if(/\s/.test(text.charAt(i)))continue;
+    s+=text.charAt(i);
+    idx.push(i);
+  }
+  return {s:s,idx:idx};
+}
+
+/* shorthand of one fatty acid in s (indexes idx), or null when it does not start like one */
+function parseShorthand(s,idx){
+  var m=/^([Cc])(\d+):(\d+)(.*)$/.exec(s),r,rest,pos,mm;
+  function range(a,b){ return [idx[a],idx[Math.max(a,b-1)]+1]; }
+  if(!m)return null;
+  r={format:"shorthand",carbons:Number(m[2]),doubleBonds:Number(m[3]),omega:null,config:null,
+     issues:[],ranges:{},label:s,syntax:false};
+  if(m[1]==="c")r.issues.push("letter-case");
+  r.ranges.carbons=range(1,1+m[2].length);
+  pos=1+m[2].length+1;
+  r.ranges.doubleBonds=range(pos,pos+m[3].length);
+  pos+=m[3].length;
+  rest=m[4];
+  while(rest.length){
+    mm=/^\(?([ωwWΩ])(\d+)\)?/.exec(rest);
+    if(mm&&r.omega===null){
+      r.omega=Number(mm[2]);
+      if(mm[1]==="W"||mm[1]==="Ω")r.issues.push("letter-case");
+      r.ranges.omega=range(pos,pos+mm[0].length);
+      pos+=mm[0].length;
+      rest=rest.slice(mm[0].length);
+      continue;
+    }
+    mm=/^(cis|trans)/i.exec(rest);
+    if(mm&&r.config===null){
+      r.config=mm[1].toLowerCase();
+      if(mm[1]!==r.config)r.issues.push("letter-case");
+      r.ranges.config=range(pos,pos+mm[0].length);
+      pos+=mm[0].length;
+      rest=rest.slice(mm[0].length);
+      continue;
+    }
+    r.syntax=true;
+    break;
+  }
+  r.ranges.all=range(0,s.length);
+  return r;
+}
+
+/*
+ * A condensed structural formula as a chain of carbons, from the CH3 end: CH3, CH2, (CH2)n, CH, C, COOH / HOOC,
+ * "=" a double bond to the next carbon ("-" an optional single bond). Written from the COOH end it is turned around.
+ */
+function parseCondensed(s,idx){
+  var units=[],k=0,bondNext=1,m,h,n,q,hs,bonds,carboxyl,ranges,i,left,right,r;
+  function carbon(hydrogens,a,b,isCarboxyl){
+    units.push({h:hydrogens,bond:bondNext,carboxyl:!!isCarboxyl,range:[idx[a],idx[b-1]+1]});
+    bondNext=1;
+  }
+  r={format:"condensed",syntax:false,issues:[],issueData:[],config:null,label:s,ranges:{all:s.length?[idx[0],idx[s.length-1]+1]:[0,0]}};
+  while(k<s.length){
+    if(s.substr(k,4)==="COOH"||s.substr(k,4)==="HOOC"){ carbon(0,k,k+4,true); k+=4; continue; }
+    if(s.charAt(k)==="="){
+      if(bondNext===2||!units.length){ r.syntax=true; return r; }
+      bondNext=2; k++; continue;
+    }
+    if(s.charAt(k)==="-"){ k++; continue; }
+    m=/^\(C(H(\d*))?\)(\d*)/.exec(s.slice(k));
+    if(m){
+      h=m[1]?(m[2]?Number(m[2]):1):0;
+      n=m[3]?Number(m[3]):1;
+      for(q=0;q<n;q++)carbon(h,k,k+m[0].length);
+      k+=m[0].length;
+      continue;
+    }
+    m=/^C(H(\d*))?/.exec(s.slice(k));
+    if(m){
+      h=m[1]?(m[2]?Number(m[2]):1):0;
+      carbon(h,k,k+m[0].length);
+      k+=m[0].length;
+      continue;
+    }
+    r.syntax=true;
+    return r;
+  }
+  if(bondNext===2||!units.length){ r.syntax=true; return r; }
+
+  hs=units.map(function(u){return u.h;});
+  carboxyl=units.map(function(u){return u.carboxyl;});
+  ranges=units.map(function(u){return u.range;});
+  bonds=units.slice(1).map(function(u){return u.bond;});      // bonds[i]: between carbon i and i+1
+  if(carboxyl[0]&&units.length>1){                            // written from the COOH end
+    hs.reverse(); carboxyl.reverse(); ranges.reverse(); bonds.reverse();
+  }
+
+  r.carbons=units.length;
+  r.doubleBonds=0;
+  r.positions=[];
+  for(i=0;i<bonds.length;i++)if(bonds[i]===2){ r.doubleBonds++; r.positions.push(i+1); }
+  r.omega=r.positions.length?r.positions[0]:null;
+
+  if(!carboxyl[carboxyl.length-1]){ r.issues.push("missing-carboxyl"); r.issueData.push({range:r.ranges.all}); }
+  if(carboxyl[0]||hs[0]!==3){ r.issues.push("missing-methyl-end"); r.issueData.push({range:ranges[0]}); }
+  /* every carbon inside the chain has four bonds: hydrogens + the bonds to its neighbours */
+  for(i=1;i<hs.length-1;i++){
+    if(carboxyl[i])continue;
+    left=bonds[i-1];
+    right=bonds[i];
+    if(hs[i]+left+right!==4){
+      r.issues.push("wrong-hydrogens");
+      r.issueData.push({range:ranges[i],position:i+1,actual:hs[i],expected:Math.max(0,4-left-right)});
+    }
+  }
+  return r;
+}
+
+/* the student's or reference answer read as a lipid: { format, ... } (format "empty" / "tg-academic" too) */
+function parseLipid(text){
+  var st=lipidStream(text),s=st.s,idx=st.idx,parts,start,i,depth,fa,list;
+  if(!s)return {format:"empty"};
+  if(/^TG/i.test(s)){
+    if(!/^TG\(.*\)$/i.test(s))return {format:/^TG\d/i.test(s)?"tg-academic":"triglyceride",syntax:!/^TG\d/i.test(s),
+      ranges:{all:[idx[0],idx[s.length-1]+1]}};
+    list=[];
+    parts=[];
+    start=3;
+    depth=0;
+    for(i=3;i<=s.length-1;i++){
+      if(i===s.length-1||(s.charAt(i)===","&&depth===0)){ parts.push([start,i]); start=i+1; continue; }
+      if(s.charAt(i)==="(")depth++;
+      if(s.charAt(i)===")")depth--;
+    }
+    for(i=0;i<parts.length;i++){
+      fa=parseShorthand(s.slice(parts[i][0],parts[i][1]),idx.slice(parts[i][0],parts[i][1]));
+      if(!fa||fa.syntax)return {format:"triglyceride",syntax:true,ranges:{all:[idx[0],idx[s.length-1]+1]}};
+      list.push(fa);
+    }
+    return {format:"triglyceride",acids:list,ranges:{all:[idx[0],idx[s.length-1]+1]},
+      issues:/^TG/.test(s)?[]:["letter-case"]};
+  }
+  fa=parseShorthand(s,idx);
+  if(fa)return fa;
+  return parseCondensed(s,idx);
+}
+
+var LIPID_FORMAT_NAMES={
+  shorthand:{en:"shorthand notation (e.g. C16:0)",he:"רישום מקוצר (למשל ⁦C16:0⁩)",ar:"الرمز المختصر (مثل ⁦C16:0⁩)"},
+  condensed:{en:"a condensed structural formula",he:"נוסחת מבנה חצי מפורטת",ar:"صيغة بنائية مختصرة"},
+  triglyceride:{en:"triglyceride notation, TG(...)",he:"רישום מקוצר של טריגליצריד, ⁦TG(...)⁩",ar:"رمز الغليسريد الثلاثي، ⁦TG(...)⁩"}
+};
+
+/* compares one fatty acid of the student with one of the reference; adds the errors of section 4 */
+function compareFattyAcid(s,r,errors,inTriglyceride){
+  var base=function(data){
+    data.fattyAcid=inTriglyceride?s.label:undefined;
+    data.studentRanges=oneTarget(data.sRange||s.ranges.all,"species");
+    data.referenceRanges=oneTarget(data.rRange||r.ranges.all,"species");
+    delete data.sRange; delete data.rRange;
+    return data;
+  };
+  var condensed=s.format==="condensed";
+
+  if(s.carbons!==r.carbons){
+    addError(errors,"wrong-carbon-count",base({expected:r.carbons,actual:s.carbons,
+      textKey:s.omega!==null&&s.omega===r.omega?"wrong-carbon-count/omega-ok":undefined,
+      sRange:s.ranges.carbons,rRange:r.ranges.carbons}));
+  }
+  if(s.doubleBonds!==r.doubleBonds){
+    addError(errors,"wrong-double-bond-count",base({expected:r.doubleBonds,actual:s.doubleBonds,
+      textKey:condensed&&s.doubleBonds===0?"wrong-double-bond-count/saturated":undefined,
+      sRange:s.ranges.doubleBonds,rRange:r.ranges.doubleBonds}));
+  }
+
+  if(condensed){
+    /* the place of the double bonds, counted from the methyl end (cis / trans cannot be written here) */
+    if(s.doubleBonds&&r.doubleBonds&&s.positions.join(",")!==r.positions.join(",")){
+      addError(errors,"wrong-double-bond-position",base({expected:r.omega,actual:s.omega}));
+    }
+    return;
+  }
+
+  if(s.doubleBonds===0&&(s.omega!==null||s.config!==null)){
+    addError(errors,"saturated-with-omega",base({sRange:s.ranges.omega||s.ranges.config}));
+    return;
+  }
+  if(r.omega===null&&r.config===null)return;
+  if(s.omega===null&&s.config===null&&r.omega!==null&&r.config!==null){
+    addError(errors,"missing-omega-configuration",base({rRange:r.ranges.omega}));
+    return;
+  }
+  if(r.omega!==null){
+    if(s.omega===null)addError(errors,"missing-omega",base({rRange:r.ranges.omega}));
+    else if(s.omega!==r.omega)addError(errors,"wrong-omega-position",base({expected:r.omega,actual:s.omega,
+      sRange:s.ranges.omega,rRange:r.ranges.omega}));
+  }
+  if(r.config!==null){
+    if(s.config===null)addError(errors,"missing-configuration",base({rRange:r.ranges.config}));
+    else if(s.config!==r.config)addError(errors,"wrong-configuration",base({expected:r.config,actual:s.config,
+      sRange:s.ranges.config,rRange:r.ranges.config}));
+  }
+}
+
+function fattyAcidKey(fa){ return fa.carbons+":"+fa.doubleBonds+":"+fa.omega+":"+fa.config; }
+
+/* a triglyceride: three fatty acids, order free - identical ones paired first, then the most similar */
+function compareTriglyceride(st,rf,errors){
+  var sUsed=[],pairs=[],rLeft=[],i,j,best,bestScore,score;
+  function similarity(a,b){
+    return (a.carbons===b.carbons?0:1)+(a.doubleBonds===b.doubleBonds?0:1)+(a.omega===b.omega&&a.config===b.config?0:1);
+  }
+  for(i=0;i<rf.acids.length;i++){
+    best=-1;
+    for(j=0;j<st.acids.length;j++){
+      if(!sUsed[j]&&fattyAcidKey(st.acids[j])===fattyAcidKey(rf.acids[i])){ best=j; break; }
+    }
+    if(best>=0){ sUsed[best]=true; continue; }
+    rLeft.push(rf.acids[i]);
+  }
+  for(i=0;i<rLeft.length;i++){
+    best=-1; bestScore=3;
+    for(j=0;j<st.acids.length;j++){
+      if(sUsed[j])continue;
+      score=similarity(st.acids[j],rLeft[i]);
+      if(score<bestScore){ best=j; bestScore=score; }
+    }
+    if(best>=0){ sUsed[best]=true; pairs.push([st.acids[best],rLeft[i]]); }
+    else addError(errors,"missing-fatty-acid",{fattyAcid:rLeft[i].label,studentRanges:[],
+      referenceRanges:oneTarget(rLeft[i].ranges.all,"species")});
+  }
+  for(j=0;j<st.acids.length;j++){
+    if(!sUsed[j])addError(errors,"extra-fatty-acid",{fattyAcid:st.acids[j].label,
+      studentRanges:oneTarget(st.acids[j].ranges.all,"species"),referenceRanges:[]});
+  }
+  if(st.acids.length!==3){
+    addError(errors,"wrong-fatty-acid-count",{actual:st.acids.length,studentRanges:oneTarget(st.ranges.all,"answer"),
+      referenceRanges:[]});
+  }
+  for(i=0;i<pairs.length;i++)compareFattyAcid(pairs[i][0],pairs[i][1],errors,true);
+}
+
+function compareLipidAnswers(studentAst,referenceAst,language,options){
+  var errors=[],st=parseLipid(studentAst.text||""),rf=parseLipid(referenceAst.text||""),i,issues=[],k,result;
+
+  if(rf.syntax||rf.format==="tg-academic"){
+    addError(errors,"syntax-error",{answer:"reference",parserCode:"invalid-lipid",studentRanges:[],
+      referenceRanges:oneTarget(rf.ranges&&rf.ranges.all,"syntax")});
+  }
+
+  if(st.format==="empty"&&rf.format==="empty"){
+    /* nothing written on either side (the validation of an empty answer) */
+  }else if(st.format==="tg-academic"){
+    addError(errors,"academic-tg-notation",{studentRanges:oneTarget(st.ranges.all,"answer"),referenceRanges:[]});
+  }else if(st.syntax){
+    addError(errors,"syntax-error",{answer:"student",parserCode:"invalid-lipid",
+      studentRanges:oneTarget(st.ranges&&st.ranges.all,"syntax"),referenceRanges:[]});
+  }else if(!rf.syntax&&st.format!==rf.format){
+    addError(errors,"wrong-lipid-format",{expectedFormat:rf.format,actualFormat:st.format,
+      textKey:st.format==="empty"?"wrong-lipid-format/empty":undefined,
+      studentRanges:oneTarget(st.ranges&&st.ranges.all,"answer"),referenceRanges:oneTarget(rf.ranges&&rf.ranges.all,"answer")});
+  }else if(!rf.syntax){
+    if(st.format==="triglyceride")compareTriglyceride(st,rf,errors);
+    else compareFattyAcid(st,rf,errors,false);
+
+    /* the student's own writing: letter case once; the structure of a condensed formula */
+    issues=st.format==="triglyceride"?[].concat.apply(st.issues||[],st.acids.map(function(a){return a.issues;})):st.issues||[];
+    if(issues.indexOf("letter-case")>=0){
+      addError(errors,"letter-case",{studentRanges:oneTarget(st.ranges.all,"note"),referenceRanges:[]});
+    }
+    if(st.format==="condensed"){
+      for(k=0;k<st.issues.length;k++){
+        addError(errors,st.issues[k],{position:st.issueData[k].position,expected:st.issueData[k].expected,
+          actual:st.issueData[k].actual,studentRanges:oneTarget(st.issueData[k].range,"species"),referenceRanges:[]});
+      }
+    }
+  }
+
+  for(i=0;i<errors.length;i++)errors[i].description=localizedErrorDescription(errors[i],language);
+  result={
+    notes:[],
+    correct:errors.length===0,
+    language:language,
+    studentCanonical:null,
+    referenceCanonical:null,
+    reversed:false,
+    errors:errors,
+    lipid:{student:st,reference:rf}
+  };
+  if(options.rubric)gradeComparison(result,options.rubric);
+  return result;
+}
+
 /*
  * The problems of the WRITING only (syntax errors, symbols that are not elements), as texts in the
  * language: the answer is compared with itself, so nothing depends on a reference; unbalanced atoms
@@ -2865,8 +3292,8 @@ ChemicalKeyboard.prototype.setComparisonFeedback=function(result,answer,value){
  */
 var WRITING_CODES=["syntax-error","unknown-element"];
 
-function validateWriting(value,language){
-  var errors=compareChemicalAnswers(value,value,language,{}).errors,problems=[],i;
+function validateWriting(value,language,options){
+  var errors=compareChemicalAnswers(value,value,language,options||{}).errors,problems=[],i;
 
   for(i=0;i<errors.length;i++){
     if(WRITING_CODES.indexOf(errors[i].code)>=0&&problems.indexOf(errors[i].description)<0){
@@ -2881,6 +3308,10 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
   options=options||{};
   var studentAst=studentValue&&studentValue.type?studentValue:analyzeValue(studentValue);
   var referenceAst=referenceValue&&referenceValue.type?referenceValue:analyzeValue(referenceValue);
+  /* fatty acids / triglycerides (LIPIDS-DESIGN.md): options.lipids, or a reference in shorthand / TG notation */
+  if(options.lipids===true||lipidShaped(referenceAst.text||"")){
+    return compareLipidAnswers(studentAst,referenceAst,language,options);
+  }
   /* a nuclear equation: decided by the reference (or options.nuclear) */
   var nuclear=options.nuclear===true||astIsNuclear(referenceAst);
   if(nuclear){
@@ -3069,7 +3500,8 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
    the error that caused it. result.score = { total, penalties: [{ category,
    penalty, errorIds, capped }] } - a penalty is listed once for all its errors.
    ============================================================ */
-var RUBRIC_CATEGORIES=["syntax","answerType","unknownElement","substances","massNumbers","atomicNumbers","coefficients","scaledCoefficients",
+var RUBRIC_CATEGORIES=["syntax","answerType","unknownElement","substances","massNumbers","atomicNumbers",
+  "lipidCarbons","lipidDoubleBonds","lipidOmega","lipidStructure","lipidFattyAcids","lipidNotation","coefficients","scaledCoefficients",
   "balance","states","charges","arrow","conditions","notation"];
 
 var RUBRIC_CATEGORY_OF={
@@ -3081,6 +3513,16 @@ var RUBRIC_CATEGORY_OF={
   "unexpected-atom":"substances","missing-atom":"substances",
   "wrong-mass-number":"massNumbers","missing-mass-number":"massNumbers","missing-numbers":"massNumbers",
   "wrong-atomic-number":"atomicNumbers","missing-atomic-number":"atomicNumbers",
+  /* fatty acids: the three independent parts (carbons, double bonds, ω + cis/trans), structure, the triglyceride */
+  "wrong-lipid-format":"answerType","academic-tg-notation":"answerType",
+  "wrong-carbon-count":"lipidCarbons",
+  "wrong-double-bond-count":"lipidDoubleBonds",
+  "wrong-omega-position":"lipidOmega","missing-omega":"lipidOmega","missing-configuration":"lipidOmega",
+  "missing-omega-configuration":"lipidOmega","wrong-configuration":"lipidOmega","saturated-with-omega":"lipidOmega",
+  "wrong-double-bond-position":"lipidOmega",
+  "missing-carboxyl":"lipidStructure","missing-methyl-end":"lipidStructure","wrong-hydrogens":"lipidStructure",
+  "missing-fatty-acid":"lipidFattyAcids","extra-fatty-acid":"lipidFattyAcids","wrong-fatty-acid-count":"lipidFattyAcids",
+  "letter-case":"lipidNotation",
   "wrong-coefficient":"coefficients",
   "scaled-coefficients":"scaledCoefficients",
   "unbalanced-atom":"balance",
@@ -3160,7 +3602,10 @@ function gradeComparison(result,rubric){
 
   /* a syntax error (score 0) or a wrong answer type stops the grading: nothing else counts */
   for(i=0;i<graded.length&&!fatal;i++)if(graded[i].code==="syntax-error")fatal=graded[i];
-  for(i=0;i<graded.length&&!fatal;i++)if(graded[i].code==="wrong-answer-type")fatal=graded[i];
+  for(i=0;i<graded.length&&!fatal;i++){
+    /* the wrong kind of answer: an expression for an equation, another fatty-acid format, TG 54:3 */
+    if(graded[i].code==="wrong-answer-type"||graded[i].code==="wrong-lipid-format"||graded[i].code==="academic-tg-notation")fatal=graded[i];
+  }
 
   if(fatal){
     for(i=0;i<graded.length;i++){
@@ -3268,6 +3713,7 @@ function studentHasAnyState(canonical){
 ChemicalKeyboard.prototype.compareOptions=function(){
   return {
     distinguishIsomers:this.config.distinguishIsomers===true,
+    lipids:this.config.lipids===true,
     rubric:this.config.rubric||null
   };
 };
@@ -3319,6 +3765,8 @@ ChemicalKeyboard.prototype.setCorrectAnswer=function(value){
  *   autoNuclideNumbers: an element typed at the start of a substance gets its numbers (autoNuclideNumbers).
  * config.states: show the state keys; default true, false in a nuclear question unless set to true.
  * config.molecules: molecule keys (see insertMolecule); default none.
+ * config.lipids: fatty acids / triglycerides (LIPIDS-DESIGN.md) - their keys, group keys COOH CH₃ CH₂ CH=CH and
+ *   the elements C H O by default, the shorthand's numbers at the normal level, and their comparison.
  */
 
   function ChemicalKeyboard(config) {
@@ -3524,6 +3972,7 @@ ChemicalKeyboard.prototype.build=function(){
   /* Comma: separates parts of the condition ("Fe, 450°C"); active only there. */
   this.commaButton=btn(operatorsRow,",",function(){
     if(self.cond&&!self.condIsFormula())self.insertConditionChars([makeChar(",","normal")]);
+    else if(!self.cond&&self.config.lipids)self.insertText(",","normal");   // between the fatty acids of TG(...)
   },t.tipComma);
 
   /*
@@ -3552,7 +4001,7 @@ ChemicalKeyboard.prototype.build=function(){
    * Reaction-condition (process) keys: the arrow with the condition placeholder, Δ, hν, °C, K.
    * config.conditions === false leaves them out (only the plain arrows remain).
    */
-  if(this.config.conditions!==false&&!this.config.nuclear){
+  if(this.config.conditions!==false&&!this.config.nuclear&&!this.config.lipids){
     var infoButton=btn(arrowsRow,"",function(){
       self.openCondition();
     },t.tipInfo);
@@ -3652,10 +4101,28 @@ ChemicalKeyboard.prototype.build=function(){
   }
 
   /*
-   * config.states: show the state keys (the row also holds the ion keys and the formula-state key).
-   * Default: shown, except in a nuclear question - where the teacher can still turn them on.
+   * Fatty acids / triglycerides (config.lipids, LIPIDS-DESIGN.md): keys for the shorthand (":", ω, cis, trans),
+   * the triglyceride (TG with its parentheses) and the double bond "=" of a condensed formula; the comma (in the
+   * first row) separates the fatty acids of a triglyceride. Each key types its characters.
    */
-  if(this.config.states===false||this.config.nuclear&&this.config.states!==true){
+  if(this.config.lipids){
+    var lipidRow=node("div");
+    apply(lipidRow,{display:"flex",flexWrap:"wrap",gap:"6px",marginBottom:"10px"});
+    this.panel.insertBefore(lipidRow,statesRow);
+    [[":",function(){self.insertText(":","normal");},t.tipColon],
+     ["ω",function(){self.insertText("ω","normal");},t.tipOmega],
+     ["cis",function(){self.insertText("cis","normal");},t.tipCis],
+     ["trans",function(){self.insertText("trans","normal");},t.tipTrans],
+     ["=",function(){self.insertText("=","normal");},t.tipDoubleBond],
+     ["TG( )",function(){self.insertText("TG","normal");self.insertPair();},t.tipTriglyceride]
+    ].forEach(function(k){ btn(lipidRow,k[0],k[1],k[2],{minWidth:"52px"}); });
+  }
+
+  /*
+   * config.states: show the state keys (the row also holds the ion keys and the formula-state key).
+   * Default: shown, except in a nuclear or a fatty-acid question - where the teacher can still turn them on.
+   */
+  if(this.config.states===false||(this.config.nuclear||this.config.lipids)&&this.config.states!==true){
     statesRow.style.display="none";
   }
 
@@ -3795,7 +4262,8 @@ ChemicalKeyboard.prototype.build=function(){
 
   atomsPanel.appendChild(atomsGrid);
 
-  this.moleculeKeys=moleculeKeysFrom(this.config.molecules);
+  /* a fatty-acid question has the group keys of the chain unless the teacher chose others */
+  this.moleculeKeys=moleculeKeysFrom(this.config.molecules||(this.config.lipids?LIPID_GROUP_KEYS:null));
   this.moleculeKeys.forEach(function(key){
     var b=btn(atomsGrid,"",function(){self.insertMolecule(key.formula);},
       moleculeTooltip(key,self.language),
@@ -3804,7 +4272,7 @@ ChemicalKeyboard.prototype.build=function(){
     else b.appendChild(formulaNodes(key.formula));
   });
 
-  common=this.config.elements||COMMON;
+  common=this.config.elements||(this.config.lipids?["C","H","O"]:COMMON);
   var nameIndex=this.language==="he"?1:this.language==="ar"?2:0;
   for(i=0;i<common.length;i++){
     (function(sym){
@@ -4117,7 +4585,7 @@ ChemicalKeyboard.prototype.updateScriptButtons=function(){
     }
 
     /* The comma only belongs in the condition above the arrow. */
-    setButtonEnabled(this.commaButton,!!this.cond&&!this.condIsFormula());
+    setButtonEnabled(this.commaButton,!!this.cond&&!this.condIsFormula()||!this.cond&&!!this.config.lipids);
 
     /* The minus: a negative charge (superscript) or condition text (−78°C). */
     setButtonEnabled(this.minusButton,this.script==="sup"||!!this.cond||!!this.config.nuclear&&this.script==="sub");
@@ -4279,6 +4747,19 @@ ChemicalKeyboard.prototype.insertDigit=function(d){
     this.insertText(d,s);
     return;
   }
+
+  /*
+   * Fatty acids (config.lipids): a digit right after a C that starts a term - at the start, after "(" or "," -
+   * is the shorthand's carbon count, at the normal level (C18:1, TG(C16:0, ...)); after H or ")" it is a
+   * subscript as usual (CH₃, (CH₂)₇). After ":" or ω a digit is normal anyway.
+   */
+  var before=this.cursor>1?this.chars[this.cursor-2]:null;
+  if(this.config.lipids&&this.cursor>0&&this.chars[this.cursor-1].ch==="C"&&
+     (!before||before.ch==="("||before.ch===","||before.ch===" ")){
+    auto=false;
+  }
+  /* the ω position: a digit after ω or w (W) is normal too (ω9, w9) */
+  if(this.config.lipids&&this.cursor>0&&"ωwW".indexOf(this.chars[this.cursor-1].ch)>=0)auto=false;
 
   if(auto&&s==="normal"&&!this.inSpeciesStart()&&this.cursor>0){
     p=this.chars[this.cursor-1];
@@ -4479,6 +4960,9 @@ ChemicalKeyboard.prototype.insertParticle = function (key, full) {
  * inserted formula is edited character by character (decided 2026-10-16: a sequence of symbols, not one unit -
  * the same as the ion keys).
  */
+/* the group keys of a fatty-acid question (config.lipids) when the teacher set no molecule keys */
+var LIPID_GROUP_KEYS=["COOH","CH_{3}","CH_{2}","CH=CH"];
+
 function moleculeKeysFrom(list){
   return (Array.isArray(list)?list:[]).map(function(item){
     if(typeof item==="string")return item?{formula:item,label:"",name:null}:null;
@@ -4817,6 +5301,14 @@ ChemicalKeyboard.prototype.key = function (e) {
       return;
     }
 
+    /* fatty acids: the signs of the shorthand, the triglyceride and the condensed formula, typed as they are */
+    if (this.config.lipids && !this.cond && ":,=-() ".indexOf(k) >= 0) {
+      e.preventDefault();
+      this.script = "normal";          // these signs end a subscript: (CH₂)₇ then ")" ... ; :1
+      if (k !== " ") this.insertText(k, "normal");
+      return;
+    }
+
     if (isDigit(k)) {
       e.preventDefault();
       this.insertDigit(k);
@@ -4850,7 +5342,8 @@ ChemicalKeyboard.prototype.key = function (e) {
       /* inside a formula state the same rule, on the formula's own characters */
       if (this.condIsFormula()) prev = this.cond.pos > 0 ? this.conditionChars()[this.cond.pos - 1] : null;
 
-      if (isLower(k) && (!this.cond || this.condIsFormula()) && !(prev && prev.script === "normal" && isUpper(prev.ch))) {
+      /* fatty acids: lowercase words are part of the notation (cis, trans, w for ω) */
+      if (isLower(k) && !this.config.lipids && (!this.cond || this.condIsFormula()) && !(prev && prev.script === "normal" && isUpper(prev.ch))) {
         return;
       }
 
@@ -4940,7 +5433,7 @@ ChemicalKeyboard.prototype.buildValidation=function(root,t){
 
 /* The problems of the writing (texts in the keyboard language); empty when it is written correctly. */
 ChemicalKeyboard.prototype.validate=function(){
-  return validateWriting(this.getAST(),this.language);
+  return validateWriting(this.getAST(),this.language,{lipids:this.config.lipids===true});
 };
 
 ChemicalKeyboard.prototype.scheduleValidation=function(){
@@ -5539,7 +6032,8 @@ ChemicalKeyboard.prototype.toLatex=function(withHighlights){
   var self=this,out="",i,c,pair,sub,sup,j,normal=[];
 
   function colorOf(k){ return withHighlights?self.isHighlighted(k):null; }
-  function charTex(ch){ return isUpper(ch)||isLower(ch)?"\\mathrm{"+ch+"}":esc(ch); }
+  /* letters upright; ":" and "=" in braces, so LaTeX does not space them as relations (C18:1, CH=CH) */
+  function charTex(ch){ return isUpper(ch)||isLower(ch)?"\\mathrm{"+ch+"}":ch===":"||ch==="="?"{"+ch+"}":esc(ch); }
   /* pieces [{tex, color}] -> LaTeX; a run of pieces with the same color in one box */
   function joinPieces(pieces){
     var s="",k=0,run,col;
@@ -6275,6 +6769,7 @@ function runQuestion(host,cfg){
     if(cfg.autoNuclideNumbers)options.autoNuclideNumbers=true;
     if(cfg.states===true)options.states=true;             // state keys in a nuclear question
   }
+  if(cfg.lipids)options.lipids=true;                      // fatty acids / triglycerides (LIPIDS-DESIGN.md)
   if(cfg.displayChars>0)options.displayChars=cfg.displayChars;   // keyboard window width, in characters
 
   /*
@@ -6324,7 +6819,7 @@ function runQuestion(host,cfg){
   }
   function compare(ast){
     return global.ChemicalGrammar.compare(ast,cfg.correctAnswer||"",lang,
-      {rubric:cfg.rubric||null,distinguishIsomers:cfg.distinguishIsomers===true});
+      {rubric:cfg.rubric||null,distinguishIsomers:cfg.distinguishIsomers===true,lipids:cfg.lipids===true});
   }
 
   var stack=cfg.stack||{};
@@ -6441,7 +6936,7 @@ function runQuestion(host,cfg){
       var ast=keyboard.getAST(),problems=[],errors,i,line;
       summary.textContent="";
       if(!keyboard.getModel().length)return;
-      errors=global.ChemicalGrammar.compare(ast,ast,lang,{}).errors;
+      errors=global.ChemicalGrammar.compare(ast,ast,lang,{lipids:cfg.lipids===true}).errors;
       for(i=0;i<errors.length;i++){
         if(WRITING_CODES_CHECK.indexOf(errors[i].code)>=0&&problems.indexOf(errors[i].description)<0)problems.push(errors[i].description);
       }
@@ -6480,7 +6975,7 @@ function runQuestion(host,cfg){
   elements:SYMBOLS.slice(),
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
-  version:"2.7.0"     // raise with every change, to see in the console which copy a page runs
+  version:"2.8.0"     // raise with every change, to see in the console which copy a page runs
 };
 
 /* questions queued by snippets before the library was loaded */

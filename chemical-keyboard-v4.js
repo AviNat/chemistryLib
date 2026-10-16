@@ -4960,6 +4960,13 @@ ChemicalKeyboard.prototype.insertParticle = function (key, full) {
  * inserted formula is edited character by character (decided 2026-10-16: a sequence of symbols, not one unit -
  * the same as the ion keys).
  */
+/*
+ * Characters that form one unit for DEL, the arrows and a click: a two-letter element symbol, a state (aq),
+ * and in a fatty-acid question the words cis / trans (markElements).
+ */
+var LIPID_WORDS=["trans","cis"];
+function isUnitKind(kind){ return kind==="element"||kind==="state"||kind==="word"; }
+
 /* the group keys of a fatty-acid question (config.lipids) when the teacher set no molecule keys */
 var LIPID_GROUP_KEYS=["COOH","CH_{3}","CH_{2}","CH=CH"];
 
@@ -5095,7 +5102,7 @@ ChemicalKeyboard.prototype.move=function(d){
     return;
   }
 
-  if(d<0&&this.cursor>0&&(this.chars[this.cursor-1].kind==="state"||this.chars[this.cursor-1].kind==="element")){
+  if(d<0&&this.cursor>0&&isUnitKind(this.chars[this.cursor-1].kind)){
     pair=this.chars[this.cursor-1].pair;
     kind=this.chars[this.cursor-1].kind;
 
@@ -5104,7 +5111,7 @@ ChemicalKeyboard.prototype.move=function(d){
     }
   }else if(
     d>0&&
-    this.cursor<this.chars.length&&(this.chars[this.cursor].kind==="state"||this.chars[this.cursor].kind==="element")
+    this.cursor<this.chars.length&&isUnitKind(this.chars[this.cursor].kind)
   ){
     pair=this.chars[this.cursor].pair;
     kind=this.chars[this.cursor].kind;
@@ -5195,7 +5202,7 @@ ChemicalKeyboard.prototype.del=function(){
   keepNavigationScript= this.navigationScript&& this.script===removedScript;
   this.navigationScript=false;
 
-  if(previous.kind==="state"||previous.kind==="element"){
+  if(isUnitKind(previous.kind)){
     pair=previous.pair;
     kind=previous.kind;
     start=this.cursor-1;
@@ -5609,7 +5616,7 @@ ChemicalKeyboard.prototype.render=function(){
   function makeClickable(element,index){
     var item=self.chars[index],start=index,end=index+1,pair,kind;
 
-    if(item.kind==="element"||item.kind==="state"){
+    if(isUnitKind(item.kind)){
       pair=item.pair;
       kind=item.kind;
 
@@ -6220,19 +6227,40 @@ ChemicalKeyboard.prototype.markStates = function () {
       }
     };
     ChemicalKeyboard.prototype.markElements=function(){
-      var i,pair,symbol;
+      var i,pair,symbol,k,word,w,ok;
 
       for(i=0;i<this.chars.length;i++){
-        if(this.chars[i].kind==="element"){
+        if(this.chars[i].kind==="element"||this.chars[i].kind==="word"){
           this.chars[i].kind=null;
           this.chars[i].pair=null;
+        }
+      }
+
+      /*
+       * Fatty acids (config.lipids): the words cis and trans are one unit, like a two-letter element symbol -
+       * DEL removes the whole word and the arrows jump over it - also when typed letter by letter or read back.
+       */
+      if(this.config.lipids){
+        for(i=0;i<this.chars.length;i++){
+          for(w=0;w<LIPID_WORDS.length;w++){
+            word=LIPID_WORDS[w];
+            ok=i+word.length<=this.chars.length;
+            for(k=0;ok&&k<word.length;k++){
+              ok=this.chars[i+k].script==="normal"&&!this.chars[i+k].kind&&this.chars[i+k].ch.toLowerCase()===word.charAt(k);
+            }
+            if(!ok)continue;
+            pair=this.groupId++;
+            for(k=0;k<word.length;k++){ this.chars[i+k].kind="word"; this.chars[i+k].pair=pair; }
+            i+=word.length-1;
+            break;
+          }
         }
       }
 
       for(i=0;i<this.chars.length-1;i++){
         symbol=this.chars[i].ch+this.chars[i+1].ch;
 
-        if(this.chars[i].kind!=="state"&&this.chars[i+1].kind!=="state"&&this.chars[i].script==="normal"&&this.chars[i+1].script==="normal"&&isUpper(this.chars[i].ch)&&isLower(this.chars[i+1].ch)&&SET[symbol]){
+        if(this.chars[i].kind!=="state"&&this.chars[i+1].kind!=="state"&&this.chars[i].kind!=="word"&&this.chars[i+1].kind!=="word"&&this.chars[i].script==="normal"&&this.chars[i+1].script==="normal"&&isUpper(this.chars[i].ch)&&isLower(this.chars[i+1].ch)&&SET[symbol]){
           pair=this.groupId++;
 
           this.chars[i].kind="element";
@@ -6975,7 +7003,7 @@ function runQuestion(host,cfg){
   elements:SYMBOLS.slice(),
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
-  version:"2.8.0"     // raise with every change, to see in the console which copy a page runs
+  version:"2.8.1"     // raise with every change, to see in the console which copy a page runs
 };
 
 /* questions queued by snippets before the library was loaded */

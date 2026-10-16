@@ -23,6 +23,9 @@ triglycerides, not lipidomics).
   `: , = - ( )` and lowercase letters accepted. Builder: option "Fatty acids / triglycerides", six rubric rows shown
   only with it. Tests: group "Lipids" in chemTests.js (30 cases); 182 / 182 pass.
 - Not in this version: ester / group formulas of triglycerides (needs several reference answers).
+- **cis / trans are one unit** (2026-10-17, library 2.8.1, the user): DEL removes the whole word and the arrows jump
+  over it, like a two-letter element symbol (`markElements` groups them as kind "word" in a fatty-acid question - also
+  when typed letter by letter or read back from a saved answer).
 
 ## 1. The three writing formats
 

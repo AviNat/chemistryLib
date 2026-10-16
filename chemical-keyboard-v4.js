@@ -4992,6 +4992,27 @@ ChemicalKeyboard.prototype.showValidation=function(problems){
 
       return null;
     };
+/*
+ * Read-only displays (feedback, reference answer) typeset with MathJax, like the formula box on the page, with
+ * the marking as colored boxes (toLatex(true)). Only when the page has MathJax (Moodle and the builder load it);
+ * otherwise the displays are drawn as HTML (render). Returns true when MathJax is used.
+ */
+ChemicalKeyboard.prototype.renderReadonlyMath=function(){
+  var self=this,revision;
+
+  if(this.mode==="edit"||this.config.mathjax===false||typeof window==="undefined"||!window.MathJax)return false;
+
+  this.mathRevision=(this.mathRevision||0)+1;
+  revision=this.mathRevision;
+  this.display.textContent="\\("+this.toLatex(true)+"\\)";
+  typesetMath(this.display,function(){
+    if(revision!==self.mathRevision)return false;
+    self.display.textContent="\\("+self.toLatex(true)+"\\)";
+    return true;
+  });
+  return true;
+};
+
 ChemicalKeyboard.prototype.syncRenderedDisplay=function(){
   var self=this,latex,revision;
 
@@ -5085,6 +5106,13 @@ ChemicalKeyboard.prototype.setCursorFromClick=function(e){
 ChemicalKeyboard.prototype.render=function(){
   /* While editing the condition, its caret is drawn by renderCondition only. */
   var self=this,i=0,j,k,c,sp,color,pair,wrapper,subLine,supLine,lower,upper,states,width,cursorDrawn=!!this.cond;
+
+  /* read-only with MathJax on the page: typeset, with the marking as colored boxes */
+  if(this.renderReadonlyMath()){
+    this.updateScriptButtons();
+    this.syncRenderedDisplay();
+    return;
+  }
   function makeClickable(element,index){
     var item=self.chars[index],start=index,end=index+1,pair,kind;
 
@@ -5501,8 +5529,29 @@ ChemicalKeyboard.prototype.isPrescript=function(start,end){
   return !prev||prev.script==="normal"&&(prev.ch==="+"||isArrowChar(prev.ch)||isDigit(prev.ch));
 };
 
-ChemicalKeyboard.prototype.toLatex=function(){
-  var out="",i,c,pair,stateText,subText,supText,j,formulaStateLatex;
+/*
+ * The answer in LaTeX (MathJax). Element symbols and state letters upright (\mathrm), as written in chemistry.
+ * withHighlights: the marked characters (setHighlights / setComparisonFeedback) get their color as a
+ * background, \bbox[color]{...} - consecutive characters with the same color share one box. Used for the
+ * read-only displays, so the feedback looks like the formula box on the page (2026-10-16).
+ */
+ChemicalKeyboard.prototype.toLatex=function(withHighlights){
+  var self=this,out="",i,c,pair,sub,sup,j,normal=[];
+
+  function colorOf(k){ return withHighlights?self.isHighlighted(k):null; }
+  function charTex(ch){ return isUpper(ch)||isLower(ch)?"\\mathrm{"+ch+"}":esc(ch); }
+  /* pieces [{tex, color}] -> LaTeX; a run of pieces with the same color in one box */
+  function joinPieces(pieces){
+    var s="",k=0,run,col;
+    while(k<pieces.length){
+      col=pieces[k].color;
+      run="";
+      while(k<pieces.length&&pieces[k].color===col){ run+=pieces[k].tex; k++; }
+      s+=col?"\\bbox["+col+"]{"+run+"}":run;
+    }
+    return s;
+  }
+  function flushNormal(){ out+=joinPieces(normal); normal=[]; }
 
   for(i=0;i<this.chars.length;i++){
     c=this.chars[i];
@@ -5512,16 +5561,15 @@ ChemicalKeyboard.prototype.toLatex=function(){
      * index, state and charge as one cluster.
      */
     if(c.kind==="state"||c.script==="sub"||c.script==="sup"){
-      subText="";
-      supText="";
-      stateText="";
+      flushNormal();
+      sub=[];
+      sup=[];
       j=i;
-      formulaStateLatex="";
 
       while(j<this.chars.length){
         /* a formula state: its formula in LaTeX, inside the lower group */
         if(this.chars[j].kind==="fstate"){
-          formulaStateLatex+="("+conditionToLatex(this.chars[j].condition||[])+")";
+          sub.push({tex:"("+conditionToLatex(this.chars[j].condition||[])+")",color:colorOf(j),state:true});
           j++;
           continue;
         }
@@ -5530,7 +5578,7 @@ ChemicalKeyboard.prototype.toLatex=function(){
           pair=this.chars[j].pair;
 
           while(j<this.chars.length&&this.chars[j].kind==="state"&&this.chars[j].pair===pair){
-            stateText+=this.chars[j].ch;
+            sub.push({tex:charTex(this.chars[j].ch),color:colorOf(j),state:true});
             j++;
           }
 
@@ -5538,13 +5586,13 @@ ChemicalKeyboard.prototype.toLatex=function(){
         }
 
         if(this.chars[j].script==="sub"){
-          subText+=this.chars[j].ch;
+          sub.push({tex:charTex(this.chars[j].ch),color:colorOf(j)});
           j++;
           continue;
         }
 
         if(this.chars[j].script==="sup"){
-          supText+=this.chars[j].ch;
+          sup.push({tex:charTex(this.chars[j].ch),color:colorOf(j)});
           j++;
           continue;
         }
@@ -5552,27 +5600,26 @@ ChemicalKeyboard.prototype.toLatex=function(){
         break;
       }
 
+      /* the index before the state (H₂O(l): "2" then "(l)") */
+      sub.sort(function(a,b){ return (a.state?1:0)-(b.state?1:0); });
+
       /*
        * Add a shared anchor whenever both a
-       * lower and an upper component exist.
+       * lower and an upper component exist (and before a nuclide's numbers).
        */
-      if((subText||stateText||formulaStateLatex)&&supText||this.isPrescript(i,j)){
+      var prescript=this.isPrescript(i,j),pad="";
+      if(sub.length&&sup.length||prescript){
         out+="{}";
       }
 
-      if(subText||stateText||formulaStateLatex){
-        out+="_{\\scriptscriptstyle "+esc(subText);
+      /*
+       * A nuclide's numbers are right-aligned against the symbol (¹⁴₆C); LaTeX aligns them on the left, so the
+       * shorter one is padded on the left with invisible digits.
+       */
+      if(prescript&&sub.length!==sup.length)pad="\\phantom{"+new Array(Math.abs(sub.length-sup.length)+1).join("0")+"}";
 
-        if(stateText){
-          out+="\\mathrm{"+esc(stateText)+"}";
-        }
-
-        out+=formulaStateLatex+"}";
-      }
-
-      if(supText){
-        out+="^{\\scriptscriptstyle "+esc(supText)+"}";
-      }
+      if(sub.length)out+="_{\\scriptscriptstyle "+(sub.length<sup.length?pad:"")+joinPieces(sub)+"}";
+      if(sup.length)out+="^{\\scriptscriptstyle "+(sup.length<sub.length?pad:"")+joinPieces(sup)+"}";
 
       i=j-1;
       continue;
@@ -5580,20 +5627,21 @@ ChemicalKeyboard.prototype.toLatex=function(){
 
     /* Arrow with a condition: \xrightarrow stretches under the text. */
     if(c.ch==="→"&&c.condition&&c.condition.length){
-      out+="\\xrightarrow{"+conditionToLatex(c.condition)+"}";
+      normal.push({tex:"\\xrightarrow{"+conditionToLatex(c.condition)+"}",color:colorOf(i)});
     }else if(c.ch==="⇌"&&c.condition&&c.condition.length){
-      out+="\\overset{"+conditionToLatex(c.condition)+"}{\\rightleftharpoons}";
+      normal.push({tex:"\\overset{"+conditionToLatex(c.condition)+"}{\\rightleftharpoons}",color:colorOf(i)});
     }else if(c.ch==="→"){
-      out+="\\longrightarrow ";
+      normal.push({tex:"\\longrightarrow ",color:colorOf(i)});
     }else if(c.ch==="⇌"){
-      out+="\\rightleftharpoons ";
+      normal.push({tex:"\\rightleftharpoons ",color:colorOf(i)});
     }else if(c.ch==="·"){
-      out+="\\cdot ";
+      normal.push({tex:"\\cdot ",color:colorOf(i)});
     }else{
-      out+=esc(c.ch);
+      normal.push({tex:charTex(c.ch),color:colorOf(i)});
     }
   }
 
+  flushNormal();
   return out;
 };
 
@@ -6432,7 +6480,7 @@ function runQuestion(host,cfg){
   elements:SYMBOLS.slice(),
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
-  version:"2.6.3"     // raise with every change, to see in the console which copy a page runs
+  version:"2.7.0"     // raise with every change, to see in the console which copy a page runs
 };
 
 /* questions queued by snippets before the library was loaded */

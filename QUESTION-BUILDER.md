@@ -41,6 +41,16 @@ built on the **current** library functionality only.
   `getValue()`, which drops the sub/sup levels.
 - "Try it as a student" runs the same student-side code as the snippet (`chemkbdRun`, copied with `toString()`).
 
+## Read-only displays typeset with MathJax (2026-10-16, library 2.7.0)
+
+The formula box on the page was MathJax (LaTeX look) while the read-only displays with the marking (feedback,
+reference answer) were the keyboard's own HTML drawing (Arial) - they looked different. Now, when the page has
+MathJax (Moodle, the builder), the read-only displays are typeset from `toLatex(true)`: the marked characters get
+their color as `\bbox[color]{...}` (consecutive characters with one color share a box). Without MathJax the HTML
+drawing stays (`config.mathjax: false` forces it). Also in the LaTeX: element symbols and state letters upright
+(`\mathrm`) - before they were italic - and a nuclide's numbers right-aligned against the symbol (the shorter number
+padded with `\phantom` digits). Checked with MathJax 3 and 2.7 (Moodle's).
+
 ## Snippet without < > & (2026-10-16, library 2.6.0, snippet 2026-10-16.2)
 
 In Moodle the pasted code arrived in the browser with `<` turned into `&lt;` (`for(i=0;i&lt;types.length;i++)`), also

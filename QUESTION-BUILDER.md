@@ -7,7 +7,10 @@ built on the **current** library functionality only.
 | Setting | Goes into the keyboard config as |
 |---|---|
 | Student language (he / ar / en), independent of the tool's interface language | `language` |
-| Element keys: default set / custom list (periodic table + drag to reorder, or one-click sort A–Z / by atomic number) / none | omitted / `elements:[...]` / `elements:[]` |
+| Element keys: default set / custom list (periodic table + drag to reorder, sorted by atomic number or A–Z) / none | omitted / `elements:[...]` / `elements:[]` |
+| Custom list order (2026-10-17): kept sorted by atomic number (default) or A–Z - the kept sort's button is light blue, added elements go to their place; a drag out of that order turns it off (the teacher's own order). Builder only, the library ignores it; files from before keep their order (`none`) | `elementsSort: "atomic" \| "alpha" \| "none"` |
+| Molecule keys (2026-10-17): a check box turns them on; then, like the elements, the default set (`ChemicalGrammar.defaultMolecules()` in the library: H₂O, SO₄²⁻, NH₃, named in he / ar / en - more to come) or a custom list ("Start from the default set", "Clear"). The list is always written into the question, so a later change of the default set does not change existing questions; `moleculesMode` is builder only. A name typed by the teacher is in the student language (a string); the default set's names are `{he, ar, en}` and are kept when a key is removed and put back unchanged. Chips show only the formula, the name is their tooltip (as on the keyboard) | `molecules`, `moleculesMode: "default" \| "custom"` |
+| Molecule keys, editing (2026-10-17): "Add the key" turns light blue while a typed formula is not added yet; clicking a key removes it and puts its formula and name back in the editor (removing another one replaces them) | `molecules` |
 | Reference answer (entered with the keyboard) | `correctAnswer` |
 | Initial student answer (optional, e.g. a partial answer to complete) | `value` |
 | Rubric per category: no penalty / once / per error (+ cap, + `allMissing` for states), or no grading | `rubric` (format of RUBRIC-DESIGN.md) |

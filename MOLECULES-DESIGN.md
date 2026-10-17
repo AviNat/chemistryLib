@@ -107,3 +107,13 @@ A "Molecule keys" section after the element keys:
   ("may give it away"); no automatic add. The keys also appear in the builder's own keyboards.
 - Not yet: the built-in sets by domain (section 3) - waiting for the curriculum expert.
 - Tests: group "Molecule keys" in `chemTests.js` (key `M:formula`), 152 / 152 pass.
+
+## 9. Default set and the on / off option (2026-10-17, library 2.8.5)
+
+- The library holds a first default set, `DEFAULT_MOLECULES` (exported as `ChemicalGrammar.defaultMolecules()`):
+  H₂O (water / מים / ماء), SO₄²⁻ (sulfate ion / יון סולפט / أيون الكبريتات), NH₃ (ammonia / אמוניה / أمونيا) - to show
+  the feature; the curriculum list (section 7) is added later.
+- Names may be `{he, ar, en}`; the tooltip uses the student's language (English otherwise). A name typed by the
+  teacher is a string in the student language.
+- Builder: a check box turns molecule keys on; then "Default set" or "Custom" ("Start from the default set",
+  "Clear"), like the element keys. The list is written into the question (not a reference to the default set).

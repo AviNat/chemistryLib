@@ -7,6 +7,7 @@
  *   value:   setValue(text) and back - the text must come back unchanged
  *   compare: a student answer against a reference answer - correct, error codes, notes
  *   grade:   the same with a rubric - the score and the penalty lines
+ *   writing: the writing check of the red "!" (ChemicalGrammar.validate) - "valid" or "invalid"
  *
  * Editor content is written in the value notation that setValue reads:
  *   H_{2}O   subscript       SO_{4}^{2−}   superscript (charge)      NaCl(aq)   state
@@ -67,6 +68,17 @@ let NUCLEAR_RUBRIC = { syntax: 100, substances: 25, massNumbers: 20, atomicNumbe
    Test cases. "expect" is the reference result - verify it by eye
    before accepting it (the harness shows the rendered expression).
    -------------------------------------------------------------- */
+/* the writing check (2026-10-17): every one of these must turn on the red "!" */
+let WRITING_ERRORS = ["^{+}(aq)", "^{+}", "^{2-}(aq)", "_{2}", "_{2}O", "(aq)", "(s)", "2(aq)", "2", "2^{+}", "2^{+}(aq)",
+    "+", "H_{2}+", "+H_{2}", "→", "H_{2}→", "→H_{2}", "H_{2}++O_{2}", "⇌", "H_{2}O→→H_{2}",
+    "Xx", "Q", "J", "Hh", "Zz_{2}", "h_{2}o", "H__{2}", "NaCl(xq)",
+    "H_{2}O(aq)(aq)", "(aq)H_{2}O", "H_{2}(aq)O", "Ca(OH)_{2}(aq)_{2}", "H_{2}O ^{+}",
+    "(H_{2}O", "H_{2}O)", "()", "H_{2}()", "Na^{+}^{-}", "H_{2}O·", "·H_{2}O", "CuSO_{4}·",
+    "Na^{+}(aq)+^{-}(aq)", "Cl^{-}(aq)→^{+}(aq)", "H_{2}O+(aq)", "^{+}+Cl^{-}"];
+let WRITING_OK = ["H_{2}O", "Na^{+}(aq)", "2H_{2}+O_{2}→2H_{2}O", "SO_{4}^{2-}", "CuSO_{4}·5H_{2}O", "^{14}_{6}C",
+    "Ca(OH)_{2}", "Na^{+}(aq)+Cl^{-}(aq)→NaCl(s)", "H^{+}", "e^{-}", "Fe^{3+}(aq)", "22H_{2}", "Ca(OH)_{2}(s)",
+    "CH_{3}COO^{-}(aq)", "2Na^{+}(aq)+SO_{4}^{2-}(aq)", "H_{2}O(l)⇌H^{+}(aq)+OH^{-}(aq)", "Al_{2}(SO_{4})_{3}"];
+
 let CASES = [
     /* Typing: formulas */
     { group: "Typing", name: "digit after a symbol is a subscript", keys: "H 2 O", expect: "H_{2}O" },
@@ -369,6 +381,11 @@ let CASES = [
     { group: "Nuclear", name: "chemical equations are unchanged", student: WATER, reference: WATER, expect: "correct" }
 ];
 
+WRITING_ERRORS.forEach(function (v) { CASES.push({ group: "Writing check", name: "error: " + v, writing: v, expect: "invalid" }); });
+WRITING_OK.forEach(function (v) { CASES.push({ group: "Writing check", name: "correct: " + v, writing: v, expect: "valid" }); });
+CASES.push({ group: "Writing check", name: "nuclear question: ₂O is graded, not a writing error", writing: "_{2}O",
+    options: { nuclear: true }, expect: "valid" });
+
 /* --------------------------------------------------------------
    Editor content in the value notation (lossless: getValue() drops
    the sub/sup levels, so it cannot be used for the expectations).
@@ -470,6 +487,7 @@ function removeKeyboard(k) {
 function caseKind(testCase) {
     if (testCase.keys !== undefined) return "keys";
     if (testCase.value !== undefined) return "value";
+    if (testCase.writing !== undefined) return "writing";
     if (testCase.rubric) return "grade";
     return "compare";
 }
@@ -479,6 +497,7 @@ function caseInput(testCase) {
     switch (caseKind(testCase)) {
         case "keys": return testCase.keys + (testCase.config ? "\nconfig: " + JSON.stringify(testCase.config) : "");
         case "value": return testCase.value;
+        case "writing": return testCase.writing + (testCase.options ? "\noptions: " + JSON.stringify(testCase.options) : "");
         default: return "student: " + testCase.student + "\nreference: " + testCase.reference +
             (testCase.options ? "\noptions: " + JSON.stringify(testCase.options) : "") +
             (testCase.rubric && testCase.rubric !== SAMPLE_RUBRIC ? "\nrubric: " + JSON.stringify(testCase.rubric) : "");
@@ -519,6 +538,10 @@ function run(KeyboardClass, host) {
 
                 result.actual = showChars(k.getModel());
                 result.latex = k.toLatex();
+            } else if (kind === "writing") {
+                let problems = ChemicalGrammar.validate(testCase.writing, "en", testCase.options || {});
+                result.actual = problems.length ? "invalid" : "valid";
+                result.details = problems.join("\n");
             } else {
                 let options = {};
                 let key;

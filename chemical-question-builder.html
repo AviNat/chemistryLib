@@ -68,6 +68,8 @@ button{font:inherit;padding:5px 12px;border:1px solid #9fb0c2;border-radius:6px;
 button:hover{background:var(--accent-soft)}
 button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 button.primary:hover{background:#174c7b}
+/* light blue: the sort order that is kept, and "Add the key" while a typed molecule is not added yet */
+button.on,button.on:hover{background:#cfe8ff;border-color:var(--accent)}
 .periodic{direction:ltr;display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:3px;max-width:760px;margin:6px 0}
 .periodic button{padding:4px 0;font-size:13px;min-width:0;border-radius:4px}
 .periodic button.picked{background:var(--picked);border-color:var(--picked);color:var(--picked-text)}
@@ -248,15 +250,28 @@ table.rubric .na{color:#a5b0bc}
 
 <section>
   <h2 data-t="secMolecules"></h2>
-  <div class="hint" data-t="moleculesHint"></div>
-  <div id="moleculeHost" class="kbd-host"></div>
-  <div class="row">
-    <label class="field"><span data-t="moleculeName"></span> <input type="text" id="moleculeName"></label>
-    <button type="button" id="addMolecule" data-t="addMolecule"></button>
+  <label class="check"><input type="checkbox" id="useMolecules"><span data-t="useMolecules"></span></label>
+  <div id="moleculesBody">
+    <div class="row" role="radiogroup">
+      <label class="check"><input type="radio" name="moleculesMode" value="default"><span data-t="moleculesDefault"></span></label>
+      <label class="check"><input type="radio" name="moleculesMode" value="custom"><span data-t="elementsCustom"></span></label>
+    </div>
+    <div class="hint" data-t="moleculesHint"></div>
+    <div id="customMolecules">
+      <div class="row">
+        <button type="button" id="moleculesFromDefault" data-t="startFromDefault"></button>
+        <button type="button" id="clearMolecules" data-t="clearElements"></button>
+      </div>
+      <div id="moleculeHost" class="kbd-host"></div>
+      <div class="row">
+        <label class="field"><span data-t="moleculeName"></span> <input type="text" id="moleculeName"></label>
+        <button type="button" id="addMolecule" data-t="addMolecule"></button>
+      </div>
+      <div class="hint" data-t="moleculesOrder"></div>
+      <div class="chips" id="moleculeChips"></div>
+    </div>
+    <div id="moleculeStatus" class="status"></div>
   </div>
-  <div id="moleculeStatus" class="status"></div>
-  <div class="hint" data-t="moleculesOrder"></div>
-  <div class="chips" id="moleculeChips"></div>
 </section>
 
 <section>
@@ -373,7 +388,7 @@ const TEXT={
     conditions:"Show the reaction-condition (process) keys: the arrow with a condition, Δ, hν, °C, K",
     autoSubscript:"Automatic subscript: a digit after a symbol becomes a subscript by itself (off: the student chooses it with _ or the subscript key)",
     ionKeys:"Show the ion keys ⁺(aq) and ⁻(aq) (a shortcut for a charge and (aq))",
-    formulaStateKey:"Show the key (▢) for a state written as a formula, e.g. a solution in another solvent: I₂(CCl₄)",
+    formulaStateKey:"Show the key ⁦X₍▢₎⁩ for a state written as a formula, e.g. a solution in another solvent: I₂(CCl₄)",
     nuclear:"Nuclear equation: particle keys (α, β, β⁺, γ, e⁻, n, p); mass and atomic numbers before the symbol",
     particleLabels:"Particle keys show",
     particleLabelsShort:"the symbol only: α, β",
@@ -409,13 +424,13 @@ const TEXT={
     sortAlpha:"Sort A–Z",
     sortAtomic:"Sort by atomic number",
     elementsOrder:"Panel order (click an element to remove it).",
-    dragHint:"Drag to change the order.",
+    dragHint:"The sort marked in light blue is kept when elements are added; dragging an element out of that order turns it off.",
     noElements:"No elements selected.",
-    secMolecules:"Molecule keys (optional)",
+    secMolecules:"Molecule keys",
     moleculesHint:"Keys that type a whole formula: a molecule, an ion or a group (H₂O, SO₄²⁻, (SO₄)). Type the formula with the keyboard below and add it. The key types the characters, so the student can still edit them. A few keys per question (4-8); a key may give the answer away.",
-    moleculeName:"Name (optional, shown when pointing at the key)",
+    moleculeName:"Name (optional, in the student language; shown when pointing at the key)",
     addMolecule:"Add the key",
-    moleculesOrder:"Click a key to remove it; drag it to change the order.",
+    moleculesOrder:"Click a key to remove it - its formula goes back to the keyboard above, to change and add again; drag it to change the order.",
     moleculesNone:"No molecule keys.",
     moleculeEmpty:"Type a formula first.",
     moleculeInvalid:"The formula is not written correctly:",
@@ -501,7 +516,7 @@ const TEXT={
     conditions:"הצגת מקשי תנאי התגובה (התהליך): החץ עם תנאי, Δ, hν, ‏°C, ‏K",
     autoSubscript:"כתב תחתי אוטומטי: ספרה אחרי סמל הופכת לכתב תחתי מעצמה (כבוי: התלמיד בוחר בכתב תחתי עם _ או עם המקש)",
     ionKeys:"הצגת מקשי היונים ‏⁺(aq) ו-‏⁻(aq) (קיצור למטען ול-(aq))",
-    formulaStateKey:"הצגת המקש (▢) למצב הכתוב כנוסחה, למשל תמיסה בממס אחר: ⁦I₂(CCl₄)⁩",
+    formulaStateKey:"הצגת המקש ⁦X₍▢₎⁩ למצב הכתוב כנוסחה, למשל תמיסה בממס אחר: ⁦I₂(CCl₄)⁩",
     nuclear:"משוואה גרעינית: מקשי חלקיקים (α, β, β⁺, γ, e⁻, n, p); מספר מסה ומספר אטומי לפני הסמל",
     particleLabels:"מקשי החלקיקים מציגים",
     particleLabelsShort:"את הסמל בלבד: α, β",
@@ -537,13 +552,13 @@ const TEXT={
     sortAlpha:"מיון לפי א״ב (A–Z)",
     sortAtomic:"מיון לפי מספר אטומי",
     elementsOrder:"הסדר בלוח (לחיצה על יסוד מסירה אותו).",
-    dragHint:"גרירה משנה את הסדר.",
+    dragHint:"המיון המסומן בתכלת נשמר כשמוסיפים יסודות; גרירת יסוד אל מחוץ לסדר מבטלת אותו.",
     noElements:"לא נבחרו יסודות.",
-    secMolecules:"מקשי מולקולות (רשות)",
+    secMolecules:"מקשי מולקולות",
     moleculesHint:"מקשים שמקלידים נוסחה שלמה: מולקולה, יון או קבוצה (H₂O, ‏SO₄²⁻, ‏(SO₄)). הקלידו את הנוסחה במקלדת שלמטה והוסיפו אותה. המקש מקליד את התווים, כך שהתלמיד יכול לערוך אותם. מעט מקשים בכל שאלה (4-8); מקש עלול לגלות את התשובה.",
-    moleculeName:"שם (רשות, מוצג כשמצביעים על המקש)",
+    moleculeName:"שם (רשות, בשפת התלמיד; מוצג כשמצביעים על המקש)",
     addMolecule:"הוספת המקש",
-    moleculesOrder:"לחיצה על מקש מסירה אותו; גרירה משנה את הסדר.",
+    moleculesOrder:"לחיצה על מקש מסירה אותו - הנוסחה שלו חוזרת למקלדת שלמעלה, לתיקון ולהוספה מחדש; גרירה משנה את הסדר.",
     moleculesNone:"אין מקשי מולקולות.",
     moleculeEmpty:"יש להקליד נוסחה קודם.",
     moleculeInvalid:"הנוסחה אינה כתובה נכון:",
@@ -629,7 +644,7 @@ const TEXT={
     conditions:"عرض مفاتيح ظروف التفاعل (العملية): السهم مع شرط، Δ، hν، ‏°C، ‏K",
     autoSubscript:"نص سفلي تلقائي: الرقم بعد الرمز يصبح نصًا سفليًا تلقائيًا (عند الإيقاف: يختار الطالب النص السفلي بـ _ أو بالمفتاح)",
     ionKeys:"عرض مفاتيح الأيونات ‏⁺(aq) و‏⁻(aq) (اختصار للشحنة و(aq))",
-    formulaStateKey:"عرض المفتاح (▢) لحالة مكتوبة كصيغة، مثل محلول في مذيب آخر: ⁦I₂(CCl₄)⁩",
+    formulaStateKey:"عرض المفتاح ⁦X₍▢₎⁩ لحالة مكتوبة كصيغة، مثل محلول في مذيب آخر: ⁦I₂(CCl₄)⁩",
     nuclear:"معادلة نووية: مفاتيح الجسيمات (α، β، β⁺، γ، e⁻، n، p)؛ العدد الكتلي والعدد الذري قبل الرمز",
     particleLabels:"تعرض مفاتيح الجسيمات",
     particleLabelsShort:"الرمز فقط: α، β",
@@ -665,13 +680,13 @@ const TEXT={
     sortAlpha:"ترتيب أبجدي (A–Z)",
     sortAtomic:"ترتيب حسب العدد الذري",
     elementsOrder:"الترتيب في اللوحة (انقر على عنصر لإزالته).",
-    dragHint:"اسحب لتغيير الترتيب.",
+    dragHint:"يُحفظ الترتيب المميَّز باللون الأزرق الفاتح عند إضافة عناصر؛ سحب عنصر خارج هذا الترتيب يلغيه.",
     noElements:"لم يتم اختيار عناصر.",
-    secMolecules:"مفاتيح الجزيئات (اختياري)",
+    secMolecules:"مفاتيح الجزيئات",
     moleculesHint:"مفاتيح تكتب صيغة كاملة: جزيء أو أيون أو مجموعة (H₂O، ‏SO₄²⁻، ‏(SO₄)). اكتب الصيغة بلوحة المفاتيح أدناه وأضفها. المفتاح يكتب الرموز، لذا يستطيع الطالب تعديلها. مفاتيح قليلة لكل سؤال (4-8)؛ قد يكشف المفتاح الإجابة.",
-    moleculeName:"الاسم (اختياري، يظهر عند الإشارة إلى المفتاح)",
+    moleculeName:"الاسم (اختياري، بلغة الطالب؛ يظهر عند الإشارة إلى المفتاح)",
     addMolecule:"إضافة المفتاح",
-    moleculesOrder:"النقر على مفتاح يزيله؛ السحب يغيّر الترتيب.",
+    moleculesOrder:"النقر على مفتاح يزيله - تعود صيغته إلى لوحة المفاتيح أعلاه لتعديلها وإضافتها من جديد؛ السحب يغيّر الترتيب.",
     moleculesNone:"لا توجد مفاتيح جزيئات.",
     moleculeEmpty:"اكتب صيغة أولًا.",
     moleculeInvalid:"الصيغة غير مكتوبة بشكل صحيح:",
@@ -811,7 +826,9 @@ function newState(){
     particleLabels:"short",
     autoNuclideNumbers:false,
     nuclearStates:false,
-    molecules:[],             // molecule keys: [{formula, name}] (MOLECULES-DESIGN.md)
+    moleculesOn:false,        // molecule keys on the panel (MOLECULES-DESIGN.md)
+    moleculesMode:"default",  // "default": the library's set; "custom": the list below
+    molecules:[],             // the custom molecule keys: [{formula, name}], name a string or {he, ar, en}
     checkButton:false,
     displayChars:"",          // keyboard window width in characters; empty = the library's default
     reviewDiv:"",             // id of the teacher's div for the review output; empty = under the question
@@ -822,6 +839,7 @@ function newState(){
     stackAnswerInput:"ans2",
     elementsMode:"default",
     elements:[],
+    elementsSort:"atomic",    // the custom panel's order kept: "atomic" | "alpha" | "none" (the teacher's own order)
     correctAnswer:"",
     value:"",
     rubricEnabled:true,
@@ -899,7 +917,10 @@ function questionConfig(){
   };
   /* always written, also when empty: an emptied field must stay empty when the file is opened again */
   cfg.stack={scoreInput:state.stackScoreInput,answerInput:state.stackAnswerInput};
-  if(state.elementsMode==="custom") cfg.elements=state.elements.slice();
+  if(state.elementsMode==="custom"){
+    cfg.elements=state.elements.slice();
+    cfg.elementsSort=state.elementsSort;   // builder only: the library ignores it
+  }
   if(state.distinguishIsomers) cfg.distinguishIsomers=true;
   if(!state.conditions) cfg.conditions=false;
   if(!state.autoSubscript) cfg.autoSubscript=false;
@@ -912,7 +933,10 @@ function questionConfig(){
     if(state.autoNuclideNumbers) cfg.autoNuclideNumbers=true;
     if(state.nuclearStates) cfg.states=true;
   }
-  if(state.molecules.length) cfg.molecules=moleculesForLibrary();
+  if(state.moleculesOn){
+    cfg.molecules=moleculesForLibrary();
+    cfg.moleculesMode=state.moleculesMode;   // builder only: the library uses the list
+  }
   if(displayChars()) cfg.displayChars=displayChars();
   if(state.reviewDiv) cfg.reviewDiv=state.reviewDiv;
   const rubric=rubricForLibrary();
@@ -928,6 +952,8 @@ function applyConfig(cfg){
   if(["system","he","ar","en"].indexOf(cfg.language)>=0) s.language=cfg.language;
   if(["default","custom","none"].indexOf(cfg.elementsMode)>=0) s.elementsMode=cfg.elementsMode;
   if(Array.isArray(cfg.elements)) s.elements=cfg.elements.filter(e=>ALL_ELEMENTS.indexOf(e)>=0);
+  /* files from before the option keep their order as it was */
+  s.elementsSort=["atomic","alpha","none"].indexOf(cfg.elementsSort)>=0?cfg.elementsSort:Array.isArray(cfg.elements)?"none":"atomic";
   s.correctAnswer=typeof cfg.correctAnswer==="string"?cfg.correctAnswer:"";
   s.value=typeof cfg.value==="string"?cfg.value:"";
   s.distinguishIsomers=cfg.distinguishIsomers===true;
@@ -939,9 +965,16 @@ function applyConfig(cfg){
   s.lipids=cfg.lipids===true;
   s.particleLabels=cfg.particleLabels==="full"?"full":"short";
   s.autoNuclideNumbers=cfg.autoNuclideNumbers===true;
-  s.molecules=(Array.isArray(cfg.molecules)?cfg.molecules:[]).map(m=>
-    typeof m==="string"?{formula:m,name:""}:m&&typeof m.formula==="string"?{formula:m.formula,name:typeof m.name==="string"?m.name:""}:null
+  /* a name: the teacher's string, or {he, ar, en} (the default set) */
+  const nameOf=n=>typeof n==="string"?n:n&&typeof n==="object"&&!Array.isArray(n)?n:"";
+  const molecules=(Array.isArray(cfg.molecules)?cfg.molecules:[]).map(m=>
+    typeof m==="string"?{formula:m,name:""}:m&&typeof m.formula==="string"?{formula:m.formula,name:nameOf(m.name)}:null
   ).filter(m=>m&&m.formula);
+  /* files from before the option: a list -> on, custom */
+  s.moleculesOn=molecules.length>0||Array.isArray(cfg.molecules)&&typeof cfg.moleculesMode==="string";   // also on with an emptied custom list
+  s.moleculesMode=cfg.moleculesMode==="default"?"default":"custom";
+  if(!s.moleculesOn) s.moleculesMode="default";
+  if(s.moleculesMode==="custom") s.molecules=molecules;
   s.nuclearStates=cfg.nuclear===true&&cfg.states===true;
   s.checkButton=false;             // hidden option: older files that had it on are saved without it
   if(cfg.displayChars>0) s.displayChars=String(cfg.displayChars);
@@ -1067,7 +1100,7 @@ function makeEditor(hostId,value,onValue){
   if(!state.autoSubscript) options.autoSubscript=false;
   if(state.ionKeys) options.ionKeys=true;
   if(state.formulaStateKey) options.formulaStateKey=true;
-  if(state.molecules.length) options.molecules=moleculesForLibrary();
+  if(state.moleculesOn) options.molecules=moleculesForLibrary();
   if(state.lipids) options.lipids=true;
   if(state.nuclear){
     options.nuclear=true;
@@ -1095,7 +1128,9 @@ function buildKeyboards(){
   moleculeKeyboard=makeEditor("moleculeHost",moleculeDraft,v=>{
     moleculeDraft=v;
     $("moleculeStatus").classList.remove("bad");
+    renderAddReminder();
   });
+  renderAddReminder();
   building=false;
   buildTry();
 }
@@ -1205,7 +1240,21 @@ function addElements(list){
   list.forEach(e=>{ if(state.elements.indexOf(e)<0) state.elements.push(e); });
 }
 
+/* The chosen order (sort buttons) is kept: added elements go to their place in it. */
+function sortedElements(list){
+  if(state.elementsSort==="alpha") return list.slice().sort();
+  if(state.elementsSort==="atomic") return list.slice().sort((a,b)=>ALL_ELEMENTS.indexOf(a)-ALL_ELEMENTS.indexOf(b));
+  return list.slice();
+}
+
+/* A drag that breaks the order turns the sorting off; one that keeps it (back to its place) does not. */
+function elementsMoved(){
+  if(sortedElements(state.elements).join()!==state.elements.join()) state.elementsSort="none";
+  elementsChanged();
+}
+
 function elementsChanged(){
+  state.elements=sortedElements(state.elements);
   renderElements();
   buildKeyboards();
   changed();
@@ -1214,6 +1263,10 @@ function elementsChanged(){
 function renderElements(){
   document.querySelectorAll("input[name=elementsMode]").forEach(r=>{ r.checked=r.value===state.elementsMode; });
   $("customElements").classList.toggle("disabled",state.elementsMode!=="custom");
+  $("sortAtomic").classList.toggle("on",state.elementsSort==="atomic");
+  $("sortAlpha").classList.toggle("on",state.elementsSort==="alpha");
+  $("sortAtomic").setAttribute("aria-pressed",String(state.elementsSort==="atomic"));
+  $("sortAlpha").setAttribute("aria-pressed",String(state.elementsSort==="alpha"));
 
   document.querySelectorAll("#periodic button").forEach(b=>{
     b.classList.toggle("picked",state.elements.indexOf(b.dataset.symbol)>=0);
@@ -1233,7 +1286,7 @@ function renderElements(){
     const chip=document.createElement("span");
     chip.className="chip";
     chip.textContent=symbol;
-    chipPointer(chip,index,{container:"chips",list:state.elements,click:()=>toggleElement(symbol),moved:elementsChanged});
+    chipPointer(chip,index,{container:"chips",list:state.elements,click:()=>toggleElement(symbol),moved:elementsMoved});
     chips.appendChild(chip);
   });
 }
@@ -1314,15 +1367,53 @@ function chipDropMarker(container,dragged,target){
 let moleculeKeyboard=null;
 let moleculeDraft="";
 
+/*
+ * Like the element keys: off, the default set (from the library, named in the three student languages) or the
+ * teacher's own list (state.molecules). A name is a string (the teacher's, in the student language) or {he, ar, en}.
+ */
+let removedName=null;      // the name of the key last removed to the editor: kept in all its languages if not changed
+
+function shownMolecules(){
+  return state.moleculesMode==="default"?ChemicalGrammar.defaultMolecules():state.molecules;
+}
+
+/* the keys of the question: none when off */
+function activeMolecules(){
+  return state.moleculesOn?shownMolecules():[];
+}
+
+/* the name as the builder shows it: in the preview language, else English */
+function nameText(name){
+  if(!name) return "";
+  if(typeof name==="string") return name;
+  return name[previewLanguage()]||name.en||"";
+}
+
 /* library format: "H_{2}O", or {formula, name} when a name is given */
 function moleculesForLibrary(){
-  return state.molecules.map(m=>m.name?{formula:m.formula,name:m.name}:m.formula);
+  return activeMolecules().map(m=>m.name?{formula:m.formula,name:m.name}:m.formula);
 }
 
 function moleculesChanged(){
   renderMolecules();
   buildKeyboards();          // the keys appear in the keyboards of this page too
   changed();
+}
+
+/* "Add the key" light blue while a typed formula waits to be added - a reminder before saving the file */
+function renderAddReminder(){
+  $("addMolecule").classList.toggle("on",moleculeDraft.trim()!=="");
+}
+
+/* A removed key goes back to the keyboard (and its name to the name field), to change and add again;
+   removing another one replaces it. */
+function removeMolecule(index){
+  const m=state.molecules.splice(index,1)[0];
+  moleculeDraft=m.formula;
+  removedName=m.name||null;
+  $("moleculeName").value=nameText(m.name);
+  $("moleculeStatus").classList.remove("bad");
+  moleculesChanged();
 }
 
 function addMolecule(){
@@ -1333,7 +1424,10 @@ function addMolecule(){
   const problems=ChemicalGrammar.validate(formula,teacherLanguage);
   if(problems.length){ status.textContent=t("moleculeInvalid")+" "+problems.join(" "); status.classList.add("bad"); return; }
   if(state.molecules.some(m=>m.formula===formula)){ status.textContent=t("moleculeDuplicate"); status.classList.add("bad"); return; }
-  state.molecules.push({formula:formula,name:$("moleculeName").value.trim()});
+  const name=$("moleculeName").value.trim();
+  /* a key put back with its name unchanged keeps the name in all languages */
+  state.molecules.push({formula:formula,name:removedName&&name===nameText(removedName)?removedName:name});
+  removedName=null;
   moleculeDraft="";
   $("moleculeName").value="";
   status.textContent="";
@@ -1341,25 +1435,31 @@ function addMolecule(){
 }
 
 function renderMolecules(){
+  $("useMolecules").checked=state.moleculesOn;
+  $("moleculesBody").classList.toggle("disabled",!state.moleculesOn);
+  document.querySelectorAll("input[name=moleculesMode]").forEach(r=>{ r.checked=r.value===state.moleculesMode; });
+  $("customMolecules").classList.toggle("disabled",state.moleculesMode!=="custom");
+  const shown=shownMolecules();
   const chips=$("moleculeChips");
   chips.textContent="";
-  if(!state.molecules.length){
+  if(!shown.length){
     const empty=document.createElement("span");
     empty.className="empty";
     empty.textContent=t("moleculesNone");
     chips.appendChild(empty);
   }
-  state.molecules.forEach((m,index)=>{
+  shown.forEach((m,index)=>{
     const chip=document.createElement("span");
     chip.className="chip";
     chip.dir="ltr";
-    chip.textContent=ChemicalGrammar.plainFormula(m.formula)+(m.name?" — "+m.name:"");
+    chip.textContent=ChemicalGrammar.plainFormula(m.formula);
+    if(m.name) chip.title=chip.textContent+" — "+nameText(m.name);    // the key's tooltip on the keyboard; not its label
     chipPointer(chip,index,{container:"moleculeChips",list:state.molecules,
-      click:()=>{ state.molecules.splice(index,1); moleculesChanged(); },moved:moleculesChanged});
+      click:()=>removeMolecule(index),moved:moleculesChanged});
     chips.appendChild(chip);
   });
   /* keys that appear in the reference answer may give it away (no automatic "add" - design, section 6) */
-  const inReference=state.molecules.filter(m=>state.correctAnswer.indexOf(m.formula)>=0);
+  const inReference=activeMolecules().filter(m=>state.correctAnswer.indexOf(m.formula)>=0);
   const status=$("moleculeStatus");
   if(!status.classList.contains("bad")){
     status.textContent=inReference.length?t("moleculeGivesAway")+" "+inReference.map(m=>ChemicalGrammar.plainFormula(m.formula)).join(", "):"";
@@ -1885,6 +1985,17 @@ document.querySelectorAll("input[name=elementsMode]").forEach(radio=>{
 });
 /* From the default set or "none" this switches to a custom panel: the current panel plus the missing elements. */
 $("addMolecule").addEventListener("click",addMolecule);
+$("useMolecules").addEventListener("change",e=>{ state.moleculesOn=e.target.checked; moleculesChanged(); });
+document.querySelectorAll("input[name=moleculesMode]").forEach(radio=>{
+  radio.addEventListener("change",()=>{
+    if(!radio.checked) return;
+    state.moleculesMode=radio.value;
+    if(state.moleculesMode==="custom"&&!state.molecules.length) state.molecules=ChemicalGrammar.defaultMolecules();
+    moleculesChanged();
+  });
+});
+$("moleculesFromDefault").addEventListener("click",()=>{ state.molecules=ChemicalGrammar.defaultMolecules(); moleculesChanged(); });
+$("clearMolecules").addEventListener("click",()=>{ state.molecules=[]; moleculesChanged(); });
 $("submitTry").addEventListener("click",submitTry);
 $("addFromReference").addEventListener("click",()=>{
   if(state.elementsMode!=="custom") state.elements=(panelElements()||[]).slice();
@@ -1894,12 +2005,9 @@ $("addFromReference").addEventListener("click",()=>{
 });
 $("startFromDefault").addEventListener("click",()=>{ state.elements=DEFAULT_ELEMENTS.slice(); elementsChanged(); });
 $("clearElements").addEventListener("click",()=>{ state.elements=[]; elementsChanged(); });
-// One-off sorts: the result is an ordinary order, still changed by dragging afterwards.
-$("sortAlpha").addEventListener("click",()=>{ state.elements.sort(); elementsChanged(); });
-$("sortAtomic").addEventListener("click",()=>{
-  state.elements.sort((a,b)=>ALL_ELEMENTS.indexOf(a)-ALL_ELEMENTS.indexOf(b));
-  elementsChanged();
-});
+// The sort is kept (light blue button) until a drag breaks it; it is saved in the file.
+$("sortAlpha").addEventListener("click",()=>{ state.elementsSort="alpha"; elementsChanged(); });
+$("sortAtomic").addEventListener("click",()=>{ state.elementsSort="atomic"; elementsChanged(); });
 
 $("copyFromReference").addEventListener("click",()=>{ initialKeyboard.setValue(state.correctAnswer); });
 $("clearInitial").addEventListener("click",()=>{ initialKeyboard.setValue(""); });

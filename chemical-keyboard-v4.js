@@ -422,6 +422,22 @@ var SYNTAX_TEXT={
     he:"המספרים לפני סמל צריכים להיות מספר מסה (למעלה) ומספר אטומי (למטה)",
     ar:"يجب أن تكون الأرقام قبل الرمز عددًا كتليًا (في الأعلى) وعددًا ذريًا (في الأسفل)"
   },
+  /* 2026-10-17: a term with no element symbol - ⁺(aq), (aq), 2⁺, a number alone */
+  "missing-formula":{
+    en:"a charge, a state or a coefficient is written without a formula (element symbols) before it",
+    he:"מטען, מצב צבירה או מקדם כתובים בלי נוסחה (סמלי יסודות) לפניהם",
+    ar:"كُتبت شحنة أو حالة أو معامل دون صيغة (رموز عناصر) قبلها"
+  },
+  "empty-parentheses":{
+    en:"there is nothing inside a pair of parentheses",
+    he:"אין דבר בתוך זוג סוגריים",
+    ar:"لا يوجد شيء داخل زوج من الأقواس"
+  },
+  "missing-hydrate-part":{
+    en:"a part of the formula is missing before or after the dot (·)",
+    he:"חסר חלק של הנוסחה לפני הנקודה (·) או אחריה",
+    ar:"يوجد جزء مفقود من الصيغة قبل النقطة (·) أو بعدها"
+  }
 };
 
 /*
@@ -1053,8 +1069,9 @@ function makeChar(ch, script, pair, kind) {
 
           part = group("·");
 
-          if (!part.length) {
-            errors.push({ code: "missing-species", range: [x.start, x.end] });
+          /* nothing before the dot (·H₂O) or after it (CuSO₄·) */
+          if (!part.length || !arr.length && stop === null) {
+            errors.push({ code: "missing-hydrate-part", range: [x.start, x.end] });
           }
 
           arr.push({
@@ -1075,8 +1092,14 @@ function makeChar(ch, script, pair, kind) {
           var count = 1;
           var groupCountRange = null;
 
+          var openIndex = i;
           i++;
           children = group(")");
+
+          /* "()" only - not "(xq)", whose letters already are "a symbol in an unexpected place" */
+          if (!children.length && i === openIndex + 2) {
+            errors.push({ code: "empty-parentheses", range: [st, tokens[i - 1].end] });
+          }
 
           if (i < to && tokens[i].script === "sub" && isDigits(tokens[i].text)) {
             count = Number(tokens[i].text);
@@ -1574,6 +1597,14 @@ function makeChar(ch, script, pair, kind) {
 
     if (chargeText) {
       writtenLabel += "^" + chargeText;
+    }
+
+    /*
+     * No element symbol at all: a charge, a state, a coefficient or a number alone (⁺(aq), (aq), 2⁺, 2) - 2026-10-17.
+     * Only when the formula part has no other error (h₂o already gets "a symbol in an unexpected place").
+     */
+    if (!p.errors.length && !sortedKeys(speciesComposition).length) {
+      errors.push({ code: "missing-formula", range: [tokens[from].start, tokens[to - 1].end] });
     }
 
     errors = errors.concat(p.errors);
@@ -3300,6 +3331,22 @@ function validateWriting(value,language,options){
       problems.push(errors[i].description);
     }
   }
+
+  /*
+   * Outside a nuclear question, a nucleus with only one of its two numbers (₂O, ²O) is a writing mistake
+   * (2026-10-17). In a nuclear question it stays a graded error ("missing atomic / mass number").
+   */
+  options=options||{};
+  if(!options.nuclear&&!options.lipids){
+    var ast=value&&value.type?value:analyzeValue(value),lang=language==="he"||language==="ar"?language:"en",text;
+    var halfWritten=(ast.reactants||[]).concat(ast.products||[]).some(function(sp){
+      return sp.nuclear&&!sp.nuclear.particle&&(sp.nuclear.massWritten===null)!==(sp.nuclear.atomicWritten===null);
+    });
+    if(halfWritten){
+      text=ERROR_TEXT[lang]["syntax-error"].replace("{parserCode}",SYNTAX_TEXT["invalid-prescript"][lang]);
+      if(problems.indexOf(text)<0)problems.push(text);
+    }
+  }
   return problems;
 }
 
@@ -4060,9 +4107,19 @@ ChemicalKeyboard.prototype.build=function(){
 
   /* config.formulaStateKey: a state written as a formula, I₂(CCl₄) - see insertFormulaState */
   if(this.config.formulaStateKey){
-    var formulaStateButton=btn(statesRow,"(▢)",function(){
+    var formulaStateButton=btn(statesRow,"",function(){
       self.insertFormulaState();
     },t.tipFormulaState);
+    /*
+     * Label X₍▢₎: a state is a subscript after the substance - not the parentheses key (▢) (2026-10-17). The grey X
+     * stands for the formula already typed; the state is drawn small and lowered, as in the display.
+     */
+    var stateBase=node("span","X"),stateSub=node("span","(▢)");
+    apply(stateBase,{color:"#8a96a3"});
+    apply(stateSub,{fontSize:"70%",verticalAlign:"-.35em",marginLeft:"1px"});
+    formulaStateButton.appendChild(stateBase);
+    formulaStateButton.appendChild(stateSub);
+    formulaStateButton.setAttribute("aria-label",t.tipFormulaState);
     removeButtonFocus(formulaStateButton);
   }
 
@@ -4285,7 +4342,8 @@ ChemicalKeyboard.prototype.build=function(){
         sym,
         function(){self.insertText(sym,"normal");},
         tooltip,
-        {width:"100%",minWidth:"0",gridColumn:"span 2"}
+        /* the elements start on a new row: not beside an odd last molecule key (2026-10-17) */
+        {width:"100%",minWidth:"0",gridColumn:i===0&&self.moleculeKeys.length?"1 / span 2":"span 2"}
       );
     })(common[i]);
   }
@@ -4971,6 +5029,17 @@ function isUnitKind(kind){ return kind==="element"||kind==="state"||kind==="word
 /* the group keys of a fatty-acid question (config.lipids) when the teacher set no molecule keys */
 var LIPID_GROUP_KEYS=["COOH","CH_{3}","CH_{2}","CH=CH"];
 
+/*
+ * The default molecule keys (2026-10-17): a first set, to show the feature; more can be added later (the curriculum
+ * list, MOLECULES-DESIGN.md). Names in the three student languages - the tooltip uses the student's. The builder
+ * copies the list into the question, so a later change of this set does not change existing questions.
+ */
+var DEFAULT_MOLECULES=[
+  {formula:"H_{2}O",name:{en:"water",he:"מים",ar:"ماء"}},
+  {formula:"SO_{4}^{2-}",name:{en:"sulfate ion",he:"יון סולפט",ar:"أيون الكبريتات"}},
+  {formula:"NH_{3}",name:{en:"ammonia",he:"אמוניה",ar:"أمونيا"}}
+];
+
 function moleculeKeysFrom(list){
   return (Array.isArray(list)?list:[]).map(function(item){
     if(typeof item==="string")return item?{formula:item,label:"",name:null}:null;
@@ -4992,11 +5061,42 @@ function moleculeTooltip(key,language){
   return plainFormula(key.formula)+(name?" — "+name:"");
 }
 
-/* The formula drawn for a key label: subscripts and charges as small lowered / raised text. */
+/*
+ * The formula drawn for a key label: subscripts and charges as small lowered / raised text. A subscript and a
+ * superscript at the same place are stacked (SO₄²⁻); the numbers of a nuclide before its symbol (²³⁸₉₂U) are
+ * right-aligned against it, as on the particle keys and in the typing area (2026-10-17).
+ */
 function formulaNodes(formula){
-  var box=document.createElement("span"),chars=modelFromValue(formula),i,c,s;
-  for(i=0;i<chars.length;i++){
+  var box=document.createElement("span"),chars=modelFromValue(formula),i,j,c,s,sub,sup,next,prev,prescript;
+
+  function isScript(x){ return x&&!x.kind&&(x.script==="sub"||x.script==="sup"); }
+  function line(text,top,right){
+    var l=document.createElement("span");
+    l.textContent=text;
+    apply(l,{position:"absolute",top:top,fontSize:"70%",lineHeight:"1",whiteSpace:"nowrap"});
+    l.style[right?"right":"left"]="0";
+    return l;
+  }
+
+  for(i=0;i<chars.length;i=j){
     c=chars[i];
+    if(isScript(c)){
+      sub="";sup="";
+      for(j=i;isScript(chars[j]);j++){ if(chars[j].script==="sub")sub+=chars[j].ch; else sup+=chars[j].ch; }
+      next=chars[j];prev=i>0?chars[i-1]:null;
+      prescript=!!next&&next.script==="normal"&&(isUpper(next.ch)||Object.prototype.hasOwnProperty.call(PARTICLES,next.ch))&&
+        (!prev||prev.script==="normal"&&(prev.ch==="+"||isArrowChar(prev.ch)||isDigit(prev.ch)));
+      if(sub&&sup||prescript){
+        s=document.createElement("span");
+        apply(s,{display:"inline-block",position:"relative",width:Math.max(sub.length,sup.length)*.42+"em",
+          height:"1em",verticalAlign:"-.18em",marginRight:prescript?"1px":"0"});
+        if(sup)s.appendChild(line(sup,"-.3em",prescript));
+        if(sub)s.appendChild(line(sub,".72em",prescript));
+        box.appendChild(s);
+        continue;
+      }
+      j=i+1;
+    }else j=i+1;
     s=document.createElement("span");
     s.textContent=c.kind==="fstate"?"("+(c.condition||[]).map(function(x){return x.ch;}).join("")+")":c.ch;
     if(c.script==="sub"||c.script==="sup"){
@@ -5481,7 +5581,7 @@ ChemicalKeyboard.prototype.buildValidation=function(root,t){
 
 /* The problems of the writing (texts in the keyboard language); empty when it is written correctly. */
 ChemicalKeyboard.prototype.validate=function(){
-  return validateWriting(this.getAST(),this.language,{lipids:this.config.lipids===true});
+  return validateWriting(this.getAST(),this.language,{lipids:this.config.lipids===true,nuclear:this.config.nuclear===true});
 };
 
 ChemicalKeyboard.prototype.scheduleValidation=function(){
@@ -5500,10 +5600,15 @@ ChemicalKeyboard.prototype.updateValidation=function(){
 };
 
 ChemicalKeyboard.prototype.showValidation=function(problems){
-  var invalid=problems.length>0,i,line;
+  var invalid=problems.length>0,i,line,rtl=this.language==="he"||this.language==="ar";
 
   this.validationIcon.style.display=invalid?"block":"none";
-  this.validationIcon.title=invalid?this.validationText+"\n"+problems.join("\n"):"";
+  /*
+   * The tooltip right to left in Hebrew / Arabic (2026-10-17): a tooltip cannot be styled; Chrome and Edge follow
+   * the element's dir, and a right-to-left mark at the start of each line sets the direction in other browsers.
+   */
+  this.validationIcon.dir=rtl?"rtl":"ltr";
+  this.validationIcon.title=invalid?[this.validationText].concat(problems).map(function(s){ return rtl?"‏"+s:s; }).join("\n"):"";
   this.validationIcon.setAttribute("aria-label",invalid?this.validationIcon.title:"");
   this.display.style.setProperty("border",invalid?"1px solid #c62828":"1px solid #789","important");
 
@@ -7076,7 +7181,8 @@ function runQuestion(host,cfg){
   elements:SYMBOLS.slice(),
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
-  version:"2.8.3"    // raise with every change, to see in the console which copy a page runs
+  defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
+  version:"2.8.8"// raise with every change, to see in the console which copy a page runs
 };
 
 /* questions queued by snippets before the library was loaded */

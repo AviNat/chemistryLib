@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מקלדת כימית ב־Moodle - הדגמה לצוות</title>
+<style>
+:root{
+  --text:#1d2733; --muted:#5b6876; --line:#d5dce4; --bg:#f4f6f9; --card:#fff;
+  --accent:#1f5f99; --accent-soft:#e3eef8;
+  --red:#ffb9b9; --blue:#cfe8ff; --yellow:#ffe49c; --ok:#1a7f37; --mid:#9a5b00; --bad:#b42318;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.6 "Segoe UI",Arial,"Noto Sans Hebrew",sans-serif}
+main{max-width:980px;margin:0 auto;padding:24px 16px 60px}
+header{background:var(--accent);color:#fff;padding:28px 16px}
+header .in{max-width:980px;margin:0 auto}
+header h1{margin:0 0 8px;font-size:30px}
+header p{margin:0;opacity:.92}
+h2{font-size:24px;margin:40px 0 12px;padding-bottom:6px;border-bottom:3px solid var(--accent)}
+h3{font-size:20px;margin:28px 0 10px;color:var(--accent)}
+section.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 22px 18px;margin:16px 0}
+.note{color:var(--muted);font-size:15px}
+/* formulas: always left to right, inside the right-to-left text */
+.f{direction:ltr;unicode-bidi:isolate;font-family:"Cambria Math","Times New Roman",serif;font-size:1.08em;white-space:nowrap}
+.k{direction:ltr;unicode-bidi:isolate;font-family:Consolas,"Courier New",monospace;background:#eef1f5;border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap}
+.msg{display:block;background:#f7f9fb;border-inline-start:4px solid var(--accent);padding:6px 12px;margin:6px 0;border-radius:4px}
+ol.tour>li{margin:10px 0}
+ol.tour b{color:var(--accent)}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:16px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:start;vertical-align:top}
+th{background:var(--accent-soft)}
+td.score{text-align:center;font-weight:700;width:60px}
+.s100{color:var(--ok)} .s9x{color:#3b6e00} .s7x{color:var(--mid)} .s0{color:var(--bad)}
+.example{margin:14px 0 6px;font-weight:600}
+.swatch{display:inline-block;width:1.1em;height:1.1em;border-radius:3px;vertical-align:-.2em;margin-inline-end:6px;border:1px solid #0002}
+ul{padding-inline-start:22px}
+li{margin:4px 0}
+@media print{body{background:#fff} header{background:#fff;color:var(--text);border-bottom:3px solid var(--accent)} section.card{break-inside:avoid}}
+@media (max-width:640px){body{font-size:16px} table{font-size:14px} th,td{padding:5px 6px}}
+</style>
+</head>
+<body>
+
+<header><div class="in">
+  <h1>מקלדת כימית ב־Moodle</h1>
+  <p>הדגמה לצוות מורי הכימיה</p>
+</div></header>
+
+<main>
+
+<section class="card">
+  <p><b>במשפט אחד:</b> מקלדת לכתיבת נוסחאות ומשוואות כימיות בתוך שאלה ב־Moodle, שבודקת את תשובת התלמיד מול
+  תשובת המורה, מסבירה כל טעות על הנוסחה עצמה, ונותנת ציון לפי מחוון שהמורה קובע.</p>
+  <p class="note">כל התוצאות שמובאות כאן (ציונים והודעות) הופקו על ידי המערכת עצמה, עם מחוון ברירת המחדל של הבונה.
+  ההודעות לתלמיד מובאות כפי שהמערכת מציגה אותן בעברית. המערכת תומכת בשלוש שפות: עברית, ערבית, אנגלית.</p>
+</section>
+
+<!-- ============================================================ -->
+<h2>חלק 1 - סקירה מהירה (5 דקות)</h2>
+
+<ol class="tour">
+  <li><b>התלמיד כותב כימיה, לא טקסט.</b> מקלדת שנבנתה לכימיה: כתב תחתי מופיע מעצמו
+    (<span class="k">H 2 O</span> ← <span class="f">H₂O</span>), מטענים, מצבי צבירה, חצים עם תנאי תגובה, חץ שיווי משקל,
+    הידרטים. סימן <b style="color:var(--bad)">!</b> אדום מתריע על טעות כתיבה כבר בזמן ההקלדה - לפני שהתשובה נשלחת.</li>
+  <li><b>המורה מחליט מה השאלה מאפשרת.</b> דף בונה אחד: מקלידים את התשובה הנכונה באותה מקלדת, בוחרים אילו מקשים יקבל
+    התלמיד, כמה עולה כל סוג טעות, ומה התלמיד רואה אחרי ההגשה. אחר כך מעתיקים שורת קוד אחת לשאלה ב־Moodle.</li>
+  <li><b>התלמיד מקבל משוב, לא רק "שגוי".</b> כל טעות מסומנת על הנוסחה של התלמיד (באדום) ועל התשובה הנכונה (בכחול),
+    עם משפט שמסביר אותה, בשפת התלמיד.</li>
+  <li><b>ציון אוטומטי והוגן.</b> ניקוד חלקי לפי קטגוריות (חומרים, מקדמים, מצבי צבירה, מטענים, חץ, תנאים ...).
+    "טעות אחת = הורדה אחת": מקדם שגוי לא נענש פעם נוספת על האטומים הלא מאוזנים שהוא גורם.</li>
+  <li><b>נושאים מיוחדים.</b> משוואות גרעיניות (<span class="f">²³⁸₉₂U</span>, α, β, γ ...) וחומצות שומן / טריגליצרידים
+    (<span class="f">C18:1(ω9)cis</span>, <span class="f">TG(...)</span>), עם בדיקה לפי כללי הבגרות.</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2>חלק 2 - העמקה לפי נושאים</h2>
+
+<section class="card">
+<h3>א. המקלדת של התלמיד</h3>
+<p>הדגמה: להקליד כל אחת מאלה בשידור חי.</p>
+<table>
+  <tr><th>מה מקלידים</th><th>התוצאה</th><th>מה רואים</th></tr>
+  <tr><td><span class="k">H 2 S O 4</span></td><td><span class="f">H₂SO₄</span></td><td>ספרה אחרי סמל = כתב תחתי; אות גדולה יוצאת ממנו</td></tr>
+  <tr><td><span class="k">2 H 2 + O 2 → 2 H 2 O</span></td><td><span class="f">2H₂ + O₂ → 2H₂O</span></td><td>המקדמים נשארים בגודל רגיל</td></tr>
+  <tr><td><span class="k">Ca (▢) O H →| 2</span></td><td><span class="f">Ca(OH)₂</span></td><td>מקש הסוגריים פותח זוג עם מקום להקליד בתוכו</td></tr>
+  <tr><td><span class="k">Cu S O 4 · 5 H 2 O</span></td><td><span class="f">CuSO₄·5H₂O</span></td><td>הידרט</td></tr>
+  <tr><td><span class="k">Na ⁺(aq)</span> &nbsp; <span class="k">Cl ⁻(aq)</span></td><td><span class="f">Na⁺(aq)</span>, <span class="f">Cl⁻(aq)</span></td><td>מקשי יונים: מטען + מצב צבירה בלחיצה אחת</td></tr>
+  <tr><td><span class="k">(s) (l) (g) (aq)</span></td><td><span class="f">NaCl<sub>(s)</sub></span></td><td>מצבי צבירה, ככתב תחתי</td></tr>
+  <tr><td><span class="k">Ca C O 3 (s) →[Δ] …</span></td><td><span class="f">CaCO₃(s) →<sup>Δ</sup> …</span></td><td>תנאי מעל החץ: Δ, hν, טמפרטורה, זרז</td></tr>
+  <tr><td><span class="k">N 2 + 3 H 2 ⇌ 2 N H 3</span></td><td><span class="f">N₂ + 3H₂ ⇌ 2NH₃</span></td><td>חץ שיווי משקל</td></tr>
+  <tr><td><span class="k">I 2 X₍▢₎ C Cl 4</span></td><td><span class="f">I₂(CCl₄)</span></td><td>מצב צבירה שנכתב כנוסחה (תמיסה בממס אחר)</td></tr>
+</table>
+<p><b>עוד שכדאי להראות:</b></p>
+<ul>
+  <li>ה־<b style="color:var(--bad)">!</b> האדום (אחרי השהיה של 2 שניות): לנסות <span class="f">Hcl</span> (אינו יסוד),
+    <span class="f">⁺(aq)</span> בלי כלום לפניו, <span class="f">H₂O)</span> (סוגר מיותר). הצבעה על ה־"!" מציגה את הסיבה,
+    בשפת התלמיד ומימין לשמאל.</li>
+  <li>מקשי מולקולות: לחיצה אחת מקלידה נוסחה שלמה (<span class="f">H₂O</span>, <span class="f">SO₄²⁻</span>, <span class="f">NH₃</span>).
+    התלמיד עדיין יכול לערוך אותה.</li>
+  <li>"כל היסודות": הרשימה המלאה של הטבלה המחזורית תמיד במרחק לחיצה, גם כשבלוח מוצגים רק מעטים.</li>
+  <li>גם המקלדת הפיזית עובדת (אותיות, ספרות, <span class="k">^</span> <span class="k">_</span> לכתב עילי / תחתי, סוגריים).</li>
+</ul>
+</section>
+
+<section class="card">
+<h3>ב. בונה השאלות - הגמישות שבידי המורה</h3>
+<p>פותחים את <span class="k">chemical-question-builder.html</span>. הכל בלחיצות, בלי קוד.</p>
+<ol>
+  <li><b>תשובת הייחוס</b> - מוקלדת באותה מקלדת. "בדיקה" מתריעה אם בתשובת המורה עצמה יש טעות כתיבה.</li>
+  <li><b>אילו מקשים יקבל התלמיד</b>
+    <ul>
+      <li>מקשי יסודות: ברירת המחדל, בחירה אישית (לחיצה על טבלה מחזורית; מיון לפי מספר אטומי או לפי א״ב; גרירה לכל סדר),
+        או ללא. "הוספת היסודות של תשובת הייחוס" בלחיצה אחת.</li>
+      <li>מקשי מולקולות: ללא / ערכת ברירת מחדל (<span class="f">H₂O</span>, <span class="f">SO₄²⁻</span>, <span class="f">NH₃</span>,
+        עם שם בשפת התלמיד) / ערכה משלכם. הבונה מזהיר כשמקש עלול לגלות את התשובה.</li>
+      <li>אפשרויות: מקשי תנאי תגובה (Δ, hν, °C), כתב תחתי אוטומטי (אפשר לכבות אותו כשהמיומנות הנבדקת היא בדיוק כתיבת
+        המספרים התחתיים), מקשי יונים <span class="f">⁺(aq) ⁻(aq)</span>, המקש <span class="f">X₍▢₎</span>.</li>
+      <li>סוגי שאלות: משוואה גרעינית, חומצות שומן / טריגליצרידים (סעיף ה).</li>
+    </ul></li>
+  <li><b>תשובה התחלתית</b> (רשות) - התלמיד מתחיל מתשובה חלקית ומשלים אותה. למשל לתת
+    <span class="f">CH₄ + O₂ → CO₂ + H₂O</span> ולבקש רק את המקדמים.</li>
+  <li><b>איזומרים</b> - כברירת מחדל <span class="f">C₂H₅OH</span> ו־<span class="f">CH₃OCH₃</span> הם "אותם אטומים"
+    (מתקבל, עם הערה). מסמנים "התייחסות לאיזומרים כחומרים שונים" כשהמבנה חשוב - ואז <span class="f">CH₃OCH₃</span>
+    מקבל ‎−25:
+    <span class="msg">ל־<span class="f">CH3OCH3</span> יש אותם אטומים כמו ל־<span class="f">C2H5OH</span>, אך מבנה שונה; אלה חומרים שונים (איזומרים).</span></li>
+  <li><b>המחוון</b> - ראו סעיף ד.</li>
+  <li><b>מה רואה התלמיד אחרי ההגשה:</b> הציון, התשובה הנכונה, ההסברים - כל אחד מהם אפשר לכבות (למשל להסתיר את
+    התשובה עד סגירת הבוחן).</li>
+  <li><b>"נסו כתלמיד" + "הגשה וצפייה במשוב":</b> בודקים את השאלה בדיוק כפי שהתלמיד יראה אותה, לפני שהיא עולה ל־Moodle.</li>
+  <li>שומרים את השאלה לקובץ, פותחים אותו מאוחר יותר לשינויים; "העתקה" של קוד ה־Moodle והדבקה בשאלה (שורה אחת).</li>
+</ol>
+</section>
+
+<section class="card">
+<h3>ג. המשוב לתלמיד</h3>
+<p>אחרי ההגשה התלמיד רואה את התשובה שלו ואת התשובה הנכונה, עם הטעויות מסומנות:</p>
+<ul>
+  <li><span class="swatch" style="background:var(--red)"></span>אדום - החלק השגוי בתשובת התלמיד</li>
+  <li><span class="swatch" style="background:var(--blue)"></span>כחול - החלק המתאים בתשובה הנכונה</li>
+  <li><span class="swatch" style="background:var(--yellow)"></span>צהוב - יסוד שאינו מאוזן</li>
+</ul>
+<p>ומשפט אחד לכל טעות. דוגמאות (הודעות המערכת):</p>
+
+<div class="example">נכון: <span class="f">Ag⁺(aq) + Cl⁻(aq) → AgCl(s)</span> &nbsp;|&nbsp; תלמיד:
+  <span class="f">Ag⁺(aq) + <span style="background:var(--red)">Cl</span>(aq) → AgCl(s)</span></div>
+<span class="msg">המטען של Cl חסר. בתשובת הייחוס מופיע המטען −.</span>
+
+<div class="example">נכון: <span class="f">CaCO₃(s) →<sup>Δ</sup> CaO(s) + CO₂(g)</span> &nbsp;|&nbsp; תלמיד:
+  <span class="f">CaCO₃(s) → CaO(s) + CO₂(g)</span></div>
+<span class="msg">חסרים תנאי התגובה מעל החץ; בתשובת הייחוס מופיע: Δ.</span>
+
+<div class="example">נכון: <span class="f">NaCl(s) → Na⁺(aq) + Cl⁻(aq)</span> &nbsp;|&nbsp; תלמיד:
+  <span class="f">NaCl(s) → NaCl(aq)</span></div>
+<span class="msg">החומר <span class="f">Cl⁻</span> צריך להופיע בצד ימין, אך הוא חסר. (וגם <span class="f">Na⁺</span>)<br>
+  תשובת הייחוס אינה מכילה את <span class="f">NaCl</span> בצד ימין.</span>
+
+<p style="margin-top:20px"><b>הערות, לא טעויות (בלי הורדת נקודות)</b> - המערכת מזהה "אותה תשובה בכתיבה אחרת":</p>
+<table>
+  <tr><th>מקרה</th><th>תשובת התלמיד</th><th>תשובת הייחוס</th><th>ציון</th></tr>
+  <tr><td>סדר החומרים</td><td><span class="f">2O₂ + CH₄ → 2H₂O + CO₂</span></td><td><span class="f">CH₄ + 2O₂ → CO₂ + 2H₂O</span></td><td class="score s100">100</td></tr>
+  <tr><td>שיווי משקל הפוך</td><td><span class="f">2NH₃ ⇌ N₂ + 3H₂</span></td><td><span class="f">N₂ + 3H₂ ⇌ 2NH₃</span></td><td class="score s100">100</td></tr>
+  <tr><td>הידרט בלי נקודה</td><td><span class="f">CuSO₄H₁₀O₅</span></td><td><span class="f">CuSO₄·5H₂O</span></td><td class="score s100">100</td></tr>
+</table>
+<span class="msg">ל־<span class="f">CuSO4H10O5</span> יש את האטומים הנכונים, אך בתשובת הייחוס הוא כתוב עם נקודה (·): <span class="f">CuSO4·5H2O</span>.</span>
+<p>גם כתב תחתי 1 מיותר (<span class="f">H₂O₁</span>) וחומר שנכתב פעמיים באותו צד מקבלים הערה.</p>
+<p class="note">ההודעות בשפת התלמיד (עברית / ערבית / אנגלית), מימין לשמאל כשצריך; הנוסחאות נשארות משמאל לימין.</p>
+</section>
+
+<section class="card">
+<h3>ד. ציון אוטומטי - המחוון</h3>
+<p>המורה קובע הורדה לכל קטגוריה, "פעם אחת" או "לכל טעות" עם מקסימום. ברירת המחדל:</p>
+<table>
+  <tr><th>קטגוריה</th><th>הורדה</th></tr>
+  <tr><td>סוג תשובה שגוי (נוסחה במקום משוואה)</td><td>100</td></tr>
+  <tr><td>יסוד לא קיים</td><td>50</td></tr>
+  <tr><td>חומר שגוי / חסר / מיותר</td><td>25</td></tr>
+  <tr><td>מקדמים</td><td>10 לכל טעות, עד 20</td></tr>
+  <tr><td>כל המקדמים מוכפלים (פי 2 מהנכונים)</td><td>15</td></tr>
+  <tr><td>מצבי צבירה</td><td>5 לכל טעות, עד 15; 20 אם לא נכתב אף מצב צבירה</td></tr>
+  <tr><td>מטענים</td><td>10 לכל טעות, עד 20</td></tr>
+  <tr><td>חץ (<span class="f">→</span> במקום <span class="f">⇌</span>)</td><td>10</td></tr>
+  <tr><td>תנאים מעל החץ</td><td>5</td></tr>
+  <tr><td>שגיאת כתיבה (תחביר)</td><td>התשובה מקבלת 0</td></tr>
+</table>
+
+<p class="example">הדגמה - תגובה אחת, הרבה תלמידים: שריפת מתאן<br>
+נכון: <span class="f">CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(l)</span></p>
+<table>
+  <tr><th>תשובת התלמיד</th><th>ציון</th><th>למה</th></tr>
+  <tr><td><span class="f">2O₂(g) + CH₄(g) → 2H₂O(l) + CO₂(g)</span></td><td class="score s100">100</td><td>הסדר לא משנה</td></tr>
+  <tr><td><span class="f">CH₄(g) + O₂(g) → CO₂(g) + 2H₂O(l)</span></td><td class="score s9x">90</td><td>המקדם של <span class="f">O₂</span>. חוסר האיזון של O מוצג אך לא נענש שוב - טעות אחת, הורדה אחת</td></tr>
+  <tr><td><span class="f">2CH₄(g) + 4O₂(g) → 2CO₂(g) + 4H₂O(l)</span></td><td class="score s7x">85</td><td>מאוזנת, אבל כל המקדמים פי 2</td></tr>
+  <tr><td><span class="f">CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(g)</span></td><td class="score s9x">95</td><td>מצב הצבירה של <span class="f">H₂O</span></td></tr>
+  <tr><td><span class="f">CH₄ + 2O₂ → CO₂ + 2H₂O</span></td><td class="score s7x">80</td><td>אין מצבי צבירה בכלל</td></tr>
+  <tr><td><span class="f">CH₄(g) + 2O₂(g) → CO(g) + 2H₂O(l)</span></td><td class="score s7x">75</td><td>חומר שגוי: <span class="f">CO</span> במקום <span class="f">CO₂</span></td></tr>
+</table>
+
+<p class="example">דוגמאות נוספות</p>
+<table>
+  <tr><th>תשובה נכונה</th><th>תשובת התלמיד</th><th>ציון</th><th>למה</th></tr>
+  <tr><td rowspan="3"><span class="f">Mg(s) + 2HCl(aq) → MgCl₂(aq) + H₂(g)</span></td>
+      <td><span class="f">Mg(s) + HCl(aq) → MgCl₂(aq) + H₂(g)</span></td><td class="score s9x">90</td><td>מקדם</td></tr>
+  <tr><td><span class="f">Mg(s) + 2HCl(aq) → MgCl(aq) + H₂(g)</span></td><td class="score s7x">75</td><td><span class="f">MgCl</span> - נוסחת המלח שגויה</td></tr>
+  <tr><td><span class="f">Mg(s) + 2Hcl(aq) → …</span></td><td class="score s0">0</td><td>"Hc אינו סמל מוכר של יסוד כימי." - ה־"!" האדום הראה את זה עוד לפני ההגשה</td></tr>
+  <tr><td><span class="f">Ca(OH)₂</span></td><td><span class="f">CaOH₂</span></td><td class="score s7x">75</td><td>"ב־<span class="f">CaOH2</span> יש 1 אטומים של O, אך בחומר המתאים בתשובת הייחוס יש 2."</td></tr>
+  <tr><td><span class="f">Al₂(SO₄)₃</span></td><td><span class="f">Al₃(SO₄)₂</span></td><td class="score s7x">75</td><td>נוסחת המלח שגויה</td></tr>
+  <tr><td><span class="f">N₂ + 3H₂ ⇌ 2NH₃</span></td><td><span class="f">N₂ + 3H₂ → 2NH₃</span></td><td class="score s9x">90</td><td>חץ</td></tr>
+  <tr><td><span class="f">I₂(s) → I₂(CCl₄)</span></td><td><span class="f">I₂(s) → I₂(aq)</span></td><td class="score s9x">95</td><td>מצב צבירה</td></tr>
+</table>
+<p>הציון עובר ל־Moodle (סוג שאלה STACK): הוא נכנס לגיליון הציונים כמו כל שאלה אחרת.</p>
+</section>
+
+<section class="card">
+<h3>ה. סוגי שאלות מיוחדים</h3>
+
+<h3 style="font-size:18px">ה1. משוואות גרעיניות</h3>
+<ul>
+  <li>מקשי חלקיקים: α β β⁺ γ e⁻ n p - כסמל בלבד או עם המספרים (<span class="f">⁴₂α</span>, <span class="f">⁰₋₁β</span>).</li>
+  <li>אפשרות: המספרים מתמלאים אוטומטית כשהתלמיד בוחר יסוד (<span class="f">C</span> ← <span class="f">¹²₆C</span>, ניתן לעריכה).</li>
+  <li>הבדיקה לפי שימור מספרי המסה והמספרים האטומיים.</li>
+  <li><span class="f">α = ⁴₂α = ⁴₂He</span> וגם <span class="f">β = ⁰₋₁β = ⁰₋₁e = e⁻</span> מזוהים כאותו חלקיק.</li>
+</ul>
+<table>
+  <tr><th>תשובה נכונה</th><th>תשובת התלמיד</th><th>ציון</th><th>הודעת המערכת</th></tr>
+  <tr><td rowspan="2"><span class="f">²³⁸₉₂U → ²³⁴₉₀Th + ⁴₂He</span><br><span class="note">דעיכת אלפא</span></td>
+      <td><span class="f">²³⁸₉₂U → ²³⁴₉₀Th + α</span></td><td class="score s7x">80</td>
+      <td>"α כתוב בלי מספר המסה והמספר האטומי; בתשובת הייחוס הם כתובים."<br><span class="note">בחירת המורה: אם בתשובת הייחוס יש מספרים, גם התלמיד צריך לכתוב אותם.</span></td></tr>
+  <tr><td><span class="f">²³⁸₉₂U → ²³⁵₉₀Th + ⁴₂He</span></td><td class="score s7x">80</td>
+      <td>"מספרי המסה אינם נשמרים: בצד שמאל 238 ובצד ימין 239."<br><span class="note">האיזון לא נענש שוב.</span></td></tr>
+  <tr><td><span class="f">¹⁴₆C → ¹⁴₇N + ⁰₋₁e</span><br><span class="note">דעיכת בטא, תיארוך פחמן</span></td>
+      <td><span class="f">¹⁴₆C → ¹⁴₆N + ⁰₋₁e</span></td><td class="score s9x">90</td>
+      <td>"המספר האטומי של <span class="f">¹⁴N</span> הוא 6, אך הוא צריך להיות 7."</td></tr>
+</table>
+
+<h3 style="font-size:18px">ה2. חומצות שומן וטריגליצרידים (כללי הבגרות)</h3>
+<ul>
+  <li>מקשים: <span class="k">:</span> <span class="k">ω</span> <span class="k">cis</span> <span class="k">trans</span> <span class="k">=</span> <span class="k">TG(▢)</span>
+    והקבוצות <span class="f">COOH</span>, <span class="f">CH₃</span>, <span class="f">CH₂</span>, <span class="f">CH=CH</span>.</li>
+  <li>חומצת שומן נבדקת בשלושה חלקים: פחמנים / קשרים כפולים / מיקום ω + cis-trans.</li>
+</ul>
+<table>
+  <tr><th>תשובה נכונה</th><th>תשובת התלמיד</th><th>ציון</th><th>הודעת המערכת</th></tr>
+  <tr><td rowspan="5"><span class="f">C18:1(ω9)cis</span><br><span class="note">חומצה אולאית</span></td>
+      <td><span class="f">C18:1ω9cis</span></td><td class="score s100">100</td><td>הסוגריים סביב ω אינם חובה</td></tr>
+  <tr><td><span class="f">C16:1(ω9)cis</span></td><td class="score s7x">67</td><td>"מיקום הקשר הכפול (ω) נכון, אך יש טעות בספירת סך אטומי הפחמן בשרשרת (16 במקום 18). בדקו שוב את אורך החומצה."</td></tr>
+  <tr><td><span class="f">C18:1(ω9)trans</span></td><td class="score s7x">66</td><td>"התצורה היא trans, אך בתשובה הנכונה cis."</td></tr>
+  <tr><td><span class="f">C18:1</span></td><td class="score s7x">66</td><td>"שכחת לציין את מיקום הקשר הכפול (ω) ואת המבנה המרחבי שלו (cis/trans)."</td></tr>
+  <tr><td><span class="f">CH₃(CH₂)₇CH=CH(CH₂)₇COOH</span></td><td class="score s0">0</td><td>"נדרשת כתיבה ברישום מקוצר (למשל <span class="f">C16:0</span>) ולא בנוסחת מבנה מקוצרת."<br><span class="note">התשובה חייבת להיות בפורמט של השאלה.</span></td></tr>
+  <tr><td rowspan="2"><span class="f">TG(C16:0, C18:1ω9cis, C18:0)</span></td>
+      <td><span class="f">TG(C18:0, C16:0, C18:1ω9cis)</span></td><td class="score s100">100</td><td>סדר חומצות השומן לא משנה</td></tr>
+  <tr><td><span class="f">TG(C16:0, C18:1ω9cis)</span></td><td class="score s0">34</td><td>"חסרה בטריגליצריד חומצת השומן <span class="f">C18:0</span>."<br>"טריגליצריד בנוי משלוש חומצות שומן, אך רשמת 2."</td></tr>
+</table>
+</section>
+
+<section class="card">
+<h3>ו. ב־Moodle</h3>
+<ul>
+  <li>השאלה היא שאלת STACK עם שני שדות; הקוד מהבונה נכנס לטקסט השאלה.</li>
+  <li>המקלדת והבדיקות נטענות ממקום מרכזי אחד: שיפור מגיע לכל השאלות הקיימות בלי לערוך אותן.</li>
+  <li>דף הסקירה (אחרי הבוחן) מציג את התשובות המסומנות וההסברים, לפי האפשרויות שהמורה בחר.</li>
+</ul>
+</section>
+
+<!-- ============================================================ -->
+<h2>סדר הדגמה מוצע (כ־20 דקות)</h2>
+<ol>
+  <li>סקירה מהירה - חלק 1 (5 דקות).</li>
+  <li>מבט התלמיד: הקלדה חיה של <span class="f">CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(l)</span>; ה־"!" האדום עם <span class="f">Hcl</span>.</li>
+  <li>הבונה: יצירת שאלת המתאן - תשובת ייחוס, מקשי יסודות (הוספה מתשובת הייחוס), מחוון ברירת המחדל.
+    "נסו כתלמיד", הגשת שלוש תשובות מהטבלה בסעיף ד: 100, 90, 75.</li>
+  <li>משוב: הצבעים והמשפטים; החלפת שפת התלמיד לערבית / אנגלית.</li>
+  <li>גמישות: כיבוי הכתב התחתי האוטומטי; הוספת מקשי מולקולות; הפעלת איזומרים.</li>
+  <li>גרעיני: דעיכת אלפא של אורניום־238, עם α במקום <span class="f">⁴₂He</span>.</li>
+  <li>חומצות שומן: חומצה אולאית, <span class="f">C16:1(ω9)cis</span> ← 67.</li>
+  <li>Moodle: הדבקת הקוד, מענה על השאלה, דף הסקירה וגיליון הציונים.</li>
+  <li>שאלות; איסוף משאלות (אילו מולקולות לערכת ברירת המחדל, אילו נושאים בהמשך).</li>
+</ol>
+
+</main>
+</body>
+</html>

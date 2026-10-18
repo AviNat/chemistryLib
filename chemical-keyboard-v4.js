@@ -586,6 +586,32 @@ function unscript(ch){
   return UNSCRIPT[ch]||null;
 }
 
+/*
+ * The same formula text as characters for formulaNodes - the HTML drawing used where there is no MathJax (a STACK-JS
+ * frame, 2026-10-18). Same rules as formulaTextToLatex: digits after a symbol or ")" are subscripts, everything
+ * after "^" is the charge, Unicode script digits (²³⁸₉₂U, e⁻) keep their level.
+ */
+function formulaTextToChars(text){
+  var out=[],i=0,ch,u;
+  text=String(text||"");
+  function push(c,script){ out.push({ch:c,script:script}); }
+  while(i<text.length){
+    ch=text.charAt(i);
+    if((u=unscript(ch))){ push(u.ch,u.script); i++; continue; }
+    if(ch==="^"){
+      for(i++;i<text.length;i++)push(text.charAt(i),"sup");
+      break;
+    }
+    push(ch,"normal");
+    i++;
+    if(isUpper(ch)&&i<text.length&&isLower(text.charAt(i))){ push(text.charAt(i),"normal"); i++; }
+    if(ch===")"||isUpper(ch)){
+      while(i<text.length&&isDigit(text.charAt(i))){ push(text.charAt(i),"sub"); i++; }
+    }
+  }
+  return out;
+}
+
 function formulaTextToLatex(text){
   var out="",i=0,symbol,digits,ch,u,sup,sub;
 
@@ -754,7 +780,12 @@ function appendErrorMessage(parent,error,language,index){
     value=selectedToken==="{species}"?error.species:
       selectedToken==="{referenceSpecies}"?error.referenceSpecies:
       error.atom;
-    formula=node("span","\\("+formulaTextToLatex(value)+"\\)");
+    /* typeset by the page's MathJax; without it (a STACK-JS frame) drawn as HTML */
+    if(typeof window!=="undefined"&&window.MathJax)formula=node("span","\\("+formulaTextToLatex(value)+"\\)");
+    else{
+      formula=node("span");
+      formula.appendChild(formulaNodes(formulaTextToChars(value)));
+    }
 
     apply(formula,{
       display:"inline-block",
@@ -6884,70 +6915,147 @@ function feedbackText(language,key){
 }
 
 /* ================================================================
-   QUESTIONS ON A PAGE (the Moodle snippet of the question builder, QUESTION-BUILDER.md)
+   QUESTIONS IN STACK-JS AND IN OTHER SYSTEMS (STACKJS-DESIGN.md, 2026-10-18)
 
-   The student-side code lives here, in the library - not in the pasted snippet (2026-10-16): a Moodle
-   server or text filter may turn "<", ">" and "&" inside a pasted script into &lt; &gt; &amp;, which breaks
-   any JavaScript that uses them. The snippet is now only a box, the configuration (JSON) and a few lines
-   without those characters that queue the question and load the library:
+   All student-side code is here; a question is started by one of two entry points, which give runQuestion
+   an adapter - where the saved state comes from, where the new state goes, answering or review:
 
-     window.__chemkbdQuestions.push({ id: "chemkbd-q1", script: document.currentScript })
+     ChemicalKeyboard.mountStackJs(stack_js, config)   inside a STACK [[iframe]] (the builder's template)
+     ChemicalKeyboard.mount(element, config, options)  any other system: options.state, .readOnly, .onChange
 
-   startQueuedQuestions (run when the library loads, and by every later snippet) starts each queued question
-   when the page is fully read. A side effect: changes of the student-side code reach Moodle with a library
-   release, without copying the questions again.
+   The classic Moodle snippet (a script in the question text, inputs found in the page) was removed: STACK-JS
+   runs the question in a sandboxed frame, which cannot reach the page - the inputs are reached through
+   stack_js.request_access_to_input, the review is recognized by the inputs being read-only there (probe T2).
+
+   The saved state (the STACK string input, or what onChange gets): JSON
+     {"v":2,"answer":"2H_{2}+O_{2}→2H_{2}O","score":0.9,"feedback":["90%","..."]}
+   answer - read back when the page is shown again; score 0..1; feedback - the texts the student got, for the
+   response history. Quotes and Hebrew survive a STACK string input unchanged (probe T4).
    ================================================================ */
 
-/*
- * undo what a server or filter may have done to the configuration text: <br /> for each line break (Moodle's
- * auto-format, found 2026-10-16) and HTML escaping
- */
-function decodeEntities(text){
-  return String(text)
-    .replace(/<br\s*\/?>/gi,"")
-    .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,"\"").replace(/&#0?39;/g,"'").replace(/&amp;/g,"&");
+/* the saved state from its text (JSON); anything else is taken as the answer itself */
+function parseState(text){
+  var s;
+  if(text&&typeof text==="object")return text;
+  if(!text)return null;
+  try{ s=JSON.parse(text); }catch(e){ s=null; }
+  if(s&&typeof s==="object"&&typeof s.answer==="string")return s;
+  return {answer:String(text)};
 }
 
-function startQueuedQuestions(){
-  var queue=global.__chemkbdQuestions||[];
-  function go(){
-    var item;
-    while(queue.length){
-      item=queue.shift();
-      if(item&&item.id)startQuestion(item.id,item.script);
+/*
+ * Inside a STACK-JS [[iframe]]: config.inputs = {score: "ans1", state: "ans2"} (the names of the STACK inputs; the
+ * question text hides them). limittoquestion = true: each frame works with the inputs of its own question, also
+ * when two questions on the page use the same names (probe T5). Returns a promise of runQuestion's result.
+ */
+function mountStackJs(stackJs,cfg){
+  var names=cfg.inputs||{score:"ans1",state:"ans2"};
+  var host=document.getElementById(cfg.hostId||"chemkbd");
+
+  if(!host){
+    host=document.createElement("div");
+    host.id=cfg.hostId||"chemkbd";
+    document.body.appendChild(host);
+  }
+
+  function access(name){
+    if(!name)return Promise.resolve(null);
+    return Promise.resolve(stackJs.request_access_to_input(name,false,true)).then(function(id){
+      return document.getElementById(id);
+    });
+  }
+  /* a value reaches Moodle only with a change event (STACK-JS) */
+  function put(el,value){
+    if(!el||el.value===value)return;
+    el.value=value;
+    el.dispatchEvent(new Event("change"));
+  }
+
+  return Promise.all([access(names.score),access(names.state)]).then(function(els){
+    var scoreEl=els[0],stateEl=els[1],run;
+    /* the review page: STACK shows submitted inputs read-only (readonly, not disabled - probe T2) */
+    var review=[scoreEl,stateEl].some(function(e){ return e&&(e.readOnly||e.disabled); });
+
+    run=runQuestion(host,cfg,{
+      state:stateEl?parseState(stateEl.value):null,
+      review:review,
+      save:function(state,score){
+        put(stateEl,state?JSON.stringify(state):"");
+        put(scoreEl,state?String(score):"");
+      }
+    });
+    fitFrame(stackJs);
+    return run;
+  }).catch(function(e){
+    var msg="Chemical keyboard: "+(e&&e.message?e.message:e);
+    if(stackJs.display_error)stackJs.display_error(msg);
+    if(global.console)console.error(msg,e);
+  });
+}
+
+/*
+ * The frame follows its content: the answer box while the keyboard is closed, and the keyboard window (fixed,
+ * so not part of the page height) while it is open. Checked after every change of the page (a window opened,
+ * closed, a line added) and of the frame width.
+ */
+function fitFrame(stackJs){
+  var last=0,pending=false;
+
+  function needed(){
+    var h=Math.ceil(document.documentElement.scrollHeight),all=document.body.getElementsByTagName("*"),i,el,st,r;
+    for(i=0;i<all.length;i++){
+      el=all[i];
+      if(el.style.position!=="fixed"||el.style.display==="none")continue;
+      st=global.getComputedStyle(el);
+      if(st.display==="none"||st.visibility==="hidden")continue;
+      r=el.getBoundingClientRect();
+      /* the window's full height, not the part the current frame lets it show */
+      h=Math.max(h,Math.ceil(r.top+el.scrollHeight+(r.height-el.clientHeight)+12));
     }
+    return h;
   }
-  /* the STACK inputs come after the code in the question text: start when the whole page is read */
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);
-  else go();
-}
+  function check(){
+    pending=false;
+    var h=needed();
+    if(Math.abs(h-last)<3)return;
+    last=h;
+    stackJs.resize_containing_frame("100%",h+"px");
+  }
+  function soon(){
+    if(pending)return;
+    pending=true;
+    (global.requestAnimationFrame||setTimeout)(check);
+  }
 
-function startQuestion(id,script){
-  /* this copy's own element with the given id: the nearest one before its script (another copy may use the same id) */
-  function own(x){
-    var e;
-    for(e=script&&script.previousElementSibling;e;e=e.previousElementSibling){if(e.id===x)return e;}
-    return document.getElementById(x);
-  }
-  var copies=document.querySelectorAll("[id='"+id+"']").length,host,configElement;
-  if(copies>1&&global.console)console.warn("[chemkbd "+id+"] "+copies+" keyboards on this page have the id "+id+
-    ": the code was pasted more than once, or two questions have the same question id");
-  try{
-    host=own(id);
-    configElement=own(id+"-config");
-    if(!host||!configElement)throw new Error("the question box or its configuration is missing");
-    runQuestion(host,JSON.parse(decodeEntities(configElement.textContent)));
-  }catch(e){
-    if(global.console)console.error("[chemkbd "+id+"] failed:",e);
-  }
+  if(global.MutationObserver)new MutationObserver(soon).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["style"]});
+  if(global.ResizeObserver)new ResizeObserver(soon).observe(document.body);
+  global.addEventListener("resize",soon);
+  /* while the frame is still small the window is cut to it; shrinking first lets it be measured again */
+  document.documentElement.style.overflow="hidden";
+  soon();
 }
 
 /*
- * One question: host - an element with an id; cfg - the question configuration (the builder's JSON).
- * Returns { keyboard, feedback: [reference keyboard of the review page] } (feedback may be empty).
- * Moved here from the builder (where it was chemkbdRun, copied into every snippet).
+ * Any other system (an LMS, an app, a plain page): the host element, the configuration and
+ *   options.state     the saved state (an object or its JSON text) or null
+ *   options.readOnly  true: show the submitted answer with its feedback (the review)
+ *   options.onChange  function(state, score) - after every change; state null when the answer is emptied
  */
-function runQuestion(host,cfg){
+function mount(element,cfg,opts){
+  opts=opts||{};
+  return runQuestion(element,cfg,{
+    state:parseState(opts.state),
+    review:opts.readOnly===true,
+    save:typeof opts.onChange==="function"?opts.onChange:null
+  });
+}
+
+/*
+ * One question: host - an element with an id; cfg - the question configuration (the builder's JSON); adapter -
+ * { state, review, save(state, score) } from mountStackJs / mount (none: a keyboard that saves nothing - the
+ * builder's "Try"). Returns { keyboard, feedback: [reference keyboard of the review page] }.
+ */
+function runQuestion(host,cfg,adapter){
   /*
    * The student language. "system": the language Moodle shows the page in, so one copy of the
    * question serves all languages - window.studentLanguage when a script on the page sets it
@@ -7011,84 +7119,41 @@ function runQuestion(host,cfg){
   if(cfg.displayChars>0)options.displayChars=cfg.displayChars;   // keyboard window width, in characters
 
   /*
-   * Connection to the STACK question (cfg.stack). On every change the keyboard writes into inputs
-   * of the same question, and hides them:
-   *   scoreInput:  the score from 0 to 1 (rubric score / 100; without a rubric 1 = correct, 0 = not);
-   *                the PRT gives it as the mark
-   *   answerInput: the answer as value text (H_{2}O, SO_{4}^{2-}); Moodle keeps it, and the
-   *                keyboard starts from it when the page is shown again
-   * An empty answer empties both, so STACK sees an unanswered question.
-   * STACK names its inputs "q<usage>:<slot>_ans1", so an input is found by the end of its name.
+   * The platform (adapter): the saved state - the keyboard starts from its answer -, the review flag, and where a
+   * new state goes after every change (STACK: the state and score inputs; another system: its onChange).
+   * An empty answer saves null, so STACK sees an unanswered question.
    */
-  function findInput(name){
-    if(!name)return null;
-    var que=host.closest&&host.closest(".que");
-    return (que||document).querySelector("input[name$='_"+name+"'],textarea[name$='_"+name+"']");
-  }
-  function setInput(field,value){
-    var e,i,types=["input","change"];
-    if(!field||field.value===value)return;
-    field.value=value;
-    for(i=0;i<types.length;i++){
-      try{e=new Event(types[i],{bubbles:true});}catch(x){e=document.createEvent("Event");e.initEvent(types[i],true,true);}
-      field.dispatchEvent(e);
-    }
-  }
+  adapter=adapter||{};
+  var saved=adapter.state||null;
+  if(saved&&typeof saved.answer==="string"&&saved.answer)options.value=saved.answer;
+  var review=adapter.review===true;
 
-  /*
-   * answerInput holds "answer || score% | feedback | feedback ...": the answer (read back by the
-   * keyboard) and, after " || ", the feedback the student got, for Moodle's response history.
-   * Quotes and backslashes are left out of the feedback (STACK string input).
-   */
-  var FEEDBACK_SEPARATOR=" || ";
-  function savedAnswer(text){
-    var i=text.indexOf(FEEDBACK_SEPARATOR);
-    return i>=0?text.slice(0,i):text;
-  }
-  function feedbackLine(result){
+  /* the texts the student got: the score line, then each counted error and note (for the response history) */
+  function feedbackParts(result){
     var parts=[],i,items=result.errors.concat(result.notes||[]);
     if(result.score)parts.push(result.score.total+"%");
     else if(result.correct)parts.push(global.ChemicalGrammar.feedbackText(lang,"correct"));
     for(i=0;i<items.length;i++){
       if(items[i].suppressedBy)continue;      // not counted: caused by another error
-      if(items[i].description)parts.push(items[i].description);
+      if(items[i].description)parts.push(items[i].description.replace(/[⁦-⁩]/g,""));
     }
-    return parts.join(" | ").replace(/["\\⁦-⁩]/g,"");
+    return parts;
   }
   function compare(ast){
     return global.ChemicalGrammar.compare(ast,cfg.correctAnswer||"",lang,
       {rubric:cfg.rubric||null,distinguishIsomers:cfg.distinguishIsomers===true,lipids:cfg.lipids===true});
   }
 
-  var stack=cfg.stack||{};
-  var scoreInput=findInput(stack.scoreInput);
-  var answerInput=findInput(stack.answerInput);
-  if(global.console&&((stack.scoreInput&&!scoreInput)||(stack.answerInput&&!answerInput))){
-    console.warn("Chemical keyboard "+base+": STACK input not found:",
-      stack.scoreInput&&!scoreInput?stack.scoreInput:"",stack.answerInput&&!answerInput?stack.answerInput:"");
-  }
-  /* review page (after the attempt is submitted): Moodle shows the inputs read-only */
-  var review=[scoreInput,answerInput].some(function(f){return f&&(f.readOnly||f.disabled);});
-
   /*
-   * The teacher's review div (cfg.reviewDiv, an id): a div the teacher puts in the question text and
-   * styles (size, place, font size, color). The review output goes into it, and the formulas take
-   * its font size. Looked up in the same question first (ids repeat when a question is shown twice).
-   * Hidden while answering, so an empty styled box is not seen. Without it the output stays in host.
+   * The review output may go into another element of the same page (cfg.reviewDiv, an id) - in a system that runs
+   * the question in the page itself. Not in STACK-JS: the frame cannot reach the question text.
    */
   var out=host,reviewDiv=null;
   if(cfg.reviewDiv){
-    var que=host.closest&&host.closest(".que");
-    reviewDiv=(que&&que.querySelector("[id='"+cfg.reviewDiv+"']"))||document.getElementById(cfg.reviewDiv);
+    reviewDiv=document.getElementById(cfg.reviewDiv);
     if(!reviewDiv&&global.console)console.warn("Chemical keyboard "+base+": review div not found:",cfg.reviewDiv);
   }
   if(reviewDiv&&!review)reviewDiv.style.display="none";
-
-  if(scoreInput)scoreInput.style.display="none";
-  if(answerInput){
-    answerInput.style.display="none";
-    if(answerInput.value)options.value=savedAnswer(answerInput.value);
-  }
 
   /*
    * Review (after submission): the student's answer, read-only - nothing can change any more.
@@ -7137,19 +7202,17 @@ function runQuestion(host,cfg){
     return {keyboard:keyboard,feedback:feedback};
   }
 
-  if(scoreInput||answerInput){
+  if(typeof adapter.save==="function"){
     options.onChange=function(r){
       var result,score;
       if(!r.model.length){
-        setInput(answerInput,"");
-        setInput(scoreInput,"");
+        adapter.save(null,0);
         return;
       }
       result=compare(r.ast);
-      score=result.score?result.score.total/100:(result.correct?1:0);
+      score=Math.round((result.score?result.score.total/100:(result.correct?1:0))*10000)/10000;
       /* r.valueText: the answer in the value notation the keyboard reads back exactly (library 2.1.0) */
-      setInput(answerInput,r.valueText+FEEDBACK_SEPARATOR+feedbackLine(result));
-      setInput(scoreInput,String(Math.round(score*10000)/10000));
+      adapter.save({v:2,answer:r.valueText,score:score,feedback:feedbackParts(result)},score);
     };
   }
 
@@ -7196,7 +7259,8 @@ function runQuestion(host,cfg){
 }
 
   ChemicalKeyboard.runQuestion=runQuestion;
-  ChemicalKeyboard.startQueuedQuestions=startQueuedQuestions;
+  ChemicalKeyboard.mountStackJs=mountStackJs;   // inside a STACK [[iframe]] (STACKJS-DESIGN.md)
+  ChemicalKeyboard.mount=mount;                 // any other system
   global.ChemicalKeyboard = ChemicalKeyboard;
 
   global.ChemicalGrammar={
@@ -7214,22 +7278,7 @@ function runQuestion(host,cfg){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"2.8.9"// raise with every change, to see in the console which copy a page runs
+  version:"3.0.0"// raise with every change, to see in the console which copy a page runs
 };
 
-/* questions queued by snippets before the library was loaded */
-startQueuedQuestions();
-/*
- * Snippets made before 2026-10-16 carry their own code and queue start functions in __chemkbdQueue; the
- * snippet that loads the library runs them on load. When a new snippet loaded the library first, nobody
- * else would run them: run them here (each runs once - the queue is emptied).
- */
-(function(){
-  var old=global.__chemkbdQueue;
-  function go(){ while(old&&old.length){ var f=old.shift(); if(typeof f==="function")f(); } }
-  if(old&&old.length){
-    if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);
-    else go();
-  }
-})();
 })(window);

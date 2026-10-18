@@ -1,6 +1,15 @@
 # Chemical keyboard: STACK-JS and other systems (design)
 
-Status: **design, 2026-10-18 - not implemented.** Requested by the user: follow the STACK-JS convention, keep one
+Status: **implemented 2026-10-18 - library 3.0.0, builder template "2026-10-18.1 STACK-JS"** (probe results in section 7;
+two questions on one page confirmed by the user). Implemented as designed with option A for the review:
+`ChemicalKeyboard.mountStackJs(stack_js, config)` / `ChemicalKeyboard.mount(element, config, {state, readOnly,
+onChange})`, `runQuestion(host, cfg, adapter)`; the classic queue and snippet removed; the frame follows its content
+(`fitFrame`: the page height and any open fixed window, `resize_containing_frame`); without MathJax the answer box and
+the formulas in the feedback are drawn as HTML (`formulaNodes`, `formulaTextToChars`). Builder: generates the
+template (hidden inputs + `[[iframe]]` + one-line `[[script type="module"]]`), reads it back, model answer of the state
+input = the state JSON as a Maxima string; the review-div option is hidden (a frame cannot reach the question text).
+
+Original status: **design, 2026-10-18.** Requested by the user: follow the STACK-JS convention, keep one
 builder for Moodle STACK and for other systems, fixed code in the library and only the configuration generated,
 and several questions on one page.
 

@@ -188,10 +188,11 @@ table.rubric .na{color:#a5b0bc}
   <div class="hint" data-t="displayCharsHint"></div>
   <h3 class="sub" data-t="reviewTitle"></h3>
   <div class="hint" data-t="reviewHint"></div>
-  <label class="field"><span data-t="reviewDiv"></span>
+  <!-- the review div needs the question text, which a STACK-JS frame cannot reach (2026-10-18): hidden, not saved -->
+  <label class="field" hidden><span data-t="reviewDiv"></span>
     <input type="text" id="reviewDiv" size="16" dir="ltr">
   </label>
-  <div class="hint"><span data-t="reviewDivHint"></span> <code dir="ltr" id="reviewDivExample"></code></div>
+  <div class="hint" hidden><span data-t="reviewDivHint"></span> <code dir="ltr" id="reviewDivExample"></code></div>
   <label class="check"><input type="checkbox" id="reviewGrade"><span data-t="reviewGrade"></span></label>
   <label class="check"><input type="checkbox" id="reviewReference"><span data-t="reviewReference"></span></label>
   <label class="check"><input type="checkbox" id="reviewDetails"><span data-t="reviewDetails"></span></label>
@@ -306,8 +307,6 @@ table.rubric .na{color:#a5b0bc}
   <!-- the review page after submission, made by the same library code as in Moodle (read-only inputs, as Moodle shows them) -->
   <div class="que" id="tryReviewQue" hidden>
     <div id="tryReview"></div>
-    <input type="text" name="try_ans1" readonly hidden>
-    <input type="text" name="try_ans2" readonly hidden>
   </div>
 </section>
 
@@ -410,8 +409,8 @@ const TEXT={
     reviewDetails:"Show the detailed evaluation (the rubric's penalty lines / the list of errors)",
     stackTitle:"Connection to the STACK question",
     stackScoreInput:"STACK input for the score (0 to 1)",
-    stackAnswerInput:"STACK input for the answer and its feedback (optional)",
-    stackHint:"Input names as in the STACK question. The keyboard fills them whenever the answer changes; the answer input is needed to show the student's answer again after the attempt is submitted. Leave a field empty when that input is not used.",
+    stackAnswerInput:"STACK input for the saved answer (state)",
+    stackHint:"Input names as in the STACK question. The keyboard fills them whenever the answer changes: the score (0 to 1, the PRT gives it as the mark) and the saved answer with its feedback (needed to show the answer again and on the review page). In STACK: the state input is of type String; for both inputs set Show the validation: No, and Extra options: hideanswer (otherwise STACK shows the model answers to the students).",
     modelFor:"Model answer of {name}",
     issueStackName:"A STACK input name starts with a letter and contains only letters, digits and _.",
     issueStackSame:"The score and the answer need two different STACK inputs.",
@@ -486,7 +485,7 @@ const TEXT={
     submitTry:"Submit and see the feedback (the review page, with the review options above)",
     restartTry:"Restart",
     secOutput:"Moodle code",
-    outputHint:"Paste this into the Moodle question text, in the editor's HTML (source code) view. Save the file too, so you can open and change the question later.",
+    outputHint:"Paste this into the STACK question text, in the plain-text editor or the HTML (source code) view. It already contains the STACK inputs (hidden) - do not add them again. The keyboard runs in a STACK-JS frame (each question in its own frame, so several questions can share a page). Save the file too, so you can open and change the question later.",
     copy:"Copy", copied:"Copied.",
     issuesTitle:"Before pasting into Moodle:",
     ready:"Ready to paste into Moodle.",
@@ -538,8 +537,8 @@ const TEXT={
     reviewDetails:"הצגת ההערכה המפורטת (שורות ההורדה של המחוון / רשימת השגיאות)",
     stackTitle:"חיבור לשאלת STACK",
     stackScoreInput:"קלט STACK לציון (0 עד 1)",
-    stackAnswerInput:"קלט STACK לתשובה ולמשוב עליה (לא חובה)",
-    stackHint:"שמות הקלטים כמו בשאלת STACK. המקלדת ממלאת אותם בכל שינוי בתשובה; קלט התשובה נחוץ כדי להציג שוב את תשובת התלמיד אחרי הגשת הניסיון. אפשר להשאיר שדה ריק אם הקלט הזה לא בשימוש.",
+    stackAnswerInput:"קלט STACK לתשובה השמורה (מצב)",
+    stackHint:"שמות הקלטים כמו בשאלת STACK. המקלדת ממלאת אותם בכל שינוי בתשובה: הציון (0 עד 1, עץ התגובות נותן אותו כציון) והתשובה השמורה עם המשוב עליה (נחוצה כדי להציג שוב את התשובה ובדף הסקירה). ב־STACK: קלט המצב מסוג String (מחרוזת); לשני הקלטים יש להגדיר הצגת אימות: לא, ובאפשרויות נוספות: hideanswer (אחרת STACK מציג לתלמידים את תשובות המודל).",
     modelFor:"תשובת המודל של {name}",
     issueStackName:"שם קלט STACK מתחיל באות ומכיל רק אותיות, ספרות ו־_.",
     issueStackSame:"הציון והתשובה צריכים שני קלטי STACK שונים.",
@@ -614,7 +613,7 @@ const TEXT={
     submitTry:"הגשה וצפייה במשוב (דף הסקירה, לפי אפשרויות הסקירה שלמעלה)",
     restartTry:"התחלה מחדש",
     secOutput:"קוד ל־Moodle",
-    outputHint:"יש להדביק את הקוד בטקסט השאלה ב־Moodle, בתצוגת ה־HTML (קוד המקור) של העורך. כדאי גם לשמור את הקובץ, כדי לפתוח ולשנות את השאלה בהמשך.",
+    outputHint:"יש להדביק את הקוד בטקסט של שאלת STACK, בעורך הטקסט הפשוט או בתצוגת ה־HTML (קוד המקור). הקוד כבר כולל את קלטי STACK (מוסתרים) - אין להוסיף אותם שוב. המקלדת פועלת במסגרת STACK-JS (כל שאלה במסגרת משלה, כך שכמה שאלות יכולות להיות באותו דף). כדאי גם לשמור את הקובץ, כדי לפתוח ולשנות את השאלה בהמשך.",
     copy:"העתקה", copied:"הועתק.",
     issuesTitle:"לפני ההדבקה ב־Moodle:",
     ready:"מוכן להדבקה ב־Moodle.",
@@ -666,8 +665,8 @@ const TEXT={
     reviewDetails:"عرض التقييم المفصّل (أسطر الخصم في سلم التقدير / قائمة الأخطاء)",
     stackTitle:"الربط بسؤال STACK",
     stackScoreInput:"مدخل STACK للدرجة (من 0 إلى 1)",
-    stackAnswerInput:"مدخل STACK للإجابة والتغذية الراجعة عليها (اختياري)",
-    stackHint:"أسماء المدخلات كما في سؤال STACK. تملؤها لوحة المفاتيح عند كل تغيير في الإجابة؛ مدخل الإجابة ضروري لعرض إجابة الطالب مرة أخرى بعد تسليم المحاولة. اترك الحقل فارغًا إن لم يُستخدم هذا المدخل.",
+    stackAnswerInput:"مدخل STACK للإجابة المحفوظة (الحالة)",
+    stackHint:"أسماء المدخلات كما في سؤال STACK. تملؤها لوحة المفاتيح عند كل تغيير في الإجابة: الدرجة (من 0 إلى 1، تعطيها شجرة الاستجابة كعلامة) والإجابة المحفوظة مع تغذيتها الراجعة (ضرورية لعرض الإجابة مجددًا وفي صفحة المراجعة). في STACK: مدخل الحالة من نوع String (نص)؛ لكلا المدخلين اضبط عرض التحقق: لا، وفي الخيارات الإضافية: hideanswer (وإلا يعرض STACK الإجابات النموذجية للطلاب).",
     modelFor:"الإجابة النموذجية لـ {name}",
     issueStackName:"يبدأ اسم مدخل STACK بحرف ويحتوي فقط على أحرف وأرقام و_.",
     issueStackSame:"تحتاج الدرجة والإجابة إلى مدخلين مختلفين في STACK.",
@@ -742,7 +741,7 @@ const TEXT={
     submitTry:"إرسال وعرض الملاحظات (صفحة المراجعة، حسب خيارات المراجعة أعلاه)",
     restartTry:"البدء من جديد",
     secOutput:"رمز Moodle",
-    outputHint:"الصق هذا الرمز في نص السؤال في Moodle، في عرض HTML (الشيفرة المصدرية) للمحرر. احفظ الملف أيضًا لتتمكن من فتح السؤال وتعديله لاحقًا.",
+    outputHint:"الصق هذا الرمز في نص سؤال STACK، في محرر النص العادي أو في عرض HTML (الشيفرة المصدرية). الرمز يتضمن مدخلات STACK (مخفية) - لا تضفها مرة أخرى. تعمل لوحة المفاتيح داخل إطار STACK-JS (كل سؤال في إطاره الخاص، لذا يمكن لعدة أسئلة أن تكون في الصفحة نفسها). احفظ الملف أيضًا لتتمكن من فتح السؤال وتعديله لاحقًا.",
     copy:"نسخ", copied:"تم النسخ.",
     issuesTitle:"قبل اللصق في Moodle:",
     ready:"جاهز للصق في Moodle.",
@@ -916,7 +915,7 @@ function questionConfig(){
     review:{grade:state.reviewGrade,reference:state.reviewReference,details:state.reviewDetails}
   };
   /* always written, also when empty: an emptied field must stay empty when the file is opened again */
-  cfg.stack={scoreInput:state.stackScoreInput,answerInput:state.stackAnswerInput};
+  cfg.inputs={score:state.stackScoreInput,state:state.stackAnswerInput};   // the STACK inputs (STACK-JS)
   if(state.elementsMode==="custom"){
     cfg.elements=state.elements.slice();
     cfg.elementsSort=state.elementsSort;   // builder only: the library ignores it
@@ -938,7 +937,6 @@ function questionConfig(){
     cfg.moleculesMode=state.moleculesMode;   // builder only: the library uses the list
   }
   if(displayChars()) cfg.displayChars=displayChars();
-  if(state.reviewDiv) cfg.reviewDiv=state.reviewDiv;
   const rubric=rubricForLibrary();
   if(rubric) cfg.rubric=rubric;
   return cfg;
@@ -978,12 +976,14 @@ function applyConfig(cfg){
   s.nuclearStates=cfg.nuclear===true&&cfg.states===true;
   s.checkButton=false;             // hidden option: older files that had it on are saved without it
   if(cfg.displayChars>0) s.displayChars=String(cfg.displayChars);
-  if(typeof cfg.reviewDiv==="string") s.reviewDiv=cfg.reviewDiv;
   const review=cfg.review||{};     // files from before these options: all shown
   s.reviewGrade=review.grade!==false;
   s.reviewReference=review.reference!==false;
   s.reviewDetails=review.details!==false;
-  if(cfg.stack){      // files from before the STACK fields keep the defaults (ans1, ans2)
+  if(cfg.inputs){
+    s.stackScoreInput=typeof cfg.inputs.score==="string"?cfg.inputs.score:"";
+    s.stackAnswerInput=typeof cfg.inputs.state==="string"?cfg.inputs.state:"";
+  }else if(cfg.stack){      // the demo files made before STACK-JS (2026-10-18)
     s.stackScoreInput=typeof cfg.stack.scoreInput==="string"?cfg.stack.scoreInput:"";
     s.stackAnswerInput=typeof cfg.stack.answerInput==="string"?cfg.stack.answerInput:"";
   }
@@ -1000,61 +1000,56 @@ function displayChars(){
 
 function configId(){ return "chemkbd-"+state.questionId; }
 
-/* Written into the code's first comment, to see which version of the code a question has. Change it when the snippet changes (the student-side code itself is in the library: ChemicalKeyboard.runQuestion). */
-const SNIPPET_VERSION="2026-10-16.5";
+/* Written into the code's first comment, to see which version of the code a question has. Change it when the template changes (the student-side code itself is in the library: ChemicalKeyboard.mountStackJs). */
+const SNIPPET_VERSION="2026-10-18.1 STACK-JS";
 
 /* The language the builder's keyboards show: the student language, or with "system" the interface language. */
 function previewLanguage(){
   return state.language==="system"?teacherLanguage:state.language;
 }
 
-/* the script tags of the snippet, built from parts (see the note at the top of this page) */
+/* the script tags of old files, built from parts (see the note at the top of this page) */
 const SCRIPT_OPEN="<"+"script";
 const SCRIPT_CLOSE="<"+"/script>";
 
+/*
+ * The STACK question text (STACKJS-DESIGN.md, 2026-10-18): the STACK inputs, hidden (the frame cannot hide them), and
+ * a visible [[iframe]] that loads the library and starts the question with its configuration. Everything else is in
+ * the library (ChemicalKeyboard.mountStackJs), so only the configuration differs from question to question.
+ */
 function snippet(){
-  const id=configId();
-  /* the JSON never contains < > & (a Moodle server or filter may turn them into &lt; &gt; &amp;) */
-  /* one line, no indentation: Moodle (auto-format) turns every line break into <br /> - also inside scripts */
+  /*
+   * The configuration is JSON inside STACK's CASText: "[[", "{@" and "{#" would start a STACK block / expression, and
+   * a Moodle editor may escape < > & - inside strings they are written as \u escapes (JSON.parse restores them).
+   */
   const json=JSON.stringify(questionConfig())
-    .replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026");
-  /*
-   * The student-side code is in the library (ChemicalKeyboard.runQuestion). The script below only queues the
-   * question and loads the library once per page, and is written WITHOUT the characters < > & - Moodle may
-   * escape them inside a pasted script (found 2026-10-16), which broke the code when it was all in the snippet.
-   */
-  const loader=[
-    "(function(){",
-    "var id="+JSON.stringify(id)+",url="+JSON.stringify(state.libraryUrl)+";",
-    "var queue=window.__chemkbdQuestions=window.__chemkbdQuestions||[];",
-    "queue.push({id:id,script:document.currentScript});",
-    "if(window.ChemicalKeyboard){if(window.ChemicalKeyboard.startQueuedQuestions){window.ChemicalKeyboard.startQueuedQuestions();}return;}",
-    "if(window.__chemkbdLoading){return;}",
-    "window.__chemkbdLoading=true;",
-    "var s=document.createElement(\"script\");",
-    "s.src=url;",
-    "s.onerror=function(){if(window.console){console.error(\"[chemkbd \"+id+\"] the library could not be loaded: \"+url);}};",
-    "document.head.appendChild(s);",
-    "})();"
-  ].join("");
-  if(/[<>&\n]/.test(loader)) throw new Error("the snippet's script must not contain < > & or line breaks");
-  /*
-   * The whole snippet is ONE line (2026-10-16): Moodle's auto-format turns each line break of the question text
-   * into <br />, also inside a script, where it breaks the code ("Unexpected token '<'").
-   */
+    .replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026")
+    .replace(/\[\[/g,"[\\u005b").replace(/\]\]/g,"]\\u005d").replace(/\{@/g,"{\\u0040").replace(/\{#/g,"{\\u0023");
+  const inputs=[state.stackScoreInput,state.stackAnswerInput].filter(Boolean)
+    .map(n=>"[[input:"+n+"]] [[validation:"+n+"]]").join(" ");
+  /* ONE line: an editor's auto-format may turn line breaks into <br />, also inside the script */
   return [
     "<!-- Chemical keyboard question \""+state.questionId+"\" (code version "+SNIPPET_VERSION+"). Created with the chemical keyboard question builder: to change it, open the saved file in the builder. Do not edit by hand. -->",
-    "<div id=\""+id+"\"></div>",
-    SCRIPT_OPEN+" type=\"application/json\" id=\""+id+"-config\">"+json+SCRIPT_CLOSE,
-    SCRIPT_OPEN+">"+loader+SCRIPT_CLOSE
+    inputs?"<div style=\"display:none\">"+inputs+"</div>":"",
+    "[[iframe width=\"100%\" height=\"120px\" scrolling=\"false\" title=\"Chemical keyboard\"]]",
+    "[[script src=\""+state.libraryUrl+"\"/]]",
+    "<div id=\"chemkbd\"></div>",
+    "[[script type=\"module\"]]",
+    "import {stack_js} from '[[cors src=\"stackjsiframe.js\"/]]';",
+    "ChemicalKeyboard.mountStackJs(stack_js,"+json+");",
+    "[[/script]]",
+    "[[/iframe]]"
   ].join("");
 }
 
 /* Reads the configuration back from a saved snippet (or a plain JSON file). */
 function parseFile(text){
   let json=null;
+  /* the STACK-JS template: mountStackJs(stack_js,{...}); - the demo files before it: a JSON script tag */
+  const stackJs=/mountStackJs\(stack_js,(\{.*\})\);\[\[\/script\]\]/.exec(text);
   const match=new RegExp(SCRIPT_OPEN+"[^>]*type=[\"']application/json[\"'][^>]*>([\\s\\S]*?)"+SCRIPT_CLOSE,"i").exec(text);
-  if(match) json=match[1];
+  if(stackJs) json=stackJs[1];
+  else if(match) json=match[1];
   else if(/^\s*\{/.test(text)) json=text;
   if(!json) throw new Error("no configuration");
   const cfg=JSON.parse(json);
@@ -1156,12 +1151,9 @@ function submitTry(){
   const answer=tryRun.keyboard.getValueText();
   const cfg=questionConfig();
   cfg.language=previewLanguage();
-  cfg.stack={scoreInput:"ans1",answerInput:"ans2"};
-  delete cfg.reviewDiv;      // the teacher's review div is in the Moodle question text, not on this page
-  document.querySelector("[name='try_ans2']").value=answer;
-  document.querySelector("[name='try_ans1']").value="";
   $("tryReviewQue").hidden=false;
-  tryReviewRun=ChemicalKeyboard.runQuestion($("tryReview"),cfg);
+  /* the review page as the library shows it in Moodle: the saved answer, read-only */
+  tryReviewRun=ChemicalKeyboard.mount($("tryReview"),cfg,{state:{answer:answer},readOnly:true});
   $("tryReviewQue").scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 
@@ -1172,7 +1164,6 @@ function buildTry(){
   }
   clearTryReview();
   const cfg=questionConfig();
-  delete cfg.stack;          // no STACK inputs on this page
   cfg.language=previewLanguage();
   building=true;
   tryRun=ChemicalKeyboard.runQuestion($("tryHost"),cfg);   // the same library code Moodle runs
@@ -1732,9 +1723,8 @@ function renderOutput(){
 /*
  * Model answers for the STACK inputs, to copy into the STACK question:
  *   score input:  1
- *   answer input: what it holds for a correct answer - the reference, " || ", and its feedback
- *                 (same format and language as the library's runQuestion writes: savedAnswer / feedbackLine there),
- *                 as a quoted string, because it is a String input.
+ *   state input:  what it holds for a correct answer - the state JSON the library writes ({v, answer, score,
+ *                 feedback}: runQuestion there), as a Maxima string (quoted, \" inside), because it is a String input.
  */
 function stackModelAnswer(){
   /* with "system" the feedback text is in the preview language: STACK never compares with it, it only needs a model answer */
@@ -1744,8 +1734,9 @@ function stackModelAnswer(){
   if(result.score) parts.push(result.score.total+"%");
   else if(result.correct) parts.push(ChemicalGrammar.feedbackText(previewLanguage(),"correct"));
   result.errors.concat(result.notes||[]).forEach(e=>{ if(!e.suppressedBy&&e.description) parts.push(e.description); });
-  const feedback=parts.join(" | ").replace(/["\\\u2066-\u2069]/g,"");
-  return "\""+state.correctAnswer.replace(/["\\]/g,"")+" || "+feedback+"\"";
+  const stateJson=JSON.stringify({v:2,answer:state.correctAnswer,score:result.score?result.score.total/100:1,
+    feedback:parts.map(p=>p.replace(/[⁦-⁩]/g,""))});
+  return JSON.stringify(stateJson);
 }
 
 function renderStackModels(){

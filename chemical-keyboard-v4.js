@@ -5065,11 +5065,14 @@ function moleculeTooltip(key,language){
  * The formula drawn for a key label: subscripts and charges as small lowered / raised text. A subscript and a
  * superscript at the same place are stacked (SO₄²⁻); the numbers of a nuclide before its symbol (²³⁸₉₂U) are
  * right-aligned against it, as on the particle keys and in the typing area (2026-10-17).
+ * formula: value text, or the characters of a keyboard (this.chars). Also draws the answer box on the page when
+ * there is no MathJax (inside a STACK-JS frame, 2026-10-18): a condition above its arrow, space around + and arrows.
  */
 function formulaNodes(formula){
-  var box=document.createElement("span"),chars=modelFromValue(formula),i,j,c,s,sub,sup,next,prev,prescript;
+  var box=document.createElement("span"),chars=typeof formula==="string"?modelFromValue(formula):formula,i,j,c,s,sub,sup,next,prev,prescript;
 
-  function isScript(x){ return x&&!x.kind&&(x.script==="sub"||x.script==="sup"); }
+  /* a state (aq) is part of the stack too: Ag⁺ over (aq), as in the keyboard */
+  function isScript(x){ return x&&(!x.kind||x.kind==="state")&&(x.script==="sub"||x.script==="sup"); }
   function line(text,top,right){
     var l=document.createElement("span");
     l.textContent=text;
@@ -5098,7 +5101,29 @@ function formulaNodes(formula){
       j=i+1;
     }else j=i+1;
     s=document.createElement("span");
-    s.textContent=c.kind==="fstate"?"("+(c.condition||[]).map(function(x){return x.ch;}).join("")+")":c.ch;
+    if(c.script==="normal"&&isArrowChar(c.ch)&&c.condition&&c.condition.length){
+      /* the arrow stays on the line; the condition small above it, centred; the arrow box at least as wide */
+      var above=formulaNodes(c.condition);
+      apply(s,{display:"inline-block",position:"relative",margin:"0 .25em",textAlign:"center",
+        minWidth:Math.max(1,c.condition.length*.36)+"em"});
+      s.appendChild(document.createTextNode(c.ch));
+      apply(above,{position:"absolute",left:"50%",transform:"translateX(-50%)",bottom:"72%",fontSize:"55%",
+        lineHeight:"1",whiteSpace:"nowrap"});
+      s.appendChild(above);
+      box.appendChild(s);
+      continue;
+    }
+    if(c.kind==="fstate"){
+      /* a state written as a formula, I₂(CCl₄): its own formula, small and lowered */
+      s.appendChild(document.createTextNode("("));
+      s.appendChild(formulaNodes(c.condition||[]));
+      s.appendChild(document.createTextNode(")"));
+      apply(s,{fontSize:"70%",verticalAlign:"-.25em"});
+      box.appendChild(s);
+      continue;
+    }
+    s.textContent=c.ch;
+    if(c.script==="normal"&&(c.ch==="+"||isArrowChar(c.ch)))s.style.margin="0 .25em";
     if(c.script==="sub"||c.script==="sup"){
       s.style.fontSize="70%";
       s.style.verticalAlign=c.script==="sub"?"-.25em":".45em";
@@ -5663,6 +5688,13 @@ ChemicalKeyboard.prototype.syncRenderedDisplay=function(){
   var self=this,latex,revision;
 
   if(!this.renderedDisplay)return;
+
+  /* no MathJax (a STACK-JS frame, a plain page): drawn as HTML - never the LaTeX source (2026-10-18) */
+  if(this.config.mathjax===false||typeof window==="undefined"||!window.MathJax){
+    this.renderedDisplay.textContent="";
+    this.renderedDisplay.appendChild(formulaNodes(this.chars));
+    return;
+  }
 
   latex=this.toLatex();
   this.renderRevision=(this.renderRevision||0)+1;
@@ -7182,7 +7214,7 @@ function runQuestion(host,cfg){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"2.8.8"// raise with every change, to see in the console which copy a page runs
+  version:"2.8.9"// raise with every change, to see in the console which copy a page runs
 };
 
 /* questions queued by snippets before the library was loaded */

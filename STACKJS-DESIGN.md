@@ -9,6 +9,13 @@ the formulas in the feedback are drawn as HTML (`formulaNodes`, `formulaTextToCh
 template (hidden inputs + `[[iframe]]` + one-line `[[script type="module"]]`), reads it back, model answer of the state
 input = the state JSON as a Maxima string; the review-div option is hidden (a frame cannot reach the question text).
 
+**Docked keyboard (library 3.1.0, 2026-10-18, the user):** a frame cannot show a window over the page, so
+`mountStackJs` uses `layout: "docked"` (other systems keep the floating window unless they set it): the typing area
+and the keys open in place of the answer box and close back to it - × button, Esc (when no element window is open),
+or a click outside the frame (the frame's window `blur`). The frame follows: 63 px closed, about 500 px open.
+`fitFrame` measures the bottom of the content (not `scrollHeight`, which never shrinks below the frame's height) and
+checks with `setTimeout` (an unfocused frame may hold back `requestAnimationFrame`).
+
 Original status: **design, 2026-10-18.** Requested by the user: follow the STACK-JS convention, keep one
 builder for Moodle STACK and for other systems, fixed code in the library and only the configuration generated,
 and several questions on one page.

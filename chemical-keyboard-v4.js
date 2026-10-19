@@ -4462,7 +4462,8 @@ ChemicalKeyboard.prototype.build=function(){
     document.body.appendChild(this.elementPanel);
     document.body.appendChild(this.atomPanel);
 
-    this.buildPopupWindow(root,t);
+    if(this.config.layout==="docked")this.buildDockedWindow(root,t);
+    else this.buildPopupWindow(root,t);
     this.hide();
   }else{
     this.buildEmbeddedWindow(root);
@@ -4646,6 +4647,55 @@ ChemicalKeyboard.prototype.buildPopupWindow=function(root,t){
   root.appendChild(header);
   makeDraggable(root,header);
   document.body.appendChild(root);
+};
+
+/*
+ * config.layout "docked" (2026-10-18, the STACK-JS frame): no floating window - the typing area and the keys open in
+ * the page, in place of the answer box, and close back to it. Nothing covers the question, and a frame that follows
+ * its content (fitFrame) grows while it is open and shrinks back when it closes. Closed by the × button, Esc, or a
+ * click outside the frame (the frame's window loses the focus); moving between the keys never closes it.
+ */
+ChemicalKeyboard.prototype.buildDockedWindow=function(root,t){
+  var self=this,close=node("button","×");
+
+  apply(root,{
+    position:"relative",
+    width:"100%",
+    maxWidth:"none",
+    boxSizing:"border-box"
+  });
+  /* room for the × at the end of the typing area */
+  this.display.style.paddingRight="44px";
+
+  close.type="button";
+  close.title=t.close;
+  close.setAttribute("aria-label",t.close);
+  apply(close,{
+    position:"absolute",
+    right:"8px",
+    top:"8px",
+    zIndex:"2",
+    width:"30px",
+    height:"30px",
+    padding:"0",
+    border:"1px solid #b8c4cf",
+    borderRadius:"15px",
+    background:"#fff",
+    color:"#334",
+    fontSize:"20px",
+    lineHeight:"26px",
+    cursor:"pointer"
+  });
+  close.addEventListener("mousedown",function(e){ e.preventDefault(); });
+  close.addEventListener("click",function(){ self.hide(); });
+  root.insertBefore(close,root.firstChild);
+
+  this.docked=true;
+  this.host.appendChild(root);
+
+  global.addEventListener("blur",function(){
+    if(self.root.style.display!=="none")self.hide();
+  });
 };
 
 ChemicalKeyboard.prototype.setScript=function(s){
@@ -5441,7 +5491,11 @@ ChemicalKeyboard.prototype.key = function (e) {
     }
     if (k === "Escape") {
       e.preventDefault();
+      /* docked: Esc with no element window open closes the keys back to the answer box */
+      var panelsOpen = this.elementPanel && this.elementPanel.style.display !== "none" ||
+        this.atomPanel && this.atomPanel.style.display !== "none";
       this.closeElementWindows();
+      if (this.docked && !panelsOpen) this.hide();
       return;
     }
 
@@ -6699,12 +6753,15 @@ ChemicalKeyboard.prototype.openElements=function(){
 ChemicalKeyboard.prototype.show=function(){
   if(this.mode!=="edit")return;
 
+  /* docked: the typing area takes the place of the answer box */
+  if(this.docked&&this.displayContainer)this.displayContainer.style.display="none";
   this.root.style.display="block";
   this.root.focus();
 };
 ChemicalKeyboard.prototype.hide=function(){
   this.closeElementWindows();
   this.root.style.display="none";
+  if(this.docked&&this.displayContainer)this.displayContainer.style.display="flex";
   this.updateValidation();          // no pause to wait for: the student has finished typing
 };
 
@@ -6950,6 +7007,9 @@ function parseState(text){
  */
 function mountStackJs(stackJs,cfg){
   var names=cfg.inputs||{score:"ans1",state:"ans2"};
+  /* a frame cannot show a floating window over the page: the keys open in place of the answer box */
+  cfg=Object.assign({},cfg);
+  if(!cfg.layout)cfg.layout="docked";
   var host=document.getElementById(cfg.hostId||"chemkbd");
 
   if(!host){
@@ -7001,8 +7061,22 @@ function mountStackJs(stackJs,cfg){
 function fitFrame(stackJs){
   var last=0,pending=false;
 
+  /*
+   * The bottom of the content - not scrollHeight, which is never less than the frame's current height, so the frame
+   * could grow but never shrink back (found 2026-10-18).
+   */
+  function contentBottom(){
+    var kids=document.body.children,i,r,b=0,st;
+    for(i=0;i<kids.length;i++){
+      st=global.getComputedStyle(kids[i]);
+      if(st.display==="none"||st.position==="fixed")continue;
+      r=kids[i].getBoundingClientRect();
+      b=Math.max(b,r.bottom+(parseFloat(st.marginBottom)||0));
+    }
+    return Math.ceil(b+(global.scrollY||0)+(parseFloat(global.getComputedStyle(document.body).marginBottom)||0)+2);
+  }
   function needed(){
-    var h=Math.ceil(document.documentElement.scrollHeight),all=document.body.getElementsByTagName("*"),i,el,st,r;
+    var h=contentBottom(),all=document.body.getElementsByTagName("*"),i,el,st,r;
     for(i=0;i<all.length;i++){
       el=all[i];
       if(el.style.position!=="fixed"||el.style.display==="none")continue;
@@ -7024,7 +7098,8 @@ function fitFrame(stackJs){
   function soon(){
     if(pending)return;
     pending=true;
-    (global.requestAnimationFrame||setTimeout)(check);
+    /* not requestAnimationFrame: a browser may hold it back in a frame that is not focused or not visible */
+    setTimeout(check,30);
   }
 
   if(global.MutationObserver)new MutationObserver(soon).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["style"]});
@@ -7117,6 +7192,7 @@ function runQuestion(host,cfg,adapter){
   }
   if(cfg.lipids)options.lipids=true;                      // fatty acids / triglycerides (LIPIDS-DESIGN.md)
   if(cfg.displayChars>0)options.displayChars=cfg.displayChars;   // keyboard window width, in characters
+  if(cfg.layout)options.layout=cfg.layout;                // "docked": the keys open in place of the answer box
 
   /*
    * The platform (adapter): the saved state - the keyboard starts from its answer -, the review flag, and where a
@@ -7278,7 +7354,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.0.0"// raise with every change, to see in the console which copy a page runs
+  version:"3.1.0"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

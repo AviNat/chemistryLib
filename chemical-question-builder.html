@@ -1723,20 +1723,13 @@ function renderOutput(){
 /*
  * Model answers for the STACK inputs, to copy into the STACK question:
  *   score input:  1
- *   state input:  what it holds for a correct answer - the state JSON the library writes ({v, answer, score,
- *                 feedback}: runQuestion there), as a Maxima string (quoted, \" inside), because it is a String input.
+ *   state input:  the reference answer only, in the value notation, as a Maxima string - Moodle shows the model
+ *                 answers as "the correct answer", so no state JSON or feedback text there (the user, 2026-10-19).
+ *                 The library reads plain text in the state input as the answer (parseState), so Moodle's
+ *                 "Fill in correct responses" still works.
  */
 function stackModelAnswer(){
-  /* with "system" the feedback text is in the preview language: STACK never compares with it, it only needs a model answer */
-  const result=ChemicalGrammar.compare(state.correctAnswer,state.correctAnswer,previewLanguage(),
-    {rubric:rubricForLibrary(),distinguishIsomers:state.distinguishIsomers,lipids:state.lipids});
-  const parts=[];
-  if(result.score) parts.push(result.score.total+"%");
-  else if(result.correct) parts.push(ChemicalGrammar.feedbackText(previewLanguage(),"correct"));
-  result.errors.concat(result.notes||[]).forEach(e=>{ if(!e.suppressedBy&&e.description) parts.push(e.description); });
-  const stateJson=JSON.stringify({v:2,answer:state.correctAnswer,score:result.score?result.score.total/100:1,
-    feedback:parts.map(p=>p.replace(/[⁦-⁩]/g,""))});
-  return JSON.stringify(stateJson);
+  return JSON.stringify(state.correctAnswer);
 }
 
 function renderStackModels(){

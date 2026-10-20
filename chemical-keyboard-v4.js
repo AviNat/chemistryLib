@@ -29,6 +29,16 @@
     tipForward:"Insert a one-direction reaction arrow",
     tipEquilibrium:"Insert a reversible equilibrium arrow",
     tipDot:"Insert a centered dot, for example in a hydrate",
+    tipCopy:"Copy the whole answer (to paste it into the next equation)",
+    tipPaste:"Paste the copied answer at the cursor",
+    copied:"Copied",
+    nothingToPaste:"Nothing copied yet",
+    clipMenu:"Copy / paste",
+    copyProducts:"Products (right side)",
+    copyWhole:"Whole equation",
+    copyReactants:"Reactants (left side)",
+    copyFormula:"Copy",
+    pasteItem:"Paste",
     tipInfo:"Add reaction conditions above the arrow",
     tipHeat:"Heating (Δ) above the arrow",
     tipLight:"Light (hν) above the arrow",
@@ -85,6 +95,16 @@
     tipForward:"הוספת חץ תגובה חד־כיווני",
     tipEquilibrium:"הוספת חץ של תגובה הפיכה או שיווי משקל",
     tipDot:"הוספת נקודה אמצעית, למשל בנוסחה של הידרט",
+    tipCopy:"העתקת כל התשובה (כדי להדביק אותה במשוואה הבאה)",
+    tipPaste:"הדבקת התשובה שהועתקה במקום הסמן",
+    copied:"הועתק",
+    nothingToPaste:"עדיין לא הועתק דבר",
+    clipMenu:"העתקה / הדבקה",
+    copyProducts:"תוצרים (אגף ימין)",
+    copyWhole:"המשוואה כולה",
+    copyReactants:"מגיבים (אגף שמאל)",
+    copyFormula:"העתקה",
+    pasteItem:"הדבקה",
     tipInfo:"הוספת תנאי תגובה מעל החץ",
     tipHeat:"חימום (Δ) מעל החץ",
     tipLight:"אור (hν) מעל החץ",
@@ -141,6 +161,16 @@
     tipForward:"إضافة سهم تفاعل أحادي الاتجاه",
     tipEquilibrium:"إضافة سهم تفاعل عكوس أو اتزان",
     tipDot:"إضافة نقطة وسطية، مثلًا في صيغة الهيدرات",
+    tipCopy:"نسخ الإجابة كلها (للصقها في المعادلة التالية)",
+    tipPaste:"لصق الإجابة المنسوخة في موضع المؤشر",
+    copied:"تم النسخ",
+    nothingToPaste:"لم يُنسخ شيء بعد",
+    clipMenu:"نسخ / لصق",
+    copyProducts:"النواتج (الطرف الأيمن)",
+    copyWhole:"المعادلة كلها",
+    copyReactants:"المتفاعلات (الطرف الأيسر)",
+    copyFormula:"نسخ",
+    pasteItem:"لصق",
     tipInfo:"إضافة شروط التفاعل فوق السهم",
     tipHeat:"تسخين (Δ) فوق السهم",
     tipLight:"ضوء (hν) فوق السهم",
@@ -4095,6 +4125,7 @@ ChemicalKeyboard.prototype.build=function(){
 
   this.panel.appendChild(arrowsRow);
 
+
   btn(arrowsRow,"→",function(){
     self.insertText("→","normal");
   },t.tipForward);
@@ -4491,6 +4522,11 @@ ChemicalKeyboard.prototype.build=function(){
 
     if(this.config.layout==="docked")this.buildDockedWindow(root,t);
     else this.buildPopupWindow(root,t);
+    /* the same menu at the typing area's corner: docked - left of the × ; floating - below the title bar */
+    if(this.config.clipboard!==false){
+      if(this.docked){ this.addClipButton(root,46,8); this.display.style.paddingRight="84px"; }
+      else{ this.addClipButton(root,16,46); this.display.style.paddingRight="50px"; }
+    }
     this.hide();
   }else{
     this.buildEmbeddedWindow(root);
@@ -4501,6 +4537,231 @@ ChemicalKeyboard.prototype.build=function(){
   root.addEventListener("keydown",function(e){
     self.key(e);
   });
+
+  /*
+   * Ctrl+V: the system clipboard's text. When it is the text of the library's own last copy, that copy's exact value
+   * is pasted (states, pairs, nuclide numbers, conditions); other text is converted (pasteText).
+   */
+  if(this.mode==="edit"&&this.config.clipboard!==false){
+    root.addEventListener("paste",function(e){
+      var text=e.clipboardData?e.clipboardData.getData("text/plain"):"",stored=readClipboard();
+      self.pasteWaiting=false;
+      e.preventDefault();
+      if(stored&&(!text||text===stored.plain))self.pasteText(stored.value);
+      else if(text)self.pasteText(valueFromPlain(text));
+      else self.pasteStored();
+    });
+  }
+};
+
+/* ---------------- copy / paste ---------------- */
+var CLIPBOARD_KEY="chemkbd.clipboard";
+
+/*
+ * The library's own clipboard: localStorage, shared by every keyboard of the site's pages - also between the frames
+ * of a STACK quiz page (each question is its own document; they all have the Moodle site's origin), with no browser
+ * permission. Kept a day.
+ */
+function readClipboard(){
+  var s;
+  try{ s=JSON.parse(global.localStorage.getItem(CLIPBOARD_KEY)||"null"); }catch(e){ s=null; }
+  if(!s||typeof s.value!=="string"||!s.value||Date.now()-(s.time||0)>86400000)return null;
+  return s;
+}
+
+/* readable text ("2H₂(g) + O₂ → 2H₂O", "Na⁺(aq)") to value text: Unicode script digits and signs to _{} / ^{} */
+function valueFromPlain(text){
+  var out="",i,ch,u,run="",runScript=null;
+  function flush(){
+    if(run)out+=(runScript==="sub"?"_{":"^{")+run+"}";
+    run="";runScript=null;
+  }
+  text=String(text).replace(/\s+/g,"").replace(/->/g,"→").replace(/<=>|<->/g,"⇌");
+  for(i=0;i<text.length;i++){
+    ch=text.charAt(i);
+    u=unscript(ch);
+    if(u){
+      if(runScript&&runScript!==u.script)flush();
+      runScript=u.script;
+      run+=u.ch;
+      continue;
+    }
+    flush();
+    out+=ch;
+  }
+  flush();
+  return out;
+}
+
+/* the parts of the answer: all of it, and when it has an arrow the two sides (the condition belongs to the arrow) */
+ChemicalKeyboard.prototype.answerParts=function(){
+  var chars=this.chars,i,arrow=-1;
+  for(i=0;i<chars.length;i++){
+    if(chars[i].script==="normal"&&isArrowChar(chars[i].ch)){ arrow=i; break; }
+  }
+  if(arrow<0)return {whole:valueTextOf(chars),arrow:false};
+  return {
+    whole:valueTextOf(chars),
+    arrow:true,
+    reactants:valueTextOf(chars.slice(0,arrow)),
+    products:valueTextOf(chars.slice(arrow+1))
+  };
+};
+
+/* copy value text: the library's own clipboard (exact) and the system clipboard (readable text) */
+ChemicalKeyboard.prototype.copyValue=function(value){
+  var t=T[this.language]||T.en,plain;
+  if(!value)return false;
+  plain=plainFormula(value);
+  try{ global.localStorage.setItem(CLIPBOARD_KEY,JSON.stringify({value:value,plain:plain,time:Date.now()})); }catch(e){}
+  /* allowed from a click or a key press */
+  try{ if(global.navigator.clipboard&&global.navigator.clipboard.writeText)global.navigator.clipboard.writeText(plain).catch(function(){}); }catch(e){}
+  this.notice(t.copied);
+  return true;
+};
+
+/* Ctrl+C: the whole answer */
+ChemicalKeyboard.prototype.copyAll=function(){
+  return this.copyValue(this.getValueText());
+};
+
+ChemicalKeyboard.prototype.pasteStored=function(){
+  var t=T[this.language]||T.en,s=readClipboard();
+  if(!s){ this.notice(t.nothingToPaste); return false; }
+  this.pasteText(s.value);
+  return true;
+};
+
+/* value text at the cursor - the molecule keys' insertion: states, pairs, formula states and conditions are rebuilt */
+ChemicalKeyboard.prototype.pasteText=function(value){
+  if(!value)return;
+  this.insertMolecule(value);
+  if(this.root&&this.root.style.display!=="none")this.display.focus();
+};
+
+/*
+ * The copy / paste menu button (2026-10-20, the user): at the corner of the box that shows the answer - the answer
+ * box on the page while the keyboard is closed, the typing area while it is open; the same in the floating window and
+ * the docked keyboard. Not inside the box itself, which is redrawn on every change: in its container, placed over
+ * the box's corner. container must be position:relative.
+ */
+ChemicalKeyboard.prototype.addClipButton=function(container,right,top){
+  var self=this,t=T[this.language]||T.en,b=node("button","⧉");
+  b.type="button";
+  b.title=t.clipMenu;
+  b.setAttribute("aria-label",t.clipMenu);
+  b.setAttribute("aria-haspopup","menu");
+  apply(b,{
+    position:"absolute",right:right+"px",top:top+"px",zIndex:"3",
+    width:"30px",height:"30px",padding:"0",
+    border:"1px solid #b8c4cf",borderRadius:"6px",background:"#fff",color:"#334",
+    fontSize:"16px",lineHeight:"26px",cursor:"pointer"
+  });
+  b.addEventListener("mousedown",function(e){ e.preventDefault(); });
+  b.addEventListener("click",function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    if(self.clipMenu)self.closeClipMenu();
+    else self.openClipMenu(b);
+  });
+  container.appendChild(b);
+  (this.clipButtons=this.clipButtons||[]).push(b);
+  return b;
+};
+
+/*
+ * The menu: Products / Whole equation / Reactants (an answer without an arrow: Copy), each with its formula, and
+ * Paste with what it will paste (greyed when nothing was copied). position:fixed, so a STACK frame grows to show it
+ * (fitFrame counts fixed elements) instead of cutting it.
+ */
+ChemicalKeyboard.prototype.openClipMenu=function(anchor){
+  var self=this,t=T[this.language]||T.en,parts=this.answerParts(),stored=readClipboard(),menu=node("div"),r,left;
+  var rtl=this.language==="he"||this.language==="ar";
+
+  function item(label,value,action,enabled){
+    var b=node("button"),title=node("span",label),preview;
+    b.type="button";
+    b.setAttribute("role","menuitem");
+    apply(b,{display:"flex",justifyContent:"space-between",alignItems:"center",gap:"16px",width:"100%",
+      padding:"7px 10px",border:"0",borderRadius:"6px",background:"transparent",cursor:enabled?"pointer":"default",
+      font:"inherit",textAlign:"start",color:enabled?"#1d2733":"#9aa5b1",direction:rtl?"rtl":"ltr"});
+    b.appendChild(title);
+    if(value){
+      preview=formulaNodes(value);
+      apply(preview,{direction:"ltr",unicodeBidi:"isolate",fontSize:"17px",whiteSpace:"nowrap",color:enabled?"#1d2733":"#9aa5b1"});
+      b.appendChild(preview);
+    }
+    b.disabled=!enabled;
+    b.addEventListener("mouseenter",function(){ if(enabled)b.style.background="#e6eef7"; });
+    b.addEventListener("mouseleave",function(){ b.style.background="transparent"; });
+    b.addEventListener("mousedown",function(e){ e.preventDefault(); });
+    b.addEventListener("click",function(e){
+      e.stopPropagation();
+      if(!enabled)return;
+      self.closeClipMenu();
+      action();
+    });
+    menu.appendChild(b);
+  }
+
+  menu.setAttribute("role","menu");
+  apply(menu,{position:"fixed",zIndex:"10010",minWidth:"240px",maxWidth:"calc(100vw - 16px)",padding:"4px",
+    background:"#fff",border:"1px solid #b8c4cf",borderRadius:"8px",boxShadow:"0 6px 20px rgba(0,0,0,.2)",
+    fontFamily:"Arial,sans-serif",fontSize:"15px"});
+
+  if(parts.arrow){
+    item(t.copyProducts,parts.products,function(){ self.copyValue(parts.products); },!!parts.products);
+    item(t.copyWhole,parts.whole,function(){ self.copyValue(parts.whole); },true);
+    item(t.copyReactants,parts.reactants,function(){ self.copyValue(parts.reactants); },!!parts.reactants);
+  }else{
+    item(t.copyFormula,parts.whole,function(){ self.copyValue(parts.whole); },!!parts.whole);
+  }
+  var line=node("div");
+  apply(line,{borderTop:"1px solid #d7dee6",margin:"4px 6px"});
+  menu.appendChild(line);
+  item(stored?t.pasteItem:t.pasteItem+" - "+t.nothingToPaste,stored?stored.value:"",function(){ self.pasteText(stored.value); },
+    !!stored&&this.mode==="edit");
+
+  document.body.appendChild(menu);
+  r=anchor.getBoundingClientRect();
+  left=Math.min(r.right-menu.offsetWidth,global.innerWidth-menu.offsetWidth-8);
+  menu.style.left=Math.max(8,left)+"px";
+  menu.style.top=(r.bottom+4)+"px";
+  this.clipMenu=menu;
+
+  /* closed by a click elsewhere or Esc */
+  this.clipMenuClose=function(e){
+    if(e.type==="keydown"&&e.key!=="Escape")return;
+    if(e.type==="mousedown"&&(menu.contains(e.target)||e.target===anchor))return;
+    self.closeClipMenu();
+  };
+  document.addEventListener("mousedown",this.clipMenuClose,true);
+  document.addEventListener("keydown",this.clipMenuClose,true);
+};
+
+ChemicalKeyboard.prototype.closeClipMenu=function(){
+  if(!this.clipMenu)return;
+  if(this.clipMenu.parentNode)this.clipMenu.parentNode.removeChild(this.clipMenu);
+  this.clipMenu=null;
+  document.removeEventListener("mousedown",this.clipMenuClose,true);
+  document.removeEventListener("keydown",this.clipMenuClose,true);
+};
+
+/* a short message next to the visible menu button ("Copied", "Nothing copied yet") */
+ChemicalKeyboard.prototype.notice=function(text){
+  var b=null,i,r,tip;
+  for(i=0;i<(this.clipButtons||[]).length;i++){
+    r=this.clipButtons[i].getBoundingClientRect();
+    if(r.width&&r.height){ b=this.clipButtons[i]; break; }
+  }
+  if(!b)return;
+  tip=node("div",text);
+  apply(tip,{position:"fixed",zIndex:"10011",padding:"3px 9px",borderRadius:"6px",background:"#1a7f37",color:"#fff",
+    fontFamily:"Arial,sans-serif",fontSize:"13px",whiteSpace:"nowrap",pointerEvents:"none"});
+  document.body.appendChild(tip);
+  tip.style.left=Math.max(8,r.right-tip.offsetWidth)+"px";
+  tip.style.top=(r.bottom+4)+"px";
+  setTimeout(function(){ if(tip.parentNode)tip.parentNode.removeChild(tip); },1300);
 };
 
 ChemicalKeyboard.prototype.buildRenderedElement=function(){
@@ -4569,6 +4830,13 @@ ChemicalKeyboard.prototype.buildRenderedElement=function(){
   this.displayContainer.appendChild(this.renderedDisplay);
   this.displayContainer.appendChild(this.keyboardToggleButton);
   this.host.appendChild(this.displayContainer);
+
+  /* copy / paste menu at the answer box's corner (left of the ⌨ button: 42 px + the 8 px gap) */
+  if(this.config.clipboard!==false){
+    this.displayContainer.style.position="relative";
+    this.renderedDisplay.style.paddingRight="44px";
+    this.addClipButton(this.displayContainer,56,8);
+  }
 };
 ChemicalKeyboard.prototype.buildEmbeddedWindow=function(root){
   apply(root,{
@@ -5260,7 +5528,12 @@ ChemicalKeyboard.prototype.insertMolecule=function(formula){
       out.push(makeChar(c.ch,"sub",pairs[c.pair],"state"));
       continue;
     }
-    out.push(makeChar(c.ch,c.script));
+    box=makeChar(c.ch,c.script);
+    /* a pasted equation keeps the condition above its arrow (→[Δ]) - copy / paste, 2026-10-20 */
+    if(c.condition&&c.condition.length&&isArrowChar(c.ch)&&!this.cond){
+      box.condition=c.condition.map(function(x){ return makeChar(x.ch,x.script); });
+    }
+    out.push(box);
   }
 
   if(!out.length)return;
@@ -5524,6 +5797,19 @@ ChemicalKeyboard.prototype.key = function (e) {
       this.closeElementWindows();
       if (this.docked && !panelsOpen) this.hide();
       return;
+    }
+
+    /* Ctrl+C copies the whole answer; Ctrl+V pastes (the paste event brings the system clipboard - see build) */
+    if (this.mode === "edit" && this.config.clipboard !== false && (e.ctrlKey || e.metaKey) && !e.altKey) {
+      var lower = String(k).toLowerCase();
+      if (lower === "c") { e.preventDefault(); this.copyAll(); return; }
+      if (lower === "v") {
+        /* a browser that sends no paste event to this element: paste the library's own copy */
+        var self2 = this;
+        this.pasteWaiting = true;
+        setTimeout(function () { if (self2.pasteWaiting) { self2.pasteWaiting = false; self2.pasteStored(); } }, 120);
+        return;
+      }
     }
 
     if (this.mode !== "edit" || e.ctrlKey || e.metaKey || e.altKey) {
@@ -6787,6 +7073,7 @@ ChemicalKeyboard.prototype.show=function(){
 };
 ChemicalKeyboard.prototype.hide=function(){
   this.closeElementWindows();
+  if(this.closeClipMenu)this.closeClipMenu();
   this.root.style.display="none";
   if(this.docked&&this.displayContainer)this.displayContainer.style.display="flex";
   this.updateValidation();          // no pause to wait for: the student has finished typing
@@ -7220,6 +7507,7 @@ function runQuestion(host,cfg,adapter){
   if(cfg.lipids)options.lipids=true;                      // fatty acids / triglycerides (LIPIDS-DESIGN.md)
   if(cfg.displayChars>0)options.displayChars=cfg.displayChars;   // keyboard window width, in characters
   if(cfg.layout)options.layout=cfg.layout;                // "docked": the keys open in place of the answer box
+  if(cfg.clipboard===false)options.clipboard=false;       // no copy / paste menu, no Ctrl+C / Ctrl+V
 
   /*
    * The platform (adapter): the saved state - the keyboard starts from its answer -, the review flag, and where a
@@ -7381,7 +7669,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.1.1"// raise with every change, to see in the console which copy a page runs
+  version:"3.3.0"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

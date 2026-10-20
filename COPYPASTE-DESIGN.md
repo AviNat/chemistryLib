@@ -1,6 +1,21 @@
 # Chemical keyboard: copy and paste (design)
 
-Status: **design, 2026-10-18 - not implemented.** Requested by the user: copy from the keyboard's typing area, paste
+**Menu version, library 3.3.0 (2026-10-20, the user):** the keys in the keyboard row were replaced by a ⧉ menu button
+at the corner of the box that shows the answer - the answer box on the page (closed, both layouts) and the typing area
+(open: next to × when docked, below the title bar when floating). The menu: Products (right side) / Whole equation /
+Reactants (left side), each with its formula (an answer without an arrow: Copy), then Paste with what it will paste
+(greyed when nothing was copied); it inserts at the cursor. The menu is position:fixed, so a STACK frame grows to show
+it. Builder: the check box "Allow copy and paste" (on; off writes `clipboard:false`). The labels name the sides
+chemically, since "right" is ambiguous in a right-to-left interface.
+
+Status before: **the simple version implemented 2026-10-20 (library 3.2.0)**: the keys ⧉ Copy (the whole answer) and ⎘ Paste
+(at the cursor) at the end of the arrows row, Ctrl+C / Ctrl+V, the library's own clipboard in `localStorage`
+(`chemkbd.clipboard`: value, readable text, time; kept a day; shared by the frames of a STACK page), the system
+clipboard gets the readable text, pasted readable text is converted (`valueFromPlain`), a pasted equation keeps the
+conditions above its arrows. `config.clipboard: false` turns it off. Not done: the selection (section 4), copy from
+the review page. Use: a sequence of single-arrow equations (MULTISTEP-DESIGN.md).
+
+Original status: **design, 2026-10-18.** Requested by the user: copy from the keyboard's typing area, paste
 into a keyboard; a key that copies the whole content without selecting it, and copying a selection (there is no
 selection today). Rationale: a sequence of transformations, where the product of one equation is the input of the
 next one (often the next question).

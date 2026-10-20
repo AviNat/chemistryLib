@@ -178,6 +178,7 @@ dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
   <label class="check"><input type="checkbox" id="conditions"><span data-t="conditions"></span></label>
   <label class="check"><input type="checkbox" id="autoSubscript"><span data-t="autoSubscript"></span></label>
   <label class="check"><input type="checkbox" id="ionKeys"><span data-t="ionKeys"></span></label>
+  <label class="check"><input type="checkbox" id="clipboard"><span data-t="clipboard"></span></label>
   <label class="check"><input type="checkbox" id="formulaStateKey"><span data-t="formulaStateKey"></span></label>
   <label class="check"><input type="checkbox" id="lipids"><span data-t="lipids"></span></label>
   <label class="check"><input type="checkbox" id="nuclear"><span data-t="nuclear"></span></label>
@@ -410,6 +411,7 @@ const TEXT={
     conditions:"Show the reaction-condition (process) keys: the arrow with a condition, Δ, hν, °C, K",
     autoSubscript:"Automatic subscript: a digit after a symbol becomes a subscript by itself (off: the student chooses it with _ or the subscript key)",
     ionKeys:"Show the ion keys ⁺(aq) and ⁻(aq) (a shortcut for a charge and (aq))",
+    clipboard:"Allow copy and paste (the ⧉ menu at the answer box: copy the products, the whole equation or the reactants, and paste - e.g. into the next equation of a sequence)",
     formulaStateKey:"Show the key ⁦X₍▢₎⁩ for a state written as a formula, e.g. a solution in another solvent: I₂(CCl₄)",
     nuclear:"Nuclear equation: particle keys (α, β, β⁺, γ, e⁻, n, p); mass and atomic numbers before the symbol",
     particleLabels:"Particle keys show",
@@ -545,6 +547,7 @@ const TEXT={
     conditions:"הצגת מקשי תנאי התגובה (התהליך): החץ עם תנאי, Δ, hν, ‏°C, ‏K",
     autoSubscript:"כתב תחתי אוטומטי: ספרה אחרי סמל הופכת לכתב תחתי מעצמה (כבוי: התלמיד בוחר בכתב תחתי עם _ או עם המקש)",
     ionKeys:"הצגת מקשי היונים ‏⁺(aq) ו-‏⁻(aq) (קיצור למטען ול-(aq))",
+    clipboard:"אפשר העתקה והדבקה (תפריט ⧉ ליד תיבת התשובה: העתקת התוצרים, המשוואה כולה או המגיבים, והדבקה - למשל במשוואה הבאה ברצף)",
     formulaStateKey:"הצגת המקש ⁦X₍▢₎⁩ למצב הכתוב כנוסחה, למשל תמיסה בממס אחר: ⁦I₂(CCl₄)⁩",
     nuclear:"משוואה גרעינית: מקשי חלקיקים (α, β, β⁺, γ, e⁻, n, p); מספר מסה ומספר אטומי לפני הסמל",
     particleLabels:"מקשי החלקיקים מציגים",
@@ -680,6 +683,7 @@ const TEXT={
     conditions:"عرض مفاتيح ظروف التفاعل (العملية): السهم مع شرط، Δ، hν، ‏°C، ‏K",
     autoSubscript:"نص سفلي تلقائي: الرقم بعد الرمز يصبح نصًا سفليًا تلقائيًا (عند الإيقاف: يختار الطالب النص السفلي بـ _ أو بالمفتاح)",
     ionKeys:"عرض مفاتيح الأيونات ‏⁺(aq) و‏⁻(aq) (اختصار للشحنة و(aq))",
+    clipboard:"السماح بالنسخ واللصق (قائمة ⧉ بجانب مربع الإجابة: نسخ النواتج أو المعادلة كلها أو المتفاعلات، واللصق - مثلًا في المعادلة التالية في سلسلة)",
     formulaStateKey:"عرض المفتاح ⁦X₍▢₎⁩ لحالة مكتوبة كصيغة، مثل محلول في مذيب آخر: ⁦I₂(CCl₄)⁩",
     nuclear:"معادلة نووية: مفاتيح الجسيمات (α، β، β⁺، γ، e⁻، n، p)؛ العدد الكتلي والعدد الذري قبل الرمز",
     particleLabels:"تعرض مفاتيح الجسيمات",
@@ -863,6 +867,7 @@ function newState(){
     conditions:true,
     autoSubscript:true,
     ionKeys:false,
+    clipboard:true,           // the copy / paste menu (library config.clipboard, on unless false)
     formulaStateKey:false,
     nuclear:false,
     lipids:false,
@@ -970,6 +975,7 @@ function questionConfig(){
   if(!state.conditions) cfg.conditions=false;
   if(!state.autoSubscript) cfg.autoSubscript=false;
   if(state.ionKeys) cfg.ionKeys=true;
+  if(!state.clipboard) cfg.clipboard=false;
   if(state.formulaStateKey) cfg.formulaStateKey=true;
   if(state.lipids) cfg.lipids=true;
   if(state.nuclear){
@@ -1004,6 +1010,7 @@ function applyConfig(cfg){
   s.conditions=cfg.conditions!==false;
   s.autoSubscript=cfg.autoSubscript!==false;
   s.ionKeys=cfg.ionKeys===true;
+  s.clipboard=cfg.clipboard!==false;
   s.formulaStateKey=cfg.formulaStateKey===true;
   s.nuclear=cfg.nuclear===true;
   s.lipids=cfg.lipids===true;
@@ -1212,6 +1219,7 @@ function makeEditor(hostId,value,onValue){
   if(!state.conditions) options.conditions=false;
   if(!state.autoSubscript) options.autoSubscript=false;
   if(state.ionKeys) options.ionKeys=true;
+  if(!state.clipboard) options.clipboard=false;
   if(state.formulaStateKey) options.formulaStateKey=true;
   if(state.moleculesOn) options.molecules=moleculesForLibrary();
   if(state.lipids) options.lipids=true;
@@ -1934,6 +1942,7 @@ function renderSettings(){
   $("conditions").checked=state.conditions;
   $("autoSubscript").checked=state.autoSubscript;
   $("ionKeys").checked=state.ionKeys;
+  $("clipboard").checked=state.clipboard;
   $("formulaStateKey").checked=state.formulaStateKey;
   $("nuclear").checked=state.nuclear;
   $("lipids").checked=state.lipids;
@@ -2068,6 +2077,7 @@ $("distinguishIsomers").addEventListener("change",e=>{ state.distinguishIsomers=
 $("conditions").addEventListener("change",e=>{ state.conditions=e.target.checked; buildKeyboards(); changed(); });
 $("autoSubscript").addEventListener("change",e=>{ state.autoSubscript=e.target.checked; buildKeyboards(); changed(); });
 $("ionKeys").addEventListener("change",e=>{ state.ionKeys=e.target.checked; buildKeyboards(); changed(); });
+$("clipboard").addEventListener("change",e=>{ state.clipboard=e.target.checked; buildKeyboards(); changed(); });
 $("formulaStateKey").addEventListener("change",e=>{ state.formulaStateKey=e.target.checked; buildKeyboards(); changed(); });
 $("nuclear").addEventListener("change",e=>{
   state.nuclear=e.target.checked;

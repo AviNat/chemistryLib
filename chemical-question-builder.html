@@ -112,6 +112,17 @@ table.rubric .na{color:#a5b0bc}
 #issues li.info{color:var(--muted)}
 #output{width:100%;height:220px;font:12px/1.4 Consolas,monospace;direction:ltr;text-align:left;border:1px solid var(--line);border-radius:6px;padding:8px;background:#fafbfc}
 #tryHost{max-width:820px}
+.help-btn{width:26px;height:26px;padding:0;border-radius:13px;font-weight:bold;line-height:24px;vertical-align:middle}
+dialog#stackHelp{max-width:min(760px,94vw);border:1px solid var(--line);border-radius:10px;padding:0;color:var(--text);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;background:#dce7f0;border-bottom:1px solid var(--line)}
+.dlg-head button{font-size:20px;line-height:20px;padding:2px 9px}
+.dlg-body{padding:6px 18px 16px;max-height:75vh;overflow:auto;font-size:15px;line-height:1.55}
+.dlg-body h4{margin:14px 0 4px}
+.dlg-body code,.dlg-body .ltr{direction:ltr;unicode-bidi:isolate;font-family:Consolas,monospace;background:#eef1f5;border-radius:4px;padding:0 4px}
+.dlg-body table{border-collapse:collapse;margin:6px 0}
+.dlg-body td,.dlg-body th{border:1px solid var(--line);padding:4px 10px;text-align:start}
+.dlg-body th{background:#eef3f8}
 @media (max-width:640px){
   .periodic button{font-size:10px;padding:3px 0}
 }
@@ -196,7 +207,8 @@ table.rubric .na{color:#a5b0bc}
   <label class="check"><input type="checkbox" id="reviewGrade"><span data-t="reviewGrade"></span></label>
   <label class="check"><input type="checkbox" id="reviewReference"><span data-t="reviewReference"></span></label>
   <label class="check"><input type="checkbox" id="reviewDetails"><span data-t="reviewDetails"></span></label>
-  <h3 class="sub" data-t="stackTitle"></h3>
+  <div id="stackPart">
+  <h3 class="sub"><span data-t="stackTitle"></span> <button type="button" id="stackHelpBtn" class="help-btn">?</button></h3>
   <div class="row">
     <label class="field"><span data-t="stackScoreInput"></span>
       <input type="text" id="stackScoreInput" size="10" dir="ltr">
@@ -207,6 +219,12 @@ table.rubric .na{color:#a5b0bc}
   </div>
   <div class="hint" data-t="stackHint"></div>
   <div id="stackModels"></div>
+  </div>
+  <!-- how to set up the inputs in the STACK question (the "?" button), in the interface language -->
+  <dialog id="stackHelp">
+    <div class="dlg-head"><b data-t="stackHelpTitle"></b><button type="button" id="stackHelpClose">×</button></div>
+    <div id="stackHelpBody" class="dlg-body"></div>
+  </dialog>
 </section>
 
 <section>
@@ -312,7 +330,12 @@ table.rubric .na{color:#a5b0bc}
 
 <section>
   <h2 data-t="secOutput"></h2>
-  <div class="hint" data-t="outputHint"></div>
+  <div class="row" role="radiogroup">
+    <span data-t="targetLabel"></span>
+    <label class="check"><input type="radio" name="target" value="stack"><span data-t="targetStack"></span></label>
+    <label class="check"><input type="radio" name="target" value="html"><span data-t="targetHtml"></span></label>
+  </div>
+  <div class="hint" id="outputHint"></div>
   <div id="issues" class="status"></div>
   <div class="row"><button type="button" id="copyOutput" data-t="copy"></button><span id="copyStatus" class="hint"></span></div>
   <textarea id="output" readonly spellcheck="false"></textarea>
@@ -411,6 +434,13 @@ const TEXT={
     stackScoreInput:"STACK input for the score (0 to 1)",
     stackAnswerInput:"STACK input for the saved answer (state)",
     stackHint:"Input names as in the STACK question. The keyboard fills them whenever the answer changes: the score (0 to 1, the PRT gives it as the mark) and the saved answer with its feedback (needed to show the answer again and on the review page). In STACK: the state input is of type String; for both inputs set Show the validation: No, and Extra options: hideanswer (otherwise STACK shows the model answers to the students).",
+    stackHelpOpen:"How to set up these inputs in the STACK question",
+    stackHelpTitle:"Setting up ans1 and ans2 in the STACK question",
+    stackHelpHtml:"<p>The builder's code already contains the two inputs - <code>[[input:ans1]] [[validation:ans1]] [[input:ans2]] [[validation:ans2]]</code> - in a hidden box. Paste it into the question text as it is (plain-text editor or HTML source view) and do <b>not</b> add the inputs again. Then set each input in its section of the question form:</p><table><tr><th></th><th>ans1 - the score</th><th>ans2 - the saved answer</th></tr><tr><td>Input type</td><td>Numerical</td><td>String</td></tr><tr><td>Model answer</td><td><code>1</code></td><td>the builder's model answer, e.g. <code>\"2H_{2}+O_{2}→2H_{2}O\"</code> (with the quotes)</td></tr><tr><td>Student must verify</td><td>No</td><td>No</td></tr><tr><td>Show the validation</td><td><b>No</b></td><td><b>No</b></td></tr><tr><td>Extra options</td><td><code>hideanswer</code></td><td><code>hideanswer</code></td></tr></table><h4>Why \"Show the validation: No\"</h4><p>The keyboard fills the inputs by itself after every change. STACK's validation (\"Your last answer was interpreted as…\") would show the raw values, and with \"Student must verify\" it would make the student submit twice. The keyboard checks the writing itself (the red \"!\").</p><h4>Why hideanswer</h4><p>On the review page Moodle shows the inputs' model answers as \"the correct answer\": without hideanswer the student sees <code>1</code> and the answer in the keyboard's notation. With it, the correct answer appears only inside the keyboard, as a formula with its marking (the review options above).</p><h4>The potential response tree (PRT)</h4><p>ans1 holds the score from 0 to 1, and the PRT gives it as the mark. For example: feedback variables <code>sc: ans1;</code> and one node - SAns <code>ans1</code>, TAns <code>1</code>, answer test <code>NumAbsolute</code> with the option <code>0.0001</code>; true branch: score <code>1</code>; false branch: score <code>sc</code>. ans2 needs no PRT: STACK saves it and the keyboard reads it back.</p><h4>Other names</h4><p>If the inputs have other names (e.g. ans3 and ans4 for a second keyboard in the same question), write them in the two fields here: each keyboard needs its own pair.</p>",
+    targetLabel:"Code for:",
+    targetStack:"Moodle STACK question (STACK-JS)",
+    targetHtml:"Stand-alone page (any website or system)",
+    outputHintHtml:"A complete web page: the question's keyboard with Submit / Try again buttons, the grade and the feedback. Save it as an .html file (Save) and open it in a browser, or put it on any website. Write the question text in the page where it says so. To connect it to another system, the comment in the page explains ChemicalKeyboard.mount: it gives the student's answer and score after every change, to store in that system. Save opens the page in the builder again.",
     modelFor:"Model answer of {name}",
     issueStackName:"A STACK input name starts with a letter and contains only letters, digits and _.",
     issueStackSame:"The score and the answer need two different STACK inputs.",
@@ -484,7 +514,7 @@ const TEXT={
     tryHint:"This is the student's view, in the student language. What you type here is not saved.",
     submitTry:"Submit and see the feedback (the review page, with the review options above)",
     restartTry:"Restart",
-    secOutput:"Moodle code",
+    secOutput:"The code",
     outputHint:"Paste this into the STACK question text, in the plain-text editor or the HTML (source code) view. It already contains the STACK inputs (hidden) - do not add them again. The keyboard runs in a STACK-JS frame (each question in its own frame, so several questions can share a page). Save the file too, so you can open and change the question later.",
     copy:"Copy", copied:"Copied.",
     issuesTitle:"Before pasting into Moodle:",
@@ -539,6 +569,13 @@ const TEXT={
     stackScoreInput:"קלט STACK לציון (0 עד 1)",
     stackAnswerInput:"קלט STACK לתשובה השמורה (מצב)",
     stackHint:"שמות הקלטים כמו בשאלת STACK. המקלדת ממלאת אותם בכל שינוי בתשובה: הציון (0 עד 1, עץ התגובות נותן אותו כציון) והתשובה השמורה עם המשוב עליה (נחוצה כדי להציג שוב את התשובה ובדף הסקירה). ב־STACK: קלט המצב מסוג String (מחרוזת); לשני הקלטים יש להגדיר הצגת אימות: לא, ובאפשרויות נוספות: hideanswer (אחרת STACK מציג לתלמידים את תשובות המודל).",
+    stackHelpOpen:"איך מגדירים את הקלטים האלה בשאלת STACK",
+    stackHelpTitle:"הגדרת ans1 ו־ans2 בשאלת STACK",
+    stackHelpHtml:"<p>הקוד מהבונה כבר כולל את שני הקלטים - <code>[[input:ans1]] [[validation:ans1]] [[input:ans2]] [[validation:ans2]]</code> - בתוך תיבה מוסתרת. יש להדביק אותו בטקסט השאלה כפי שהוא (בעורך הטקסט הפשוט או בתצוגת קוד המקור) ו<b>לא</b> להוסיף את הקלטים שוב. אחר כך מגדירים כל קלט באזור שלו בטופס השאלה:</p><table><tr><th></th><th>ans1 - הציון</th><th>ans2 - התשובה השמורה</th></tr><tr><td>סוג הקלט (Input type)</td><td>Numerical (מספרי)</td><td>String (מחרוזת)</td></tr><tr><td>תשובת המודל (Model answer)</td><td><code>1</code></td><td>תשובת המודל מהבונה, למשל <code>\"2H_{2}+O_{2}→2H_{2}O\"</code> (עם המירכאות)</td></tr><tr><td>התלמיד חייב לאשר (Student must verify)</td><td>לא</td><td>לא</td></tr><tr><td>הצגת האימות (Show the validation)</td><td><b>לא</b></td><td><b>לא</b></td></tr><tr><td>אפשרויות נוספות (Extra options)</td><td><code>hideanswer</code></td><td><code>hideanswer</code></td></tr></table><h4>למה \"הצגת האימות: לא\"</h4><p>המקלדת ממלאת את הקלטים בעצמה אחרי כל שינוי. האימות של STACK (\"התשובה האחרונה שלך פורשה כ…\") היה מציג את הערכים הגולמיים, ועם \"התלמיד חייב לאשר\" התלמיד היה צריך להגיש פעמיים. המקלדת בודקת את הכתיבה בעצמה (סימן ה־\"!\" האדום).</p><h4>למה hideanswer</h4><p>בדף הסקירה Moodle מציג את תשובות המודל של הקלטים בתור \"התשובה הנכונה\": בלי hideanswer התלמיד רואה <code>1</code> ואת התשובה בכתיב של המקלדת. עם האפשרות הזו התשובה הנכונה מוצגת רק בתוך המקלדת, כנוסחה עם הסימונים (לפי אפשרויות הסקירה שלמעלה).</p><h4>עץ התגובות (PRT)</h4><p>ב־ans1 נמצא הציון מ־0 עד 1, ועץ התגובות נותן אותו כציון. למשל: במשתני המשוב <code>sc: ans1;</code> וצומת אחד - SAns <code>ans1</code>, TAns <code>1</code>, מבחן התשובה <code>NumAbsolute</code> עם האפשרות <code>0.0001</code>; ענף נכון: ציון <code>1</code>; ענף שגוי: ציון <code>sc</code>. ל־ans2 לא צריך עץ תגובות: STACK שומר אותו והמקלדת קוראת אותו בחזרה.</p><h4>שמות אחרים</h4><p>אם לקלטים יש שמות אחרים (למשל ans3 ו־ans4 למקלדת שנייה באותה שאלה), יש לכתוב אותם בשני השדות כאן: לכל מקלדת זוג קלטים משלה.</p>",
+    targetLabel:"קוד עבור:",
+    targetStack:"שאלת STACK ב־Moodle ‏(STACK-JS)",
+    targetHtml:"דף עצמאי (כל אתר או מערכת)",
+    outputHintHtml:"דף אינטרנט שלם: המקלדת של השאלה עם כפתורי הגשה / ניסיון נוסף, הציון והמשוב. שומרים אותו כקובץ ‎.html (שמירה) ופותחים בדפדפן, או מעלים לכל אתר. את טקסט השאלה כותבים בדף במקום המסומן. לחיבור למערכת אחרת, ההערה בדף מסבירה את ChemicalKeyboard.mount: היא מוסרת את תשובת התלמיד ואת הציון אחרי כל שינוי, לשמירה באותה מערכת. הקובץ השמור נפתח שוב בבונה.",
     modelFor:"תשובת המודל של {name}",
     issueStackName:"שם קלט STACK מתחיל באות ומכיל רק אותיות, ספרות ו־_.",
     issueStackSame:"הציון והתשובה צריכים שני קלטי STACK שונים.",
@@ -612,7 +649,7 @@ const TEXT={
     tryHint:"זה מה שהתלמיד רואה, בשפת התלמיד. מה שמוקלד כאן לא נשמר.",
     submitTry:"הגשה וצפייה במשוב (דף הסקירה, לפי אפשרויות הסקירה שלמעלה)",
     restartTry:"התחלה מחדש",
-    secOutput:"קוד ל־Moodle",
+    secOutput:"הקוד",
     outputHint:"יש להדביק את הקוד בטקסט של שאלת STACK, בעורך הטקסט הפשוט או בתצוגת ה־HTML (קוד המקור). הקוד כבר כולל את קלטי STACK (מוסתרים) - אין להוסיף אותם שוב. המקלדת פועלת במסגרת STACK-JS (כל שאלה במסגרת משלה, כך שכמה שאלות יכולות להיות באותו דף). כדאי גם לשמור את הקובץ, כדי לפתוח ולשנות את השאלה בהמשך.",
     copy:"העתקה", copied:"הועתק.",
     issuesTitle:"לפני ההדבקה ב־Moodle:",
@@ -667,6 +704,13 @@ const TEXT={
     stackScoreInput:"مدخل STACK للدرجة (من 0 إلى 1)",
     stackAnswerInput:"مدخل STACK للإجابة المحفوظة (الحالة)",
     stackHint:"أسماء المدخلات كما في سؤال STACK. تملؤها لوحة المفاتيح عند كل تغيير في الإجابة: الدرجة (من 0 إلى 1، تعطيها شجرة الاستجابة كعلامة) والإجابة المحفوظة مع تغذيتها الراجعة (ضرورية لعرض الإجابة مجددًا وفي صفحة المراجعة). في STACK: مدخل الحالة من نوع String (نص)؛ لكلا المدخلين اضبط عرض التحقق: لا، وفي الخيارات الإضافية: hideanswer (وإلا يعرض STACK الإجابات النموذجية للطلاب).",
+    stackHelpOpen:"كيفية إعداد هذه المدخلات في سؤال STACK",
+    stackHelpTitle:"إعداد ans1 و ans2 في سؤال STACK",
+    stackHelpHtml:"<p>رمز المُنشئ يتضمن المدخلين - <code>[[input:ans1]] [[validation:ans1]] [[input:ans2]] [[validation:ans2]]</code> - داخل مربع مخفي. الصقه في نص السؤال كما هو (في محرر النص العادي أو في عرض الشيفرة المصدرية) و<b>لا</b> تضف المدخلات مرة أخرى. ثم اضبط كل مدخل في قسمه في نموذج السؤال:</p><table><tr><th></th><th>ans1 - الدرجة</th><th>ans2 - الإجابة المحفوظة</th></tr><tr><td>نوع المدخل (Input type)</td><td>Numerical (رقمي)</td><td>String (نص)</td></tr><tr><td>الإجابة النموذجية (Model answer)</td><td><code>1</code></td><td>الإجابة النموذجية من المُنشئ، مثل <code>\"2H_{2}+O_{2}→2H_{2}O\"</code> (مع علامات الاقتباس)</td></tr><tr><td>على الطالب التأكيد (Student must verify)</td><td>لا</td><td>لا</td></tr><tr><td>عرض التحقق (Show the validation)</td><td><b>لا</b></td><td><b>لا</b></td></tr><tr><td>خيارات إضافية (Extra options)</td><td><code>hideanswer</code></td><td><code>hideanswer</code></td></tr></table><h4>لماذا \"عرض التحقق: لا\"</h4><p>تملأ لوحة المفاتيح المدخلات بنفسها بعد كل تغيير. التحقق في STACK (\"فُسِّرت إجابتك الأخيرة على أنها…\") كان سيعرض القيم الخام، ومع \"على الطالب التأكيد\" كان على الطالب الإرسال مرتين. لوحة المفاتيح تفحص الكتابة بنفسها (علامة \"!\" الحمراء).</p><h4>لماذا hideanswer</h4><p>في صفحة المراجعة يعرض Moodle الإجابات النموذجية للمدخلات على أنها \"الإجابة الصحيحة\": بدون hideanswer يرى الطالب <code>1</code> والإجابة بصيغة لوحة المفاتيح. مع هذا الخيار تظهر الإجابة الصحيحة داخل لوحة المفاتيح فقط، كصيغة مع التعليمات (حسب خيارات المراجعة أعلاه).</p><h4>شجرة الاستجابة (PRT)</h4><p>يحمل ans1 الدرجة من 0 إلى 1، وتعطيها شجرة الاستجابة كعلامة. مثلًا: في متغيرات التغذية الراجعة <code>sc: ans1;</code> وعقدة واحدة - SAns <code>ans1</code>، TAns <code>1</code>، اختبار الإجابة <code>NumAbsolute</code> مع الخيار <code>0.0001</code>؛ الفرع الصحيح: الدرجة <code>1</code>؛ الفرع الخاطئ: الدرجة <code>sc</code>. لا يحتاج ans2 إلى شجرة استجابة: يحفظه STACK وتقرؤه لوحة المفاتيح مجددًا.</p><h4>أسماء أخرى</h4><p>إذا كانت للمدخلات أسماء أخرى (مثل ans3 و ans4 للوحة مفاتيح ثانية في السؤال نفسه)، اكتبها في الحقلين هنا: لكل لوحة مفاتيح زوج مدخلات خاص بها.</p>",
+    targetLabel:"رمز لـ:",
+    targetStack:"سؤال STACK في Moodle ‏(STACK-JS)",
+    targetHtml:"صفحة مستقلة (أي موقع أو نظام)",
+    outputHintHtml:"صفحة ويب كاملة: لوحة مفاتيح السؤال مع زرّي إرسال / محاولة أخرى، والدرجة والتغذية الراجعة. احفظها كملف ‎.html (حفظ) وافتحها في المتصفح، أو ضعها في أي موقع. اكتب نص السؤال في الصفحة في المكان المشار إليه. لربطها بنظام آخر، يشرح التعليق في الصفحة ChemicalKeyboard.mount: تعطي إجابة الطالب ودرجته بعد كل تغيير لحفظهما في ذلك النظام. الملف المحفوظ يُفتح مجددًا في المُنشئ.",
     modelFor:"الإجابة النموذجية لـ {name}",
     issueStackName:"يبدأ اسم مدخل STACK بحرف ويحتوي فقط على أحرف وأرقام و_.",
     issueStackSame:"تحتاج الدرجة والإجابة إلى مدخلين مختلفين في STACK.",
@@ -740,7 +784,7 @@ const TEXT={
     tryHint:"هذا ما يراه الطالب، بلغة الطالب. ما تكتبه هنا لا يُحفظ.",
     submitTry:"إرسال وعرض الملاحظات (صفحة المراجعة، حسب خيارات المراجعة أعلاه)",
     restartTry:"البدء من جديد",
-    secOutput:"رمز Moodle",
+    secOutput:"الرمز",
     outputHint:"الصق هذا الرمز في نص سؤال STACK، في محرر النص العادي أو في عرض HTML (الشيفرة المصدرية). الرمز يتضمن مدخلات STACK (مخفية) - لا تضفها مرة أخرى. تعمل لوحة المفاتيح داخل إطار STACK-JS (كل سؤال في إطاره الخاص، لذا يمكن لعدة أسئلة أن تكون في الصفحة نفسها). احفظ الملف أيضًا لتتمكن من فتح السؤال وتعديله لاحقًا.",
     copy:"نسخ", copied:"تم النسخ.",
     issuesTitle:"قبل اللصق في Moodle:",
@@ -836,6 +880,7 @@ function newState(){
     reviewDetails:true,
     stackScoreInput:"ans1",
     stackAnswerInput:"ans2",
+    target:"stack",           // the code made: "stack" (a STACK-JS question) or "html" (a stand-alone page)
     elementsMode:"default",
     elements:[],
     elementsSort:"atomic",    // the custom panel's order kept: "atomic" | "alpha" | "none" (the teacher's own order)
@@ -916,6 +961,7 @@ function questionConfig(){
   };
   /* always written, also when empty: an emptied field must stay empty when the file is opened again */
   cfg.inputs={score:state.stackScoreInput,state:state.stackAnswerInput};   // the STACK inputs (STACK-JS)
+  if(state.target==="html") cfg.target="html";                              // builder only: the library ignores it
   if(state.elementsMode==="custom"){
     cfg.elements=state.elements.slice();
     cfg.elementsSort=state.elementsSort;   // builder only: the library ignores it
@@ -987,6 +1033,7 @@ function applyConfig(cfg){
     s.stackScoreInput=typeof cfg.stack.scoreInput==="string"?cfg.stack.scoreInput:"";
     s.stackAnswerInput=typeof cfg.stack.answerInput==="string"?cfg.stack.answerInput:"";
   }
+  s.target=cfg.target==="html"?"html":"stack";
   s.rubricEnabled=!!cfg.rubric;
   s.rubric=rubricRulesFrom(cfg.rubric||SAMPLE_RUBRIC);
   state=s;
@@ -1018,6 +1065,7 @@ const SCRIPT_CLOSE="<"+"/script>";
  * the library (ChemicalKeyboard.mountStackJs), so only the configuration differs from question to question.
  */
 function snippet(){
+  if(state.target==="html") return htmlPage();
   /*
    * The configuration is JSON inside STACK's CASText: "[[", "{@" and "{#" would start a STACK block / expression, and
    * a Moodle editor may escape < > & - inside strings they are written as \u escapes (JSON.parse restores them).
@@ -1042,11 +1090,81 @@ function snippet(){
   ].join("");
 }
 
+/*
+ * A stand-alone page (target "html", 2026-10-19): any website or system, no Moodle. The keyboard with Submit / Try
+ * again (the review: grade, feedback, reference answer - the review options of this question), and in a comment the
+ * library's API for connecting it to another system (ChemicalKeyboard.mount). Saved as .html it opens in a browser as
+ * is, and the builder reads its configuration back (the line "var CONFIG = ...;").
+ */
+function htmlPage(){
+  const lang=previewLanguage();
+  const json=JSON.stringify(questionConfig()).replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026");
+  const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return [
+    "<!DOCTYPE html>",
+    "<html lang=\""+lang+"\" dir=\""+(lang==="en"?"ltr":"rtl")+"\">",
+    "<head>",
+    "<meta charset=\"utf-8\">",
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
+    "<title>"+esc(state.questionId)+"</title>",
+    "<!-- Chemical keyboard question \""+esc(state.questionId)+"\" (code version "+SNIPPET_VERSION+", stand-alone page). Created with the chemical keyboard question builder: to change the question, open this file in the builder. -->",
+    SCRIPT_OPEN+" src=\""+esc(state.libraryUrl)+"\">"+SCRIPT_CLOSE,
+    "<style>",
+    "body{font-family:Arial,sans-serif;max-width:860px;margin:24px auto;padding:0 16px;color:#1d2733}",
+    ".actions{margin:14px 0}",
+    ".actions button{font-size:16px;padding:6px 18px;margin-inline-end:8px;cursor:pointer}",
+    "</style>",
+    "</head>",
+    "<body>",
+    "<!-- the question text: write it here -->",
+    "<p></p>",
+    "<div id=\"question\"></div>",
+    "<div class=\"actions\"><button type=\"button\" id=\"submit\"></button><button type=\"button\" id=\"again\" hidden></button></div>",
+    SCRIPT_OPEN+">",
+    "/*",
+    " * The question's configuration (made by the builder - change it there, not here).",
+    " *",
+    " * Connecting the question to another system - ChemicalKeyboard.mount(element, CONFIG, options):",
+    " *   options.state     the saved state to start from (what onChange gave, or its JSON text), or null",
+    " *   options.readOnly  true: show the submitted answer with its grade and feedback (the review)",
+    " *   options.onChange  function (state, score) - after every change of the answer:",
+    " *                       state  {v, answer, score, feedback} (null when the answer is emptied) - store it",
+    " *                       score  0 to 1 (the rubric of the question)",
+    " * The keyboard draws itself in the element; nothing else is needed.",
+    " */",
+    "var CONFIG = "+json+";",
+    "var TEXT = {he:{submit:\"הגשה\",again:\"ניסיון נוסף\"}, ar:{submit:\"إرسال\",again:\"محاولة أخرى\"}, en:{submit:\"Submit\",again:\"Try again\"}};",
+    "var words = TEXT[document.documentElement.lang] || TEXT.en;",
+    "var box = document.getElementById(\"question\"), submit = document.getElementById(\"submit\"), again = document.getElementById(\"again\");",
+    "var saved = null, run = null;",
+    "submit.textContent = words.submit;",
+    "again.textContent = words.again;",
+    "function show(readOnly) {",
+    "  if (run) [run.keyboard.root, run.keyboard.elementPanel, run.keyboard.atomPanel].forEach(function (e) { if (e && e.parentNode) e.parentNode.removeChild(e); });",
+    "  run = ChemicalKeyboard.mount(box, Object.assign({layout: \"docked\"}, CONFIG), {",
+    "    state: saved,",
+    "    readOnly: readOnly,",
+    "    onChange: function (state, score) { saved = state; }",
+    "  });",
+    "  submit.hidden = readOnly;",
+    "  again.hidden = !readOnly;",
+    "}",
+    "submit.onclick = function () { if (saved) show(true); };",
+    "again.onclick = function () { show(false); };",
+    "show(false);",
+    SCRIPT_CLOSE,
+    "</body>",
+    "</html>",
+    ""
+  ].join("\n");
+}
+
 /* Reads the configuration back from a saved snippet (or a plain JSON file). */
 function parseFile(text){
   let json=null;
-  /* the STACK-JS template: mountStackJs(stack_js,{...}); - the demo files before it: a JSON script tag */
-  const stackJs=/mountStackJs\(stack_js,(\{.*\})\);\[\[\/script\]\]/.exec(text);
+  /* the STACK-JS template: mountStackJs(stack_js,{...}); - a stand-alone page: var CONFIG = {...}; -
+     the demo files before them: a JSON script tag */
+  const stackJs=/mountStackJs\(stack_js,(\{.*\})\);\[\[\/script\]\]/.exec(text)||/^var CONFIG = (\{.*\});$/m.exec(text);
   const match=new RegExp(SCRIPT_OPEN+"[^>]*type=[\"']application/json[\"'][^>]*>([\\s\\S]*?)"+SCRIPT_CLOSE,"i").exec(text);
   if(stackJs) json=stackJs[1];
   else if(match) json=match[1];
@@ -1689,7 +1807,7 @@ function renderIssues(){
   const issues=[];
   if(!/^[A-Za-z0-9_-]+$/.test(state.questionId)) issues.push(t("issueId"));
   if(state.reviewDiv&&!/^[A-Za-z0-9_-]+$/.test(state.reviewDiv)) issues.push(t("issueReviewDiv"));
-  const stackNames=[state.stackScoreInput,state.stackAnswerInput].filter(Boolean);
+  const stackNames=state.target==="html"?[]:[state.stackScoreInput,state.stackAnswerInput].filter(Boolean);
   if(stackNames.some(name=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(name))) issues.push(t("issueStackName"));
   if(stackNames.length===2&&stackNames[0]===stackNames[1]) issues.push(t("issueStackSame"));
   if(!state.libraryUrl.trim()) issues.push(t("issueUrl"));
@@ -1715,9 +1833,19 @@ function renderIssues(){
 }
 
 function renderOutput(){
+  document.querySelectorAll("input[name=target]").forEach(r=>{ r.checked=r.value===state.target; });
+  $("outputHint").textContent=t(state.target==="html"?"outputHintHtml":"outputHint");
+  $("stackPart").hidden=state.target==="html";     // the STACK inputs mean nothing on a stand-alone page
   $("output").value=snippet();
   $("copyStatus").textContent="";
   renderStackModels();
+}
+
+/* the "?" next to the STACK inputs: how to set them up in the STACK question, in the interface language */
+function openStackHelp(){
+  $("stackHelpBody").innerHTML=t("stackHelpHtml");
+  const dialog=$("stackHelp");
+  if(dialog.showModal) dialog.showModal(); else dialog.setAttribute("open","");
 }
 
 /*
@@ -1789,6 +1917,9 @@ function renderTexts(){
   document.documentElement.dir=teacherLanguage==="en"?"ltr":"rtl";
   document.title=t("appTitle");
   document.querySelectorAll("[data-t]").forEach(el=>{ el.textContent=t(el.dataset.t); });
+  $("stackHelpBtn").title=t("stackHelpOpen");
+  $("stackHelpBtn").setAttribute("aria-label",t("stackHelpOpen"));
+  if($("stackHelp").open) $("stackHelpBody").innerHTML=t("stackHelpHtml");
   $("teacherLanguage").value=teacherLanguage;
   $("librarySource").textContent=t(librarySource.kind==="local"?"libraryLocal":"libraryPublic");
   $("librarySource").style.color=librarySource.kind==="local"?"var(--warn)":"";
@@ -1866,7 +1997,7 @@ async function openFile(){
   if(!confirmDiscard()) return;
   if(window.showOpenFilePicker){
     try{
-      const [handle]=await window.showOpenFilePicker({types:[{description:"Text",accept:{"text/plain":[".txt"]}}]});
+      const [handle]=await window.showOpenFilePicker({types:[{description:"Question",accept:{"text/plain":[".txt"],"text/html":[".html"]}}]});
       const file=await handle.getFile();
       openText(await file.text(),file.name,handle);
     }catch(e){ if(e.name!=="AbortError") window.alert(t("openError")); }
@@ -1878,12 +2009,17 @@ async function openFile(){
 
 async function saveFile(saveAs){
   const text=snippet();
-  const suggested=fileName||(state.questionId||"question")+".txt";
+  /* a stand-alone page is saved as .html: the saved file is the page itself (and opens in the builder again) */
+  const ext=state.target==="html"?".html":".txt";
+  const base=(fileName||state.questionId||"question").replace(/\.(txt|html)$/i,"");
+  const suggested=base+ext;
+  const types=state.target==="html"?[{description:"Web page",accept:{"text/html":[".html"]}}]:[{description:"Text",accept:{"text/plain":[".txt"]}}];
 
   if(window.showSaveFilePicker){
     try{
       let handle=saveAs?null:fileHandle;
-      if(!handle) handle=await window.showSaveFilePicker({suggestedName:suggested,types:[{description:"Text",accept:{"text/plain":[".txt"]}}]});
+      if(handle&&!handle.name.toLowerCase().endsWith(ext)) handle=null;   // the target changed: a new file
+      if(!handle) handle=await window.showSaveFilePicker({suggestedName:suggested,types:types});
       const writable=await handle.createWritable();
       await writable.write(text);
       await writable.close();
@@ -1981,6 +2117,11 @@ document.querySelectorAll("input[name=moleculesMode]").forEach(radio=>{
 $("moleculesFromDefault").addEventListener("click",()=>{ state.molecules=ChemicalGrammar.defaultMolecules(); moleculesChanged(); });
 $("clearMolecules").addEventListener("click",()=>{ state.molecules=[]; moleculesChanged(); });
 $("submitTry").addEventListener("click",submitTry);
+$("stackHelpBtn").addEventListener("click",openStackHelp);
+$("stackHelpClose").addEventListener("click",()=>{ const d=$("stackHelp"); if(d.close) d.close(); else d.removeAttribute("open"); });
+document.querySelectorAll("input[name=target]").forEach(radio=>{
+  radio.addEventListener("change",()=>{ if(radio.checked){ state.target=radio.value; changed(); } });
+});
 $("addFromReference").addEventListener("click",()=>{
   if(state.elementsMode!=="custom") state.elements=(panelElements()||[]).slice();
   state.elementsMode="custom";

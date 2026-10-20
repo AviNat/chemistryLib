@@ -2575,6 +2575,9 @@ function compareNuclides(student,reference,side,errors){
 
   if(!s)return;
 
+  /* a particle paired by its symbol with another atomic number: ⁰₁e (+1, the positron) for ⁰₋₁e */
+  if(r&&s.particle&&r.particle&&s.Z!==r.Z)report("wrong-atomic-number",r.Z,s.Z);
+
   for(i=0;i<s.issues.length;i++){
     issue=s.issues[i];
     report(issue.code,issue.expected,issue.actual);
@@ -2613,6 +2616,11 @@ function nuclearizeAst(ast){
   }
 }
 
+function sameNuclearSymbol(a,b){
+  var electron={e:true,"β":true};
+  return a.symbol===b.symbol||!!(electron[a.symbol]&&electron[b.symbol]);
+}
+
 function findSpeciesMatch(studentSide,referenceSpecies,used){
   var i;
 
@@ -2620,6 +2628,22 @@ function findSpeciesMatch(studentSide,referenceSpecies,used){
   for(i=0;i<studentSide.length;i++){
     if(!used[i]&&studentSide[i].formulaKey===referenceSpecies.formulaKey){
       return i;
+    }
+  }
+
+  /*
+   * Nuclear: the same symbol (e and β are the same particle) with the same mass number. A wrong atomic number of a
+   * particle - ⁰₁e (the positron's +1) for ⁰₋₁e, a forgotten minus - is then a wrong atomic number, not a missing
+   * and an extra substance (the user, 2026-10-19). Elements were already paired by their symbol.
+   */
+  if(referenceSpecies.nuclear){
+    for(i=0;i<studentSide.length;i++){
+      /* only when the student wrote the atomic number: β alone for β⁺ is another particle, not a wrong number */
+      if(!used[i]&&studentSide[i].nuclear&&sameNuclearSymbol(studentSide[i].nuclear,referenceSpecies.nuclear)&&
+        studentSide[i].nuclear.A===referenceSpecies.nuclear.A&&
+        (studentSide[i].nuclear.Z===referenceSpecies.nuclear.Z||studentSide[i].nuclear.atomicWritten!==null)){
+        return i;
+      }
     }
   }
 
@@ -3635,6 +3659,8 @@ var SUPPRESSION_RULES=[
     by:["missing-species","unexpected-species","unknown-element"].concat(WRONG_SPECIES_CODES),match:"atom"},
   /* one wrong coefficient unbalances all the atoms of its substance: one error */
   {codes:["unbalanced-atom"],by:["wrong-coefficient"],match:"atom"},
+  /* a particle's wrong atomic number (⁰₁e for ⁰₋₁e) unbalances the atomic numbers: one error (2026-10-19) */
+  {codes:["unbalanced-atom"],by:["wrong-atomic-number"],match:"atomicNumber"},
   /* an extra substance that contains an unknown element (Q2 typed for O2) */
   {codes:["unexpected-species"],by:["unknown-element"],match:"containsAtom"}
 ];
@@ -3642,6 +3668,7 @@ var SUPPRESSION_RULES=[
 function suppressionMatches(error,other,match){
   if(match==="species")return !!error.speciesKey&&error.speciesKey===other.speciesKey;
   if(match==="containsAtom")return !!error.speciesAtoms&&error.speciesAtoms.indexOf(other.atom)>=0;
+  if(match==="atomicNumber")return error.atom==="#Z";
 
   if(!error.atom)return false;
   if(other.speciesAtoms)return other.speciesAtoms.indexOf(error.atom)>=0;
@@ -7354,7 +7381,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.1.0"// raise with every change, to see in the console which copy a page runs
+  version:"3.1.1"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

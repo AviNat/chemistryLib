@@ -92,6 +92,18 @@ library also undoes `&lt; &gt; &amp; &quot;` in the configuration text before pa
 - Paste into the Moodle question text in the editor's HTML view. The question id must be unique per page.
 - Save uses the File System Access API when available (save back to the same file), otherwise a download.
 
+## Targets and STACK setup help (2026-10-19)
+- **Code for:** "Moodle STACK question (STACK-JS)" (the template of STACKJS-DESIGN.md) or "Stand-alone page" - a
+  complete HTML page: the keyboard (docked) with Submit / Try again (the review with this question's review options),
+  the question text to be written in it, and a comment explaining `ChemicalKeyboard.mount` for connecting it to
+  another system. The choice is saved (`target: "html"`, builder only); a stand-alone page is saved as `.html` - the
+  file is the page itself, and the builder opens it again (`var CONFIG = …;`). The STACK input fields are hidden for it.
+- The **"?"** next to the STACK inputs opens a window (he / ar / en, the interface language) on setting up ans1 / ans2:
+  Numerical / String, model answers, Student must verify: No, **Show the validation: No**, **Extra options:
+  hideanswer** (with the reasons), the PRT (`sc: ans1;`, one node, false-branch score `sc`), other input names.
+- The state input's model answer is the reference answer only (`"2H_{2}+O_{2}→2H_{2}O"`): Moodle shows model answers
+  as "the correct answer", so no JSON or feedback there; the library reads plain text in the state input as the answer.
+
 ## Connection to STACK (decided 2026-10-08)
 - Config `stack: { scoreInput: "ans1", answerInput: "ans2" }` (both optional), set in the builder's settings.
 - On **every change** of the student's answer the keyboard writes, and hides both inputs:

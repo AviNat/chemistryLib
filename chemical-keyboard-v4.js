@@ -743,11 +743,22 @@ function localizedErrorTemplate(error,language){
   if(error.fattyAcid!==undefined)text=replaceTextToken(text,"fattyAcid","⁦"+error.fattyAcid+"⁩");
   if(error.expectedFormat)text=replaceTextToken(text,"expectedFormat",localizedFromTable(LIPID_FORMAT_NAMES,error.expectedFormat,language));
   if(error.actualFormat)text=replaceTextToken(text,"actualFormat",localizedFromTable(LIPID_FORMAT_NAMES,error.actualFormat,language));
-  if(error.position!==undefined)text=replaceTextToken(text,"position",error.position);
+  if(error.position!==undefined)text=replaceTextToken(text,"position","⁦"+error.position+"⁩");
 
-  text=replaceTextToken(text,"count",error.count);
-  text=replaceTextToken(text,"left",error.left);
-  text=replaceTextToken(text,"right",error.right);
+  /*
+   * Numbers left to right also in a Hebrew / Arabic message (the user, 2026-10-20: "−2" was shown as "2-"): each number
+   * in an isolate (LRI ... PDI), a negative one with the minus sign "−". Charges ("2−") the same.
+   */
+  function num(v){
+    if(v===undefined||v===null||v==="")return v;
+    var s=typeof v==="number"&&v<0?"−"+Math.abs(v):String(v).replace(/^-/,"−");
+    return "⁦"+s+"⁩";
+  }
+  function isNumeric(v){ return typeof v==="number"||typeof v==="string"&&/^[-−+]?\d+(\.\d+)?$/.test(v); }
+
+  text=replaceTextToken(text,"count",num(error.count));
+  text=replaceTextToken(text,"left",num(error.left));
+  text=replaceTextToken(text,"right",num(error.right));
   text=replaceTextToken(text,"parserCode",localizedFromTable(SYNTAX_TEXT,error.parserCode,language));
 
   /*
@@ -761,11 +772,12 @@ function localizedErrorTemplate(error,language){
   text=replaceTextToken(text,"onSide",localizedOnSide(error.side,language));
   text=replaceTextToken(text,"actualState",localizedState(error.actual,language));
   text=replaceTextToken(text,"expectedState",localizedState(error.expected,language));
-  text=replaceTextToken(text,"actualCharge",chargeLabel(error.actual));
-  text=replaceTextToken(text,"expectedCharge",chargeLabel(error.expected));
-  text=replaceTextToken(text,"actual",error.actual);
-  text=replaceTextToken(text,"expected",error.expected);
-  text=replaceTextToken(text,"factor",error.factor);
+  text=replaceTextToken(text,"actualCharge","⁦"+chargeLabel(error.actual)+"⁩");
+  text=replaceTextToken(text,"expectedCharge","⁦"+chargeLabel(error.expected)+"⁩");
+  /* {actual} / {expected} are numbers, or words (a state, cis / trans): only numbers are isolated */
+  text=replaceTextToken(text,"actual",isNumeric(error.actual)?num(error.actual):error.actual);
+  text=replaceTextToken(text,"expected",isNumeric(error.expected)?num(error.expected):error.expected);
+  text=replaceTextToken(text,"factor",num(error.factor));
 
   return text;
 }
@@ -7173,7 +7185,9 @@ function renderGradedResult(result,language,summary,details){
 
   for(i=0;i<items.length;i++)byId[items[i].id]=items[i];
 
-  summary.textContent=replaceTextToken(localizedFromTable(GRADE_TEXT,"score",language),"score",result.score.total);
+  /* "90%" kept together, left to right, in a Hebrew / Arabic line */
+  summary.textContent=replaceTextToken(localizedFromTable(GRADE_TEXT,"score",language).replace("{score}%","⁦{score}%⁩"),
+    "score",result.score.total);
   summary.style.color=result.score.total===100?"#18742a":"#a12622";
 
   if(result.correct&&!result.score.penalties.length){
@@ -7669,7 +7683,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.3.0"// raise with every change, to see in the console which copy a page runs
+  version:"3.3.1"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

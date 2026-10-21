@@ -4628,8 +4628,8 @@ ChemicalKeyboard.prototype.copyValue=function(value){
   if(!value)return false;
   plain=readableFormula(value);
   try{ global.localStorage.setItem(CLIPBOARD_KEY,JSON.stringify({value:value,plain:plain,time:Date.now()})); }catch(e){}
-  /* allowed from a click or a key press */
-  try{ if(global.navigator.clipboard&&global.navigator.clipboard.writeText)global.navigator.clipboard.writeText(plain).catch(function(){}); }catch(e){}
+  /* the system clipboard: plain text and a formatted (HTML) version - allowed from a click or a key press */
+  try{ writeSystemClipboard(plain,htmlFormula(value)); }catch(e){}
   this.notice(t.copied);
   return true;
 };
@@ -5444,6 +5444,83 @@ function plainFormula(formula){
     if(c.kind==="fstate")return "("+(c.condition||[]).map(function(x){return x.script==="normal"?x.ch:scriptText(x.ch,x.script);}).join("")+")";
     return c.script==="normal"||c.kind==="state"?c.ch:scriptText(c.ch,c.script);
   }).join("");
+}
+
+/*
+ * The formatted version a copy also puts on the system clipboard (2026-10-21, the user: "#1"): HTML that Word, Google
+ * Docs, Gmail and web editors paste with a plain Ctrl+V - subscripts and superscripts as <sub> / <sup>, states as
+ * subscripts, a nuclide's numbers before its symbol, spaces around + and the arrow, and the condition ABOVE its
+ * arrow as ruby text (2026-10-21, tested by pasting into Word 16: Word makes it a "phonetic guide" over the arrow).
+ * Word's import cuts ruby text at a comma, so the commas there are U+201A "‚" (looks the same); → is the long ⟶
+ * so the arrow spans more of the condition; <rp> gives "→[Δ]" where ruby is not supported. "Paste special" there
+ * offers this or the plain text. A keyboard always pastes the plain text / its own copy, never this.
+ */
+function htmlFormula(formula){
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function run(chars){
+    var out="",i=0,c,script,text;
+    while(i<chars.length){
+      c=chars[i];
+      if(c.kind==="fstate"){
+        out+="<sub>("+run(c.condition||[])+")</sub>";
+        i++;
+        continue;
+      }
+      if(c.script==="normal"&&isArrowChar(c.ch)){
+        out+=" "+(c.condition&&c.condition.length?
+          "<ruby>"+(c.ch==="→"?"⟶":c.ch)+"<rp>[</rp><rt>"+run(c.condition).replace(/,/g,"‚")+"</rt><rp>]</rp></ruby>":c.ch)+" ";
+        i++;
+        continue;
+      }
+      if(c.script==="normal"&&c.ch==="+"){
+        out+=" + ";
+        i++;
+        continue;
+      }
+      /* a run of the same level: one <sub> / <sup> (a state's letters are at the sub level) */
+      script=c.kind==="state"?"sub":c.script;
+      text="";
+      while(i<chars.length&&chars[i].kind!=="fstate"&&!(chars[i].script==="normal"&&(isArrowChar(chars[i].ch)||chars[i].ch==="+"))&&
+        (chars[i].kind==="state"?"sub":chars[i].script)===script){
+        text+=esc(chars[i].ch);
+        i++;
+      }
+      out+=script==="sub"?"<sub>"+text+"</sub>":script==="sup"?"<sup>"+text+"</sup>":text;
+    }
+    return out;
+  }
+  return "<span>"+run(modelFromValue(formula)).replace(/\s+/g," ").trim()+"</span>";
+}
+
+/*
+ * Write the plain text and the HTML together (a click or a key press - the browser allows it then). The Clipboard API
+ * with both types; else the copy command with both types; else the plain text only.
+ */
+function writeSystemClipboard(plain,html){
+  var nav=global.navigator;
+  function viaCopyCommand(){
+    var done=false;
+    function onCopy(e){
+      e.clipboardData.setData("text/plain",plain);
+      e.clipboardData.setData("text/html",html);
+      e.preventDefault();
+      done=true;
+    }
+    document.addEventListener("copy",onCopy,true);
+    try{ document.execCommand("copy"); }catch(e){}
+    document.removeEventListener("copy",onCopy,true);
+    if(!done&&nav.clipboard&&nav.clipboard.writeText)nav.clipboard.writeText(plain).catch(function(){});
+  }
+  try{
+    if(global.ClipboardItem&&nav.clipboard&&nav.clipboard.write){
+      nav.clipboard.write([new global.ClipboardItem({
+        "text/plain":new Blob([plain],{type:"text/plain"}),
+        "text/html":new Blob([html],{type:"text/html"})
+      })]).catch(viaCopyCommand);
+      return;
+    }
+  }catch(e){}
+  viaCopyCommand();
 }
 
 /*
@@ -7686,6 +7763,11 @@ function runQuestion(host,cfg,adapter){
   ChemicalKeyboard.runQuestion=runQuestion;
   ChemicalKeyboard.mountStackJs=mountStackJs;   // inside a STACK [[iframe]] (STACKJS-DESIGN.md)
   ChemicalKeyboard.mount=mount;                 // any other system
+  /* what a copy puts on the system clipboard, for a formula as text or value ("CaCO₃ →[Δ] CaO") - tests, tools */
+  ChemicalKeyboard.copyFormats=function(formula){
+    var v=valueFromPlain(formula);
+    return {text:readableFormula(v),html:htmlFormula(v)};
+  };
   global.ChemicalKeyboard = ChemicalKeyboard;
 
   global.ChemicalGrammar={
@@ -7703,7 +7785,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.3.2"// raise with every change, to see in the console which copy a page runs
+  version:"3.4.0"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

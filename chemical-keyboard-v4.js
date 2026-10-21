@@ -4588,7 +4588,9 @@ function valueFromPlain(text){
     if(run)out+=(runScript==="sub"?"_{":"^{")+run+"}";
     run="";runScript=null;
   }
-  text=String(text).replace(/\s+/g,"").replace(/->/g,"→").replace(/<=>|<->/g,"⇌");
+  /* spaces out, except inside a condition ("[Fe, 450°C]" keeps its space) */
+  text=String(text).replace(/\[[^\]]*\]|\s+/g,function(m){ return m.charAt(0)==="["?m:""; })
+    .replace(/->/g,"→").replace(/<=>|<->/g,"⇌");
   for(i=0;i<text.length;i++){
     ch=text.charAt(i);
     u=unscript(ch);
@@ -4624,7 +4626,7 @@ ChemicalKeyboard.prototype.answerParts=function(){
 ChemicalKeyboard.prototype.copyValue=function(value){
   var t=T[this.language]||T.en,plain;
   if(!value)return false;
-  plain=plainFormula(value);
+  plain=readableFormula(value);
   try{ global.localStorage.setItem(CLIPBOARD_KEY,JSON.stringify({value:value,plain:plain,time:Date.now()})); }catch(e){}
   /* allowed from a click or a key press */
   try{ if(global.navigator.clipboard&&global.navigator.clipboard.writeText)global.navigator.clipboard.writeText(plain).catch(function(){}); }catch(e){}
@@ -5442,6 +5444,24 @@ function plainFormula(formula){
     if(c.kind==="fstate")return "("+(c.condition||[]).map(function(x){return x.script==="normal"?x.ch:scriptText(x.ch,x.script);}).join("")+")";
     return c.script==="normal"||c.kind==="state"?c.ch:scriptText(c.ch,c.script);
   }).join("");
+}
+
+/*
+ * The text a copy puts on the system clipboard (2026-10-21): readable AND complete - the condition in brackets after
+ * its arrow ("→[Δ]", "⇌[Fe, 450°C]"), spaces around + and the arrow: "CaCO₃(s) →[Δ] CaO(s) + CO₂(g)". Pasted into a
+ * keyboard (valueFromPlain) it gives the same answer back, conditions included, also when the library's own copy
+ * is not there (another browser tab, storage blocked, text from a document).
+ */
+function readableFormula(formula){
+  function piece(x){ return x.script==="normal"||x.kind==="state"?x.ch:scriptText(x.ch,x.script); }
+  return modelFromValue(formula).map(function(c){
+    if(c.kind==="fstate")return "("+(c.condition||[]).map(piece).join("")+")";
+    if(c.script==="normal"&&isArrowChar(c.ch)){
+      return " "+c.ch+(c.condition&&c.condition.length?"["+c.condition.map(piece).join("")+"]":"")+" ";
+    }
+    if(c.script==="normal"&&c.ch==="+")return " + ";
+    return piece(c);
+  }).join("").replace(/\s+/g," ").trim();
 }
 
 function moleculeTooltip(key,language){
@@ -7683,7 +7703,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.3.1"// raise with every change, to see in the console which copy a page runs
+  version:"3.3.2"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

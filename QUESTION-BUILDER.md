@@ -85,12 +85,39 @@ library also undoes `&lt; &gt; &amp; &quot;` in the configuration text before pa
   configuration text before parsing. Teachers should also choose "HTML format" under the question text when the
   plain-text editor is used.
 
-## Output / file
-- The saved `.txt` **is** the Moodle snippet: a `div`, the configuration as JSON in
+## Tabs, exercise file, question code (2026-11-01)
+Redesigned on the lines of the math keyboard's playground (`FullKBD/mathCheckPlayground.html`). Same functions, in
+five tabs (the open tab is remembered; a tab with something to fix gets ⚠ on its button):
+1. **Keyboard** - student language, the key options, element keys, molecule keys, and a **preview** keyboard (new).
+2. **Checker** - the reference answer (with "Check the reference answer"), a **student answer graded on every change**
+   (new: the library's review page with everything shown - grade, penalty lines, marked reference - whatever the
+   review options hide), the rubric, and "isomers are different substances" (a grading rule, moved from the settings).
+3. **Didactics** - the correct answer read-only ("Edit in the Checker tab"), the initial answer with messages:
+   already correct (warning) / writing problems (fine for a part to complete) / "graded as an answer it would get X%".
+   Common mistakes: not yet.
+4. **Exercise file** - New / Open / Save / Save as (moved from the header), a summary, the file's JSON (Copy).
+5. **Question code** - target, question id, library address, keyboard width, review options, STACK inputs (+ "?"),
+   the issues list, "Try it as a student" + Submit, the code with **Copy the code** and **Save the code…**.
+
+Two separate outputs (the user, 2026-11-01: "the file should include all the info for the builder, the code to
+embed in the learning platform is separate and should be minimal"):
+- **Exercise file** `.chemq` - the builder's whole JSON (`questionConfig`, `tool: "chemkbd-question-builder"`,
+  `formatVersion: 1`), pretty-printed. Save writes it back to the same file (File System Access API) or downloads it.
+- **Question code** - only what the library reads, and only what differs from its defaults (`embedConfig`): no
+  `tool`, `formatVersion`, `questionId`, `libraryUrl` (it is in the script tag), `elementsSort`, `moleculesMode`,
+  `target`, `checkButton`; `review` only with the options turned off; `inputs` only when not ans1 / ans2. The try in
+  tab 5 runs this configuration, so it shows exactly what the student gets.
+- **Open** reads a `.chemq` / `.json` file, the code saved by older versions (`.txt` / `.html`, the whole JSON inside),
+  and the new minimal code: then the question name and the library address come from the code's comment and script
+  tag, the other builder-only settings get their defaults, tab 5 opens with a message, and Save makes a new `.chemq`.
+- **Initial answer** (library 3.5.0, aligned with mathQuestion 1.1.0): an initial answer left as it is, or edited back
+  to it, saves no answer (`adapter.save(null, 0)`) - not graded.
+
+## Output / file (before 2026-11-01)
+- The saved `.txt` **was** the Moodle snippet: a `div`, the configuration as JSON in
   `<script type="application/json" id="chemkbd-<id>-config">`, and a script that loads the library (once per page)
   and runs `chemkbdRun`. Opening a file reads only the JSON block (`tool: "chemkbd-question-builder"`, `formatVersion: 1`).
 - Paste into the Moodle question text in the editor's HTML view. The question id must be unique per page.
-- Save uses the File System Access API when available (save back to the same file), otherwise a download.
 
 ## Targets and STACK setup help (2026-10-19)
 - **Code for:** "Moodle STACK question (STACK-JS)" (the template of STACKJS-DESIGN.md) or "Stand-alone page" - a

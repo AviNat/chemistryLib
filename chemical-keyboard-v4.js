@@ -7711,7 +7711,8 @@ function runQuestion(host,cfg,adapter){
   if(typeof adapter.save==="function"){
     options.onChange=function(r){
       var result,score;
-      if(!r.model.length){
+      /* empty, or the initial answer as it was given (also after edits that undo each other): no answer - not graded, as in the math keyboard (3.5.0) */
+      if(!r.model.length||cfg.value&&r.valueText===cfg.value){
         adapter.save(null,0);
         return;
       }
@@ -7789,7 +7790,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.4.0"// raise with every change, to see in the console which copy a page runs
+  version:"3.5.0"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

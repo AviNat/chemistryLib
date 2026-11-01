@@ -9,13 +9,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chemical Question Builder</title>
 <!--
-  Teacher tool: builds a Moodle question with the chemical keyboard (chemical-keyboard-v4.js).
-  The teacher sets the student language, the element keys, the reference answer, an optional
-  initial answer and the grading rubric (RUBRIC-DESIGN.md). The output is a snippet to paste into
-  the Moodle question text; it is saved as a .txt file and can be opened here again.
+  Teacher tool: builds a question with the chemical keyboard (chemical-keyboard-v4.js). Five tabs, as in the math
+  keyboard's playground (2026-11-01): 1 the student's keyboard (language, keys, elements, molecules, preview),
+  2 the reference answer, a student answer graded live, the rubric (RUBRIC-DESIGN.md), 3 didactics (the initial
+  answer), 4 the exercise file, 5 the question code (STACK-JS or a stand-alone page) with a try as a student.
 
-  The saved file is the snippet itself. The configuration is in it once, as JSON in a script
-  element of type application/json with the id chemkbd-...-config; opening a file reads only that block.
+  Two separate outputs: the exercise file (.chemq, the builder's whole JSON - questionConfig) is what the builder
+  opens again; the question code holds only what the library reads (embedConfig). The code saved by older versions
+  (.txt / .html, the whole JSON inside) and the new code still open, the new code with the builder-only settings
+  at their defaults.
 
   Nothing in this page may contain the text of a script tag except the real tags (write it as
   "<"+"script" in code): page previewers such as htmlpreview.github.io find the scripts by
@@ -50,9 +52,23 @@ body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Arial,sans-s
 header{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:1px solid var(--line);
   display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:10px 16px}
 header h1{font-size:18px;margin:0;flex:1 1 auto}
-header .file{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+/* the tabs: the last row of the header */
+nav.tabs{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;margin:2px -16px -10px;padding:6px 16px 0;border-top:1px solid var(--line)}
+nav.tabs button[role=tab]{border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;background:none;padding:7px 14px;color:var(--muted)}
+nav.tabs button[role=tab]:hover{background:var(--accent-soft)}
+nav.tabs button[aria-selected=true]{background:var(--bg);border-color:var(--line);color:var(--text);font-weight:bold}
+nav.tabs button.has-issue::after{content:" ⚠";color:var(--warn)}
+.tab-note{margin-inline-start:auto;align-self:center;font-size:13px;color:var(--muted);padding-bottom:6px}
 #fileName{color:var(--muted);font-size:13px}
-#dirtyMark{color:var(--warn);font-size:13px}
+#dirtyMark,.dirty{color:var(--warn);font-size:13px}
+table.summary{border-collapse:collapse;margin-top:10px;width:100%}
+table.summary td{border:1px solid var(--line);padding:6px 10px;vertical-align:top}
+table.summary td:first-child{font-weight:bold;white-space:nowrap;width:1%;background:#f8fafc}
+table.summary td.formula{direction:ltr;text-align:left;unicode-bidi:isolate}
+textarea.code{width:100%;height:240px;font:12px/1.4 Consolas,monospace;direction:ltr;text-align:left;border:1px solid var(--line);border-radius:6px;padding:8px;background:#fafbfc}
+.status.warn{color:var(--warn)}
+.student-result{margin-top:10px}
+.student-result:empty{display:none}
 main{max-width:1000px;margin:0 auto;padding:16px}
 section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
 section h2{font-size:16px;margin:0 0 10px}
@@ -143,21 +159,22 @@ dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
       <option value="ar">العربية</option>
     </select>
   </label>
-  <div class="file">
-    <button type="button" id="newBtn" data-t="new"></button>
-    <button type="button" id="openBtn" data-t="open"></button>
-    <button type="button" id="saveBtn" class="primary" data-t="save"></button>
-    <button type="button" id="saveAsBtn" data-t="saveAs"></button>
-    <span id="fileName"></span>
-    <span id="dirtyMark"></span>
-    <input type="file" id="fileInput" accept=".txt,.html,.json,text/plain" hidden>
-  </div>
+  <!-- the tabs, as in the math keyboard's playground: the keyboard, the answer and its grading, the didactics, the file, the code -->
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" id="tabBtnKeyboard" aria-controls="tabKeyboard" data-t="tabKeyboard"></button>
+    <button type="button" role="tab" id="tabBtnChecker" aria-controls="tabChecker" data-t="tabChecker"></button>
+    <button type="button" role="tab" id="tabBtnDidactics" aria-controls="tabDidactics" data-t="tabDidactics"></button>
+    <button type="button" role="tab" id="tabBtnFile" aria-controls="tabFile" data-t="tabFile"></button>
+    <button type="button" role="tab" id="tabBtnQuestion" aria-controls="tabQuestion" data-t="tabQuestion"></button>
+    <span class="tab-note"><span id="tabFileName"></span> <span id="dirtyMark"></span></span>
+  </nav>
 </header>
 
-<main>
+<!-- 1. the keyboard the student gets -->
+<main id="tabKeyboard" role="tabpanel" hidden>
 
 <section>
-  <h2 data-t="secSettings"></h2>
+  <h2 data-t="secKeyboard"></h2>
   <div class="row">
     <label class="field"><span data-t="studentLanguage"></span>
       <select id="studentLanguage">
@@ -167,18 +184,9 @@ dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
         <option value="en">English</option>
       </select>
     </label>
-    <label class="field"><span data-t="questionId"></span>
-      <input type="text" id="questionId" size="16" dir="ltr">
-    </label>
   </div>
   <div class="hint" data-t="studentLanguageHint"></div>
   <div class="hint" id="languageSystemHint" data-t="languageSystemHint"></div>
-  <div class="hint" data-t="questionIdHint"></div>
-  <label class="field"><span data-t="libraryUrl"></span>
-    <input type="url" id="libraryUrl" placeholder="https://.../chemical-keyboard-v4.js">
-  </label>
-  <div class="hint" id="librarySource"></div>
-  <label class="check"><input type="checkbox" id="distinguishIsomers"><span data-t="distinguishIsomers"></span></label>
   <label class="check"><input type="checkbox" id="conditions"><span data-t="conditions"></span></label>
   <label class="check"><input type="checkbox" id="autoSubscript"><span data-t="autoSubscript"></span></label>
   <label class="check"><input type="checkbox" id="ionKeys"><span data-t="ionKeys"></span></label>
@@ -198,48 +206,6 @@ dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
   </div>
   <!-- hidden (2026-10-10): the keyboard's validation icon replaces the check button; the code stays in the library's runQuestion -->
   <label class="check" hidden><input type="checkbox" id="checkButton"><span data-t="checkButton"></span></label>
-  <label class="field"><span data-t="displayChars"></span>
-    <input type="number" id="displayChars" min="32" max="120" step="1" placeholder="32">
-  </label>
-  <div class="hint" data-t="displayCharsHint"></div>
-  <h3 class="sub" data-t="reviewTitle"></h3>
-  <div class="hint" data-t="reviewHint"></div>
-  <!-- the review div needs the question text, which a STACK-JS frame cannot reach (2026-10-18): hidden, not saved -->
-  <label class="field" hidden><span data-t="reviewDiv"></span>
-    <input type="text" id="reviewDiv" size="16" dir="ltr">
-  </label>
-  <div class="hint" hidden><span data-t="reviewDivHint"></span> <code dir="ltr" id="reviewDivExample"></code></div>
-  <label class="check"><input type="checkbox" id="reviewGrade"><span data-t="reviewGrade"></span></label>
-  <label class="check"><input type="checkbox" id="reviewReference"><span data-t="reviewReference"></span></label>
-  <label class="check"><input type="checkbox" id="reviewDetails"><span data-t="reviewDetails"></span></label>
-  <div id="stackPart">
-  <h3 class="sub"><span data-t="stackTitle"></span> <button type="button" id="stackHelpBtn" class="help-btn">?</button></h3>
-  <div class="row">
-    <label class="field"><span data-t="stackScoreInput"></span>
-      <input type="text" id="stackScoreInput" size="10" dir="ltr">
-    </label>
-    <label class="field"><span data-t="stackAnswerInput"></span>
-      <input type="text" id="stackAnswerInput" size="10" dir="ltr">
-    </label>
-  </div>
-  <div class="hint" data-t="stackHint"></div>
-  <div id="stackModels"></div>
-  </div>
-  <!-- how to set up the inputs in the STACK question (the "?" button), in the interface language -->
-  <dialog id="stackHelp">
-    <div class="dlg-head"><b data-t="stackHelpTitle"></b><button type="button" id="stackHelpClose">×</button></div>
-    <div id="stackHelpBody" class="dlg-body"></div>
-  </dialog>
-</section>
-
-<section>
-  <h2 data-t="secReference"></h2>
-  <div class="hint" data-t="keyboardHint"></div>
-  <div id="referenceHost" class="kbd-host"></div>
-  <div id="referenceStatus" class="status"></div>
-  <div class="row"><button type="button" id="checkReference" data-t="checkReference"></button></div>
-  <div id="referenceCheck" class="status"></div>
-  <div id="referenceCheckView" class="kbd-host"></div>
 </section>
 
 <section>
@@ -299,17 +265,35 @@ dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
 </section>
 
 <section>
-  <h2 data-t="secInitial"></h2>
-  <div class="hint" data-t="initialHint"></div>
-  <div class="row">
-    <button type="button" id="copyFromReference" data-t="copyFromReference"></button>
-    <button type="button" id="clearInitial" data-t="clearAnswer"></button>
-  </div>
-  <div id="initialHost" class="kbd-host"></div>
+  <h2 data-t="secPreview"></h2>
+  <div class="hint" data-t="previewHint"></div>
+  <div id="previewHost" class="kbd-host"></div>
+</section>
+</main>
+
+<!-- 2. the answer and its grading -->
+<main id="tabChecker" role="tabpanel" hidden>
+
+<section>
+  <h2 data-t="secReference"></h2>
+  <div class="hint" data-t="keyboardHint"></div>
+  <div id="referenceHost" class="kbd-host"></div>
+  <div id="referenceStatus" class="status"></div>
+  <div class="row"><button type="button" id="checkReference" data-t="checkReference"></button></div>
+  <div id="referenceCheck" class="status"></div>
+  <div id="referenceCheckView" class="kbd-host"></div>
+</section>
+
+<section>
+  <h2 data-t="secStudent"></h2>
+  <div class="hint" data-t="studentHint"></div>
+  <div id="studentHost" class="kbd-host"></div>
+  <div id="studentResult" class="student-result"></div>
 </section>
 
 <section>
   <h2 data-t="secRubric"></h2>
+  <label class="check"><input type="checkbox" id="distinguishIsomers"><span data-t="distinguishIsomers"></span></label>
   <label class="check"><input type="checkbox" id="useRubric"><span data-t="useRubric"></span></label>
   <div class="hint" data-t="rubricHint"></div>
   <div id="rubricBody">
@@ -319,6 +303,108 @@ dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
     </table></div>
     <div class="row"><button type="button" id="resetRubric" data-t="resetRubric"></button></div>
   </div>
+</section>
+</main>
+
+<!-- 3. didactics: the answer the student starts from (common mistakes: later) -->
+<main id="tabDidactics" role="tabpanel" hidden>
+
+<section>
+  <h2><span data-t="didRefTitle"></span> <button type="button" id="didEditRef" data-t="didEditRef" style="margin-inline-start:10px"></button></h2>
+  <div class="hint" data-t="didRefHint"></div>
+  <div id="didRef" class="kbd-host"></div>
+</section>
+
+<section>
+  <h2 data-t="secInitial"></h2>
+  <div class="hint" data-t="initialHint"></div>
+  <div class="row">
+    <button type="button" id="copyFromReference" data-t="copyFromReference"></button>
+    <button type="button" id="clearInitial" data-t="clearAnswer"></button>
+  </div>
+  <div id="initialHost" class="kbd-host"></div>
+  <div id="initialInfo" class="status info"></div>
+  <div id="initialWarn" class="status warn"></div>
+</section>
+</main>
+
+<!-- 4. the exercise file: everything the builder needs to open the question again -->
+<main id="tabFile" role="tabpanel" hidden>
+
+<section>
+  <h2 data-t="secFile"></h2>
+  <div class="hint" data-t="fileHint"></div>
+  <div class="row">
+    <button type="button" id="newBtn" data-t="new"></button>
+    <button type="button" id="openBtn" data-t="open"></button>
+    <button type="button" id="saveBtn" class="primary" data-t="save"></button>
+    <button type="button" id="saveAsBtn" data-t="saveAs"></button>
+    <span id="fileName"></span>
+    <span id="fileDirty" class="dirty"></span>
+    <input type="file" id="fileInput" accept=".chemq,.json,.txt,.html,text/plain" hidden>
+  </div>
+  <table id="fileSummary" class="summary"></table>
+</section>
+
+<section>
+  <h2><span data-t="secFileJson"></span> <button type="button" id="copyFileJson" data-t="copy" style="margin-inline-start:10px"></button> <span id="copyFileJsonStatus" class="hint"></span></h2>
+  <div class="hint" data-t="fileJsonHint"></div>
+  <textarea id="fileJson" class="code" readonly spellcheck="false"></textarea>
+</section>
+</main>
+
+<!-- 5. the question code: the minimal code for the learning platform, its settings, and a try as a student -->
+<main id="tabQuestion" role="tabpanel" hidden>
+
+<section>
+  <h2 data-t="secSettings"></h2>
+  <div class="row" role="radiogroup">
+    <span data-t="targetLabel"></span>
+    <label class="check"><input type="radio" name="target" value="stack"><span data-t="targetStack"></span></label>
+    <label class="check"><input type="radio" name="target" value="html"><span data-t="targetHtml"></span></label>
+  </div>
+  <div class="row">
+    <label class="field"><span data-t="questionId"></span>
+      <input type="text" id="questionId" size="16" dir="ltr">
+    </label>
+  </div>
+  <div class="hint" data-t="questionIdHint"></div>
+  <label class="field"><span data-t="libraryUrl"></span>
+    <input type="url" id="libraryUrl" placeholder="https://.../chemical-keyboard-v4.js">
+  </label>
+  <div class="hint" id="librarySource"></div>
+  <label class="field"><span data-t="displayChars"></span>
+    <input type="number" id="displayChars" min="32" max="120" step="1" placeholder="32">
+  </label>
+  <div class="hint" data-t="displayCharsHint"></div>
+  <h3 class="sub" data-t="reviewTitle"></h3>
+  <div class="hint" data-t="reviewHint"></div>
+  <!-- the review div needs the question text, which a STACK-JS frame cannot reach (2026-10-18): hidden, not saved -->
+  <label class="field" hidden><span data-t="reviewDiv"></span>
+    <input type="text" id="reviewDiv" size="16" dir="ltr">
+  </label>
+  <div class="hint" hidden><span data-t="reviewDivHint"></span> <code dir="ltr" id="reviewDivExample"></code></div>
+  <label class="check"><input type="checkbox" id="reviewGrade"><span data-t="reviewGrade"></span></label>
+  <label class="check"><input type="checkbox" id="reviewReference"><span data-t="reviewReference"></span></label>
+  <label class="check"><input type="checkbox" id="reviewDetails"><span data-t="reviewDetails"></span></label>
+  <div id="stackPart">
+  <h3 class="sub"><span data-t="stackTitle"></span> <button type="button" id="stackHelpBtn" class="help-btn">?</button></h3>
+  <div class="row">
+    <label class="field"><span data-t="stackScoreInput"></span>
+      <input type="text" id="stackScoreInput" size="10" dir="ltr">
+    </label>
+    <label class="field"><span data-t="stackAnswerInput"></span>
+      <input type="text" id="stackAnswerInput" size="10" dir="ltr">
+    </label>
+  </div>
+  <div class="hint" data-t="stackHint"></div>
+  <div id="stackModels"></div>
+  </div>
+  <!-- how to set up the inputs in the STACK question (the "?" button), in the interface language -->
+  <dialog id="stackHelp">
+    <div class="dlg-head"><b data-t="stackHelpTitle"></b><button type="button" id="stackHelpClose">×</button></div>
+    <div id="stackHelpBody" class="dlg-body"></div>
+  </dialog>
 </section>
 
 <section>
@@ -335,17 +421,15 @@ dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
 
 <section>
   <h2 data-t="secOutput"></h2>
-  <div class="row" role="radiogroup">
-    <span data-t="targetLabel"></span>
-    <label class="check"><input type="radio" name="target" value="stack"><span data-t="targetStack"></span></label>
-    <label class="check"><input type="radio" name="target" value="html"><span data-t="targetHtml"></span></label>
-  </div>
   <div class="hint" id="outputHint"></div>
   <div id="issues" class="status"></div>
-  <div class="row"><button type="button" id="copyOutput" data-t="copy"></button><span id="copyStatus" class="hint"></span></div>
+  <div class="row">
+    <button type="button" id="copyOutput" class="primary" data-t="copyCode"></button>
+    <button type="button" id="saveCode" data-t="saveCode"></button>
+    <span id="copyStatus" class="hint"></span>
+  </div>
   <textarea id="output" readonly spellcheck="false"></textarea>
 </section>
-
 </main>
 
 <script>
@@ -446,7 +530,7 @@ const TEXT={
     targetLabel:"Code for:",
     targetStack:"Moodle STACK question (STACK-JS)",
     targetHtml:"Stand-alone page (any website or system)",
-    outputHintHtml:"A complete web page: the question's keyboard with Submit / Try again buttons, the grade and the feedback. Save it as an .html file (Save) and open it in a browser, or put it on any website. Write the question text in the page where it says so. To connect it to another system, the comment in the page explains ChemicalKeyboard.mount: it gives the student's answer and score after every change, to store in that system. Save opens the page in the builder again.",
+    outputHintHtml:"A complete web page: the question's keyboard with Submit / Try again buttons, the grade and the feedback. Save it as an .html file (Save) and open it in a browser, or put it on any website. Write the question text in the page where it says so. To connect it to another system, the comment in the page explains ChemicalKeyboard.mount: it gives the student's answer and score after every change, to store in that system. Keep the exercise file (tab 4) to change the question later.",
     modelFor:"Model answer of {name}",
     issueStackName:"A STACK input name starts with a letter and contains only letters, digits and _.",
     issueStackSame:"The score and the answer need two different STACK inputs.",
@@ -484,7 +568,7 @@ const TEXT={
     legendOnPanel:"on the panel",
     legendFullList:"not on the panel: the student reaches it through the full list",
     secInitial:"Initial student answer",
-    initialHint:"Optional. The student starts from this answer and completes it. Leave it empty to start from an empty box.",
+    initialHint:"Optional. The student starts from this answer: part of it to complete, or a wrong one to correct. Left as it is (also after changes that are undone), it counts as no answer - nothing is graded. Empty: the student starts from an empty box.",
     copyFromReference:"Copy from the reference answer",
     clearAnswer:"Clear",
     secRubric:"Grading rubric",
@@ -521,14 +605,36 @@ const TEXT={
     submitTry:"Submit and see the feedback (the review page, with the review options above)",
     restartTry:"Restart",
     secOutput:"The code",
-    outputHint:"Paste this into the STACK question text, in the plain-text editor or the HTML (source code) view. It already contains the STACK inputs (hidden) - do not add them again. The keyboard runs in a STACK-JS frame (each question in its own frame, so several questions can share a page). Save the file too, so you can open and change the question later.",
+    outputHint:"Paste this into the STACK question text, in the plain-text editor or the HTML (source code) view. It already contains the STACK inputs (hidden) - do not add them again. The keyboard runs in a STACK-JS frame (each question in its own frame, so several questions can share a page). The code holds only what the student's keyboard needs: keep the exercise file (tab 4) to change the question later.",
     copy:"Copy", copied:"Copied.",
     issuesTitle:"Before pasting into Moodle:",
     ready:"Ready to paste into Moodle.",
     issueId:"The question id may contain only letters, digits, - and _.",
     issueUrl:"Enter the keyboard library URL.",
     issueReference:"The reference answer has errors.",
-    issueNoPenalty:"Grading is on but no category has a penalty, so every answer that can be analyzed scores 100."
+    issueNoPenalty:"Grading is on but no category has a penalty, so every answer that can be analyzed scores 100.",
+    tabKeyboard:"1. Keyboard", tabChecker:"2. Checker", tabDidactics:"3. Didactics", tabFile:"4. Exercise file", tabQuestion:"5. Question code",
+    secKeyboard:"Keyboard settings",
+    secPreview:"Preview",
+    previewHint:"The keyboard as the student will get it - try it. What you type here is not saved.",
+    secStudent:"Student answer",
+    studentHint:"Type an answer as a student would: it is graded against the reference answer with the rubric below on every change. Not saved.",
+    studentEmpty:"Type an answer to see its grade and feedback.",
+    didRefTitle:"Correct answer",
+    didEditRef:"Edit in the Checker tab",
+    didRefHint:"Read-only here - the reference answer of tab 2.",
+    initialCorrect:"The initial answer is already the correct answer: the student has nothing to do.",
+    initialProblems:"The initial answer has writing problems (fine for a part to complete):",
+    initialGrade:"Left as it is, it is not graded. Graded as an answer, it would get {grade}.",
+    secFile:"Exercise file",
+    fileHint:"One file holds everything the builder needs to open the question again: the keyboard (tab 1), the reference answer and the rubric (tab 2), the initial answer (tab 3) and the code settings (tab 5). The file has its own extension, .chemq (a chemical keyboard question; JSON inside). Files saved before (the .txt / .html code) still open - Save then makes a new .chemq file.",
+    secFileJson:"The file's content",
+    fileJsonHint:"What Save writes. The question code in tab 5 is made from it.",
+    sumKeyboard:"Keyboard", sumReference:"Reference answer", sumRubric:"Grading", sumInitial:"Initial answer", sumCode:"Question code",
+    sumElements:"elements", sumMolecules:"molecule keys", sumOff:"off", sumNone:"none",
+    sumRubricOn:"a rubric, {n} categories with a penalty", sumNoRubric:"correct / not correct (no rubric)",
+    copyCode:"Copy the code", saveCode:"Save the code…",
+    openedCode:"This is question code, not an exercise file: what only the builder keeps (the question name, the library address, the order of the element keys…) was set to its default. Check tab 5, and save it as an exercise file."
   },
   he:{
     appTitle:"בניית שאלה עם מקלדת כימית",
@@ -582,7 +688,7 @@ const TEXT={
     targetLabel:"קוד עבור:",
     targetStack:"שאלת STACK ב־Moodle ‏(STACK-JS)",
     targetHtml:"דף עצמאי (כל אתר או מערכת)",
-    outputHintHtml:"דף אינטרנט שלם: המקלדת של השאלה עם כפתורי הגשה / ניסיון נוסף, הציון והמשוב. שומרים אותו כקובץ ‎.html (שמירה) ופותחים בדפדפן, או מעלים לכל אתר. את טקסט השאלה כותבים בדף במקום המסומן. לחיבור למערכת אחרת, ההערה בדף מסבירה את ChemicalKeyboard.mount: היא מוסרת את תשובת התלמיד ואת הציון אחרי כל שינוי, לשמירה באותה מערכת. הקובץ השמור נפתח שוב בבונה.",
+    outputHintHtml:"דף אינטרנט שלם: המקלדת של השאלה עם כפתורי הגשה / ניסיון נוסף, הציון והמשוב. שומרים אותו כקובץ ‎.html (שמירה) ופותחים בדפדפן, או מעלים לכל אתר. את טקסט השאלה כותבים בדף במקום המסומן. לחיבור למערכת אחרת, ההערה בדף מסבירה את ChemicalKeyboard.mount: היא מוסרת את תשובת התלמיד ואת הציון אחרי כל שינוי, לשמירה באותה מערכת. כדי לשנות את השאלה בהמשך, יש לשמור את קובץ התרגיל (לשונית 4).",
     modelFor:"תשובת המודל של {name}",
     issueStackName:"שם קלט STACK מתחיל באות ומכיל רק אותיות, ספרות ו־_.",
     issueStackSame:"הציון והתשובה צריכים שני קלטי STACK שונים.",
@@ -620,7 +726,7 @@ const TEXT={
     legendOnPanel:"בלוח",
     legendFullList:"לא בלוח: התלמיד יגיע אליו דרך הרשימה המלאה",
     secInitial:"תשובה התחלתית לתלמיד",
-    initialHint:"לא חובה. התלמיד מתחיל מהתשובה הזו ומשלים אותה. אפשר להשאיר ריק כדי שהתלמיד יתחיל מתיבה ריקה.",
+    initialHint:"לא חובה. התלמיד מתחיל מהתשובה הזו: חלק ממנה להשלמה, או תשובה שגויה לתיקון. אם היא נשארת כמו שהיא (גם אחרי שינויים שבוטלו), היא נחשבת כאין תשובה - שום דבר לא מקבל ציון. ריק: התלמיד מתחיל מתיבה ריקה.",
     copyFromReference:"העתקה מתשובת הייחוס",
     clearAnswer:"ניקוי",
     secRubric:"מחוון",
@@ -657,14 +763,36 @@ const TEXT={
     submitTry:"הגשה וצפייה במשוב (דף הסקירה, לפי אפשרויות הסקירה שלמעלה)",
     restartTry:"התחלה מחדש",
     secOutput:"הקוד",
-    outputHint:"יש להדביק את הקוד בטקסט של שאלת STACK, בעורך הטקסט הפשוט או בתצוגת ה־HTML (קוד המקור). הקוד כבר כולל את קלטי STACK (מוסתרים) - אין להוסיף אותם שוב. המקלדת פועלת במסגרת STACK-JS (כל שאלה במסגרת משלה, כך שכמה שאלות יכולות להיות באותו דף). כדאי גם לשמור את הקובץ, כדי לפתוח ולשנות את השאלה בהמשך.",
+    outputHint:"יש להדביק את הקוד בטקסט של שאלת STACK, בעורך הטקסט הפשוט או בתצוגת ה־HTML (קוד המקור). הקוד כבר כולל את קלטי STACK (מוסתרים) - אין להוסיף אותם שוב. המקלדת פועלת במסגרת STACK-JS (כל שאלה במסגרת משלה, כך שכמה שאלות יכולות להיות באותו דף). הקוד מכיל רק את מה שהמקלדת של התלמיד צריכה: כדי לשנות את השאלה בהמשך, יש לשמור את קובץ התרגיל (לשונית 4).",
     copy:"העתקה", copied:"הועתק.",
     issuesTitle:"לפני ההדבקה ב־Moodle:",
     ready:"מוכן להדבקה ב־Moodle.",
     issueId:"מזהה השאלה יכול להכיל רק אותיות, ספרות, ‎-‎ ו־_.",
     issueUrl:"יש להזין את כתובת ספריית המקלדת.",
     issueReference:"בתשובת הייחוס יש שגיאות.",
-    issueNoPenalty:"מתן הציון פעיל, אבל לאף קטגוריה אין הורדה, ולכן כל תשובה שאפשר לנתח תקבל 100."
+    issueNoPenalty:"מתן הציון פעיל, אבל לאף קטגוריה אין הורדה, ולכן כל תשובה שאפשר לנתח תקבל 100.",
+    tabKeyboard:"1. מקלדת", tabChecker:"2. בדיקה", tabDidactics:"3. דידקטיקה", tabFile:"4. קובץ התרגיל", tabQuestion:"5. קוד השאלה",
+    secKeyboard:"הגדרות המקלדת",
+    secPreview:"תצוגה מקדימה",
+    previewHint:"המקלדת כפי שהתלמיד יקבל אותה - אפשר לנסות. מה שמוקלד כאן לא נשמר.",
+    secStudent:"תשובת תלמיד",
+    studentHint:"הקלידו תשובה כמו שתלמיד היה כותב: בכל שינוי היא נבדקת מול תשובת הייחוס לפי המחוון שלמטה. לא נשמר.",
+    studentEmpty:"הקלידו תשובה כדי לראות את הציון והמשוב.",
+    didRefTitle:"התשובה הנכונה",
+    didEditRef:"עריכה בלשונית הבדיקה",
+    didRefHint:"כאן לקריאה בלבד - תשובת הייחוס מלשונית 2.",
+    initialCorrect:"התשובה ההתחלתית היא כבר התשובה הנכונה: לתלמיד אין מה לעשות.",
+    initialProblems:"בתשובה ההתחלתית יש בעיות כתיבה (תקין לחלק שצריך להשלים):",
+    initialGrade:"אם היא נשארת כמו שהיא, היא לא מקבלת ציון. כתשובה, היא הייתה מקבלת {grade}.",
+    secFile:"קובץ התרגיל",
+    fileHint:"קובץ אחד מכיל את כל מה שהבונה צריך כדי לפתוח את השאלה שוב: המקלדת (לשונית 1), תשובת הייחוס והמחוון (לשונית 2), התשובה ההתחלתית (לשונית 3) והגדרות הקוד (לשונית 5). לקובץ סיומת משלו, ‎.chemq (שאלה עם מקלדת כימית; בתוכו JSON). קבצים שנשמרו קודם (הקוד, ‎.txt / ‎.html) עדיין נפתחים - שמירה יוצרת אז קובץ ‎.chemq חדש.",
+    secFileJson:"תוכן הקובץ",
+    fileJsonHint:"מה שנכתב בשמירה. קוד השאלה בלשונית 5 נבנה ממנו.",
+    sumKeyboard:"מקלדת", sumReference:"תשובת הייחוס", sumRubric:"מתן ציון", sumInitial:"תשובה התחלתית", sumCode:"קוד השאלה",
+    sumElements:"יסודות", sumMolecules:"מקשי מולקולות", sumOff:"כבוי", sumNone:"אין",
+    sumRubricOn:"מחוון, {n} קטגוריות עם הורדה", sumNoRubric:"נכון / לא נכון (ללא מחוון)",
+    copyCode:"העתקת הקוד", saveCode:"שמירת הקוד…",
+    openedCode:"זה קוד של שאלה, לא קובץ תרגיל: מה שרק הבונה שומר (שם השאלה, כתובת הספרייה, סדר מקשי היסודות…) קיבל את ערך ברירת המחדל. יש לבדוק את לשונית 5 ולשמור כקובץ תרגיל."
   },
   ar:{
     appTitle:"إنشاء سؤال بلوحة مفاتيح كيميائية",
@@ -718,7 +846,7 @@ const TEXT={
     targetLabel:"رمز لـ:",
     targetStack:"سؤال STACK في Moodle ‏(STACK-JS)",
     targetHtml:"صفحة مستقلة (أي موقع أو نظام)",
-    outputHintHtml:"صفحة ويب كاملة: لوحة مفاتيح السؤال مع زرّي إرسال / محاولة أخرى، والدرجة والتغذية الراجعة. احفظها كملف ‎.html (حفظ) وافتحها في المتصفح، أو ضعها في أي موقع. اكتب نص السؤال في الصفحة في المكان المشار إليه. لربطها بنظام آخر، يشرح التعليق في الصفحة ChemicalKeyboard.mount: تعطي إجابة الطالب ودرجته بعد كل تغيير لحفظهما في ذلك النظام. الملف المحفوظ يُفتح مجددًا في المُنشئ.",
+    outputHintHtml:"صفحة ويب كاملة: لوحة مفاتيح السؤال مع زرّي إرسال / محاولة أخرى، والدرجة والتغذية الراجعة. احفظها كملف ‎.html (حفظ) وافتحها في المتصفح، أو ضعها في أي موقع. اكتب نص السؤال في الصفحة في المكان المشار إليه. لربطها بنظام آخر، يشرح التعليق في الصفحة ChemicalKeyboard.mount: تعطي إجابة الطالب ودرجته بعد كل تغيير لحفظهما في ذلك النظام. لتعديل السؤال لاحقًا، احفظ ملف التمرين (التبويب 4).",
     modelFor:"الإجابة النموذجية لـ {name}",
     issueStackName:"يبدأ اسم مدخل STACK بحرف ويحتوي فقط على أحرف وأرقام و_.",
     issueStackSame:"تحتاج الدرجة والإجابة إلى مدخلين مختلفين في STACK.",
@@ -756,7 +884,7 @@ const TEXT={
     legendOnPanel:"في اللوحة",
     legendFullList:"ليس في اللوحة: يصل إليه الطالب من خلال القائمة الكاملة",
     secInitial:"الإجابة الأولية للطالب",
-    initialHint:"اختياري. يبدأ الطالب من هذه الإجابة ويكملها. اتركها فارغة ليبدأ الطالب من مربع فارغ.",
+    initialHint:"اختياري. يبدأ الطالب من هذه الإجابة: جزء منها لإكماله، أو إجابة خاطئة لتصحيحها. إذا بقيت كما هي (حتى بعد تغييرات تم التراجع عنها)، تُعدّ بلا إجابة - لا يُقدَّر شيء. فارغة: يبدأ الطالب من مربع فارغ.",
     copyFromReference:"النسخ من الإجابة المرجعية",
     clearAnswer:"مسح",
     secRubric:"سلم التقدير",
@@ -793,14 +921,36 @@ const TEXT={
     submitTry:"إرسال وعرض الملاحظات (صفحة المراجعة، حسب خيارات المراجعة أعلاه)",
     restartTry:"البدء من جديد",
     secOutput:"الرمز",
-    outputHint:"الصق هذا الرمز في نص سؤال STACK، في محرر النص العادي أو في عرض HTML (الشيفرة المصدرية). الرمز يتضمن مدخلات STACK (مخفية) - لا تضفها مرة أخرى. تعمل لوحة المفاتيح داخل إطار STACK-JS (كل سؤال في إطاره الخاص، لذا يمكن لعدة أسئلة أن تكون في الصفحة نفسها). احفظ الملف أيضًا لتتمكن من فتح السؤال وتعديله لاحقًا.",
+    outputHint:"الصق هذا الرمز في نص سؤال STACK، في محرر النص العادي أو في عرض HTML (الشيفرة المصدرية). الرمز يتضمن مدخلات STACK (مخفية) - لا تضفها مرة أخرى. تعمل لوحة المفاتيح داخل إطار STACK-JS (كل سؤال في إطاره الخاص، لذا يمكن لعدة أسئلة أن تكون في الصفحة نفسها). يحتوي الرمز فقط على ما تحتاجه لوحة مفاتيح الطالب: لتعديل السؤال لاحقًا، احفظ ملف التمرين (التبويب 4).",
     copy:"نسخ", copied:"تم النسخ.",
     issuesTitle:"قبل اللصق في Moodle:",
     ready:"جاهز للصق في Moodle.",
     issueId:"يمكن أن يحتوي معرّف السؤال على أحرف وأرقام و- و_ فقط.",
     issueUrl:"أدخل عنوان مكتبة لوحة المفاتيح.",
     issueReference:"في الإجابة المرجعية أخطاء.",
-    issueNoPenalty:"التقدير مفعّل لكن لا توجد فئة عليها خصم، لذا تحصل كل إجابة يمكن تحليلها على 100."
+    issueNoPenalty:"التقدير مفعّل لكن لا توجد فئة عليها خصم، لذا تحصل كل إجابة يمكن تحليلها على 100.",
+    tabKeyboard:"1. لوحة المفاتيح", tabChecker:"2. الفحص", tabDidactics:"3. الجانب التعليمي", tabFile:"4. ملف التمرين", tabQuestion:"5. رمز السؤال",
+    secKeyboard:"إعدادات لوحة المفاتيح",
+    secPreview:"معاينة",
+    previewHint:"لوحة المفاتيح كما سيحصل عليها الطالب - جرّبها. ما تكتبه هنا لا يُحفظ.",
+    secStudent:"إجابة طالب",
+    studentHint:"اكتب إجابة كما يكتبها الطالب: تُقيَّم مقابل الإجابة المرجعية وفق سلّم التقدير أدناه عند كل تغيير. لا تُحفظ.",
+    studentEmpty:"اكتب إجابة لترى درجتها والتغذية الراجعة.",
+    didRefTitle:"الإجابة الصحيحة",
+    didEditRef:"التعديل في تبويب الفحص",
+    didRefHint:"للقراءة فقط هنا - الإجابة المرجعية من التبويب 2.",
+    initialCorrect:"الإجابة الابتدائية هي الإجابة الصحيحة: لا يبقى للطالب ما يفعله.",
+    initialProblems:"في الإجابة الابتدائية مشكلات في الكتابة (لا بأس بذلك لجزء يجب إكماله):",
+    initialGrade:"إذا بقيت كما هي فلا تُقدَّر. كإجابة، كانت ستحصل على {grade}.",
+    secFile:"ملف التمرين",
+    fileHint:"ملف واحد يحتوي على كل ما يحتاجه المُنشئ لفتح السؤال مرة أخرى: لوحة المفاتيح (التبويب 1)، والإجابة المرجعية وسلّم التقدير (التبويب 2)، والإجابة الابتدائية (التبويب 3)، وإعدادات الرمز (التبويب 5). للملف امتداد خاص، ‎.chemq (سؤال بلوحة مفاتيح كيميائية؛ بداخله JSON). الملفات المحفوظة سابقًا (الرمز، ‎.txt / ‎.html) ما زالت تُفتح - والحفظ عندها ينشئ ملف ‎.chemq جديدًا.",
+    secFileJson:"محتوى الملف",
+    fileJsonHint:"ما يكتبه الحفظ. رمز السؤال في التبويب 5 مبني منه.",
+    sumKeyboard:"لوحة المفاتيح", sumReference:"الإجابة المرجعية", sumRubric:"التقدير", sumInitial:"الإجابة الابتدائية", sumCode:"رمز السؤال",
+    sumElements:"عناصر", sumMolecules:"مفاتيح جزيئات", sumOff:"متوقف", sumNone:"لا يوجد",
+    sumRubricOn:"سلّم تقدير، {n} فئات عليها خصم", sumNoRubric:"صحيح / غير صحيح (بلا سلّم تقدير)",
+    copyCode:"نسخ الرمز", saveCode:"حفظ الرمز…",
+    openedCode:"هذا رمز سؤال وليس ملف تمرين: ما يحفظه المُنشئ وحده (اسم السؤال، عنوان المكتبة، ترتيب مفاتيح العناصر…) أُعيد إلى قيمته الافتراضية. راجع التبويب 5 واحفظه كملف تمرين."
   }
 };
 
@@ -861,6 +1011,13 @@ let building=false;      // true while keyboards are (re)built: their onChange i
 let referenceKeyboard=null;
 let initialKeyboard=null;
 let tryRun=null;
+let previewKeyboard=null;   // tab 1: the student's keyboard, to try (not saved)
+let previewDraft="";
+let studentKeyboard=null;   // tab 2: a student answer, graded on every change (not saved)
+let studentDraft="";
+let studentRun=null;        // its grade and feedback: the library's review page
+let didacticsRun=null;      // tab 3: the reference answer, read-only
+let currentTab=loadPreference("tab","checker");
 
 function newState(){
   return {
@@ -998,6 +1155,30 @@ function questionConfig(){
   return cfg;
 }
 
+/*
+ * The configuration in the question code (2026-11-01, the user: "the code to embed in the learning platform is separate
+ * and should be minimal"): only what the library reads, and only what differs from its defaults. Everything else -
+ * the question name, the library address (it is in the code's script tag), the order kept for the element keys, the
+ * molecule keys' mode, the target - is in the exercise file (questionConfig) only.
+ */
+function embedConfig(){
+  const full=questionConfig();
+  const cfg={language:full.language,correctAnswer:full.correctAnswer};
+  if(full.value) cfg.value=full.value;
+  if(full.elementsMode!=="default") cfg.elementsMode=full.elementsMode;
+  if(full.elementsMode==="custom") cfg.elements=full.elements;
+  ["distinguishIsomers","conditions","autoSubscript","ionKeys","clipboard","formulaStateKey","lipids",
+   "nuclear","particleLabels","autoNuclideNumbers","states","molecules","displayChars","rubric"].forEach(key=>{
+    if(full[key]!==undefined) cfg[key]=full[key];
+  });
+  const review={};
+  Object.keys(full.review).forEach(key=>{ if(full.review[key]===false) review[key]=false; });
+  if(Object.keys(review).length) cfg.review=review;
+  /* the library's default inputs are ans1 and ans2; an emptied name is written, it differs from the default */
+  if(state.target!=="html"&&(full.inputs.score!=="ans1"||full.inputs.state!=="ans2")) cfg.inputs=full.inputs;
+  return cfg;
+}
+
 function applyConfig(cfg){
   const s=newState();
   if(typeof cfg.questionId==="string") s.questionId=cfg.questionId;
@@ -1059,7 +1240,7 @@ function displayChars(){
 function configId(){ return "chemkbd-"+state.questionId; }
 
 /* Written into the code's first comment, to see which version of the code a question has. Change it when the template changes (the student-side code itself is in the library: ChemicalKeyboard.mountStackJs). */
-const SNIPPET_VERSION="2026-10-18.1 STACK-JS";
+const SNIPPET_VERSION="2026-11-01.1 STACK-JS";   // .1: the minimal configuration (embedConfig)
 
 /* The language the builder's keyboards show: the student language, or with "system" the interface language. */
 function previewLanguage(){
@@ -1081,14 +1262,14 @@ function snippet(){
    * The configuration is JSON inside STACK's CASText: "[[", "{@" and "{#" would start a STACK block / expression, and
    * a Moodle editor may escape < > & - inside strings they are written as \u escapes (JSON.parse restores them).
    */
-  const json=JSON.stringify(questionConfig())
+  const json=JSON.stringify(embedConfig())
     .replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026")
     .replace(/\[\[/g,"[\\u005b").replace(/\]\]/g,"]\\u005d").replace(/\{@/g,"{\\u0040").replace(/\{#/g,"{\\u0023");
   const inputs=[state.stackScoreInput,state.stackAnswerInput].filter(Boolean)
     .map(n=>"[[input:"+n+"]] [[validation:"+n+"]]").join(" ");
   /* ONE line: an editor's auto-format may turn line breaks into <br />, also inside the script */
   return [
-    "<!-- Chemical keyboard question \""+state.questionId+"\" (code version "+SNIPPET_VERSION+"). Created with the chemical keyboard question builder: to change it, open the saved file in the builder. Do not edit by hand. -->",
+    "<!-- Chemical keyboard question \""+state.questionId+"\" ("+SNIPPET_VERSION+"). Made with the chemical keyboard question builder: change it there (its exercise file), not here. -->",
     inputs?"<div style=\"display:none\">"+inputs+"</div>":"",
     "[[iframe width=\"100%\" height=\"120px\" scrolling=\"false\" title=\"Chemical keyboard\"]]",
     "[[script src=\""+state.libraryUrl+"\"/]]",
@@ -1109,7 +1290,7 @@ function snippet(){
  */
 function htmlPage(){
   const lang=previewLanguage();
-  const json=JSON.stringify(questionConfig()).replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026");
+  const json=JSON.stringify(embedConfig()).replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026");
   const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   return [
     "<!DOCTYPE html>",
@@ -1118,7 +1299,7 @@ function htmlPage(){
     "<meta charset=\"utf-8\">",
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
     "<title>"+esc(state.questionId)+"</title>",
-    "<!-- Chemical keyboard question \""+esc(state.questionId)+"\" (code version "+SNIPPET_VERSION+", stand-alone page). Created with the chemical keyboard question builder: to change the question, open this file in the builder. -->",
+    "<!-- Chemical keyboard question \""+esc(state.questionId)+"\" ("+SNIPPET_VERSION+", stand-alone page). Made with the chemical keyboard question builder: change it there (its exercise file), not here. -->",
     SCRIPT_OPEN+" src=\""+esc(state.libraryUrl)+"\">"+SCRIPT_CLOSE,
     "<style>",
     "body{font-family:Arial,sans-serif;max-width:860px;margin:24px auto;padding:0 16px;color:#1d2733}",
@@ -1170,7 +1351,14 @@ function htmlPage(){
   ].join("\n");
 }
 
-/* Reads the configuration back from a saved snippet (or a plain JSON file). */
+/*
+ * Reads a question back: { cfg, fromCode }.
+ *   - the exercise file (.chemq, 2026-11-01): the builder's JSON;
+ *   - the code saved before (.txt / .html): it held the whole builder JSON (tool: FILE_TOOL);
+ *   - the minimal question code of now: only the library's configuration (fromCode) - the question name and the
+ *     library address are taken from the code's comment and script tag, the rest of the builder's settings get
+ *     their defaults.
+ */
 function parseFile(text){
   let json=null;
   /* the STACK-JS template: mountStackJs(stack_js,{...}); - a stand-alone page: var CONFIG = {...}; -
@@ -1182,8 +1370,15 @@ function parseFile(text){
   else if(/^\s*\{/.test(text)) json=text;
   if(!json) throw new Error("no configuration");
   const cfg=JSON.parse(json);
-  if(!cfg||cfg.tool!==FILE_TOOL) throw new Error("not a builder file");
-  return cfg;
+  if(!cfg||typeof cfg!=="object") throw new Error("no configuration");
+  if(cfg.tool===FILE_TOOL) return {cfg:cfg,fromCode:false};
+  if(!stackJs||typeof cfg.correctAnswer!=="string") throw new Error("not a builder file");
+  const id=/Chemical keyboard question "([^"]*)"/.exec(text);
+  const src=/\[\[script src="([^"]+)"\/\]\]/.exec(text)||new RegExp(SCRIPT_OPEN+" src=\"([^\"]+)\"").exec(text);
+  if(id) cfg.questionId=id[1];
+  if(src) cfg.libraryUrl=src[1].replace(/&amp;/g,"&");
+  if(/^var CONFIG = /m.test(text)) cfg.target="html";
+  return {cfg:cfg,fromCode:true};
 }
 
 /* ================================================================
@@ -1204,7 +1399,7 @@ function keyboardElements(){
 
 /* Only one keyboard window open at a time: opening one closes the others. */
 function openKeyboards(){
-  return [referenceKeyboard,initialKeyboard,moleculeKeyboard,tryRun&&tryRun.keyboard].filter(Boolean);
+  return [referenceKeyboard,initialKeyboard,moleculeKeyboard,previewKeyboard,studentKeyboard,tryRun&&tryRun.keyboard].filter(Boolean);
 }
 function oneWindowAtATime(keyboard){
   const show=keyboard.show;
@@ -1249,6 +1444,11 @@ function buildKeyboards(){
   initialKeyboard=makeEditor("initialHost",state.value,v=>{
     state.value=v; changed(); buildTry();   // the student starts from the initial answer
   });
+  /* not part of the question: the preview of tab 1, and the student answer of tab 2 (graded on every change) */
+  removeKeyboard(previewKeyboard);
+  removeKeyboard(studentKeyboard);
+  previewKeyboard=makeEditor("previewHost",previewDraft,v=>{ previewDraft=v; });
+  studentKeyboard=makeEditor("studentHost",studentDraft,v=>{ studentDraft=v; renderStudentResult(); });
   removeKeyboard(moleculeKeyboard);
   moleculeKeyboard=makeEditor("moleculeHost",moleculeDraft,v=>{
     moleculeDraft=v;
@@ -1279,7 +1479,7 @@ function submitTry(){
   if(!tryRun) return;
   clearTryReview();
   const answer=tryRun.keyboard.getValueText();
-  const cfg=questionConfig();
+  const cfg=embedConfig();
   cfg.language=previewLanguage();
   $("tryReviewQue").hidden=false;
   /* the review page as the library shows it in Moodle: the saved answer, read-only */
@@ -1293,7 +1493,7 @@ function buildTry(){
     tryRun.feedback.forEach(removeKeyboard);
   }
   clearTryReview();
-  const cfg=questionConfig();
+  const cfg=embedConfig();    // what the question code holds: the try shows what the student will get
   cfg.language=previewLanguage();
   building=true;
   tryRun=ChemicalKeyboard.runQuestion($("tryHost"),cfg);   // the same library code Moodle runs
@@ -1309,6 +1509,124 @@ function syncTry(){
   keyboard.setCorrectAnswer(state.correctAnswer);
   keyboard.setRubric(rubricForLibrary());
   keyboard.config.distinguishIsomers=state.distinguishIsomers;
+}
+
+/* ================================================================
+   Tabs (as in the math keyboard's playground): 1 keyboard, 2 checker, 3 didactics, 4 exercise file, 5 question code
+   ================================================================ */
+const TABS=["keyboard","checker","didactics","file","question"];
+const tabId=(prefix,name)=>prefix+name.charAt(0).toUpperCase()+name.slice(1);
+
+function showTab(name){
+  if(TABS.indexOf(name)<0) name="checker";
+  currentTab=name;
+  savePreference("tab",name);
+  TABS.forEach(n=>{
+    $(tabId("tab",n)).hidden=n!==name;
+    $(tabId("tabBtn",n)).setAttribute("aria-selected",String(n===name));
+  });
+  openKeyboards().forEach(k=>k.hide());     // a keyboard window of another tab would stay open over this one
+  refreshTab();
+}
+
+/* the parts drawn only while their tab is shown (they typeset formulas): drawn again when it is shown */
+function refreshTab(){
+  if(currentTab==="checker") renderStudentResult();
+  if(currentTab==="didactics") renderDidactics();
+  if(currentTab==="file") renderFileTab();
+}
+
+function removeRun(run){
+  if(!run) return;
+  removeKeyboard(run.keyboard);
+  (run.feedback||[]).forEach(removeKeyboard);
+}
+
+/*
+ * Tab 2, the student answer: graded against the reference with the rubric, shown as the library's review page with
+ * everything on (the grade, the details, the marked reference) - whatever the review options of tab 5 hide.
+ */
+function renderStudentResult(){
+  if(currentTab!=="checker") return;
+  removeRun(studentRun);
+  studentRun=null;
+  const box=$("studentResult");
+  box.textContent="";
+  if(!studentDraft){
+    const hint=document.createElement("div");
+    hint.className="hint";
+    hint.textContent=t("studentEmpty");
+    box.appendChild(hint);
+    return;
+  }
+  if(!state.correctAnswer) return;          // the reference status says it is missing
+  const cfg=embedConfig();
+  cfg.language=previewLanguage();
+  delete cfg.review;
+  const host=document.createElement("div");
+  host.id="studentResultRun";
+  box.appendChild(host);
+  studentRun=ChemicalKeyboard.mount(host,cfg,{state:{answer:studentDraft},readOnly:true});
+}
+
+/* Tab 3: the reference answer read-only, and what the initial answer means for the student */
+function renderDidactics(){
+  if(currentTab!=="didactics") return;
+  removeKeyboard(didacticsRun);
+  didacticsRun=null;
+  $("didRef").textContent="";
+  if(state.correctAnswer){
+    didacticsRun=new ChemicalKeyboard({divId:"didRef",language:previewLanguage(),mode:"readonly-errors",value:state.correctAnswer});
+  }else{
+    $("didRef").textContent=t("referenceEmpty");
+  }
+
+  const info=$("initialInfo"),warn=$("initialWarn");
+  info.textContent="";
+  warn.textContent="";
+  if(!state.value||!state.correctAnswer) return;
+  const result=ChemicalGrammar.compare(state.value,state.correctAnswer,previewLanguage(),
+    {rubric:rubricForLibrary(),distinguishIsomers:state.distinguishIsomers,lipids:state.lipids});
+  if(result.correct){
+    warn.textContent=t("initialCorrect");
+    return;
+  }
+  const problems=ChemicalGrammar.validate(state.value,teacherLanguage);
+  const grade=result.score?result.score.total+"%":"0%";
+  info.textContent=(problems.length?t("initialProblems")+" "+problems.join(" ")+" ":"")+t("initialGrade").replace("{grade}",grade);
+}
+
+/* Tab 4: what the file holds, and its content */
+const LANGUAGE_NAMES={he:"עברית",ar:"العربية",en:"English"};
+function renderFileTab(){
+  const plain=v=>v?ChemicalGrammar.plainFormula(v):t("sumNone");
+  const elements=state.elementsMode==="custom"?state.elements.length+" "+t("sumElements")
+    :t(state.elementsMode==="none"?"elementsNone":"elementsDefault");
+  const penalties=RUBRIC_CATEGORIES.filter(c=>state.rubric[c].mode!=="none").length;
+  const rows=[
+    ["sumKeyboard",(state.language==="system"?t("languageSystem"):LANGUAGE_NAMES[state.language])+" · "+elements+" · "+
+      t("sumMolecules")+": "+(state.moleculesOn?activeMolecules().length:t("sumOff")),false],
+    ["sumReference",plain(state.correctAnswer),!!state.correctAnswer],
+    ["sumRubric",state.rubricEnabled?t("sumRubricOn").replace("{n}",penalties):t("sumNoRubric"),false],
+    ["sumInitial",plain(state.value),!!state.value],
+    ["sumCode",t(state.target==="html"?"targetHtml":"targetStack")+" · "+state.questionId,false]
+  ];
+  const table=$("fileSummary");
+  table.textContent="";
+  rows.forEach(([key,value,formula])=>{
+    const tr=table.insertRow();
+    tr.insertCell().textContent=t(key);
+    const cell=tr.insertCell();
+    cell.textContent=value;
+    if(formula) cell.className="formula";
+  });
+  $("fileJson").value=fileText();
+  $("copyFileJsonStatus").textContent="";
+}
+
+/* the exercise file: the builder's whole configuration, readable */
+function fileText(){
+  return JSON.stringify(questionConfig(),null,2)+"\n";
 }
 
 /* ================================================================
@@ -1817,15 +2135,18 @@ function referenceProblems(){
 
 function renderIssues(){
   const issues=[];
-  if(!/^[A-Za-z0-9_-]+$/.test(state.questionId)) issues.push(t("issueId"));
-  if(state.reviewDiv&&!/^[A-Za-z0-9_-]+$/.test(state.reviewDiv)) issues.push(t("issueReviewDiv"));
+  const tabs={};      // the tabs where an issue is fixed get a mark on their button
+  const issue=(key,tab)=>{ issues.push(t(key)); tabs[tab]=true; };
+  if(!/^[A-Za-z0-9_-]+$/.test(state.questionId)) issue("issueId","question");
+  if(state.reviewDiv&&!/^[A-Za-z0-9_-]+$/.test(state.reviewDiv)) issue("issueReviewDiv","question");
   const stackNames=state.target==="html"?[]:[state.stackScoreInput,state.stackAnswerInput].filter(Boolean);
-  if(stackNames.some(name=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(name))) issues.push(t("issueStackName"));
-  if(stackNames.length===2&&stackNames[0]===stackNames[1]) issues.push(t("issueStackSame"));
-  if(!state.libraryUrl.trim()) issues.push(t("issueUrl"));
-  if(!state.correctAnswer) issues.push(t("referenceEmpty"));
-  if(!state.conditions&&/[→⇌]\[/.test(state.correctAnswer)) issues.push(t("issueConditions"));
-  else if(referenceProblems().length) issues.push(t("issueReference"));
+  if(stackNames.some(name=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(name))) issue("issueStackName","question");
+  if(stackNames.length===2&&stackNames[0]===stackNames[1]) issue("issueStackSame","question");
+  if(!state.libraryUrl.trim()) issue("issueUrl","question");
+  if(!state.correctAnswer) issue("referenceEmpty","checker");
+  if(!state.conditions&&/[→⇌]\[/.test(state.correctAnswer)) issue("issueConditions","keyboard");
+  else if(referenceProblems().length) issue("issueReference","checker");
+  TABS.forEach(n=>{ $(tabId("tabBtn",n)).classList.toggle("has-issue",!!tabs[n]); });
   const info=[];
   if(state.rubricEnabled&&RUBRIC_CATEGORIES.every(c=>state.rubric[c].mode==="none")) info.push(t("issueNoPenalty"));
 
@@ -1908,7 +2229,9 @@ function renderStackModels(){
 
 function renderFileState(){
   $("fileName").textContent=fileName||t("untitled");
+  $("tabFileName").textContent=fileName||t("untitled");
   $("dirtyMark").textContent=dirty?t("unsaved"):"";
+  $("fileDirty").textContent=dirty?t("unsaved"):"";
 }
 
 function changed(options){
@@ -1919,6 +2242,7 @@ function changed(options){
   renderIssues();
   renderOutput();
   renderFileState();
+  refreshTab();
 }
 
 /* ================================================================
@@ -1981,6 +2305,7 @@ function renderAll(){
   renderIssues();
   renderOutput();
   renderFileState();
+  refreshTab();
 }
 
 function loadState(cfg,name,handle){
@@ -2000,17 +2325,26 @@ function confirmDiscard(){
 }
 
 function openText(text,name,handle){
-  let cfg;
-  try{ cfg=parseFile(text); }
+  let parsed;
+  try{ parsed=parseFile(text); }
   catch(e){ window.alert(t("openError")); return; }
-  loadState(cfg,name,handle);
+  /* only a .chemq file is saved back to itself; code (old or new) is saved as a new exercise file */
+  const isFile=/\.(chemq|json)$/i.test(name||"");
+  loadState(parsed.cfg,name,isFile?handle:null);
+  if(parsed.fromCode){
+    showTab("question");
+    window.alert(t("openedCode"));
+  }
 }
+
+const FILE_EXT=".chemq";
 
 async function openFile(){
   if(!confirmDiscard()) return;
   if(window.showOpenFilePicker){
     try{
-      const [handle]=await window.showOpenFilePicker({types:[{description:"Question",accept:{"text/plain":[".txt"],"text/html":[".html"]}}]});
+      const [handle]=await window.showOpenFilePicker({types:[{description:"Chemical keyboard question",
+        accept:{"application/json":[FILE_EXT,".json"],"text/plain":[".txt"],"text/html":[".html"]}}]});
       const file=await handle.getFile();
       openText(await file.text(),file.name,handle);
     }catch(e){ if(e.name!=="AbortError") window.alert(t("openError")); }
@@ -2020,32 +2354,22 @@ async function openFile(){
   $("fileInput").click();
 }
 
-async function saveFile(saveAs){
-  const text=snippet();
-  /* a stand-alone page is saved as .html: the saved file is the page itself (and opens in the builder again) */
-  const ext=state.target==="html"?".html":".txt";
-  const base=(fileName||state.questionId||"question").replace(/\.(txt|html)$/i,"");
-  const suggested=base+ext;
-  const types=state.target==="html"?[{description:"Web page",accept:{"text/html":[".html"]}}]:[{description:"Text",accept:{"text/plain":[".txt"]}}];
+/* the name without its extension: the exercise file, or the question's code saved before */
+function baseName(){
+  return (fileName||state.questionId||"question").replace(/\.(chemq|json|txt|html)$/i,"");
+}
 
+/* Writes text to a file: to handle when given, else asks for one (or downloads it). Resolves to the handle, or null. */
+async function writeFile(text,handle,suggested,types,mime){
   if(window.showSaveFilePicker){
-    try{
-      let handle=saveAs?null:fileHandle;
-      if(handle&&!handle.name.toLowerCase().endsWith(ext)) handle=null;   // the target changed: a new file
-      if(!handle) handle=await window.showSaveFilePicker({suggestedName:suggested,types:types});
-      const writable=await handle.createWritable();
-      await writable.write(text);
-      await writable.close();
-      fileHandle=handle;
-      fileName=handle.name;
-      dirty=false;
-      renderFileState();
-    }catch(e){ if(e.name!=="AbortError") window.alert(e.message); }
-    return;
+    if(!handle) handle=await window.showSaveFilePicker({suggestedName:suggested,types:types});
+    const writable=await handle.createWritable();
+    await writable.write(text);
+    await writable.close();
+    return handle;
   }
-
   /* No file system access: download the file. */
-  const blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+  const blob=new Blob([text],{type:mime+";charset=utf-8"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download=suggested;
@@ -2053,9 +2377,30 @@ async function saveFile(saveAs){
   a.click();
   a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  fileName=suggested;
-  dirty=false;
-  renderFileState();
+  return null;
+}
+
+/* The exercise file (2026-11-01): the builder's JSON - not the code, which tab 5 saves on its own. */
+async function saveFile(saveAs){
+  const suggested=baseName()+FILE_EXT;
+  try{
+    const handle=await writeFile(fileText(),saveAs?null:fileHandle,suggested,
+      [{description:"Chemical keyboard question",accept:{"application/json":[FILE_EXT]}}],"application/json");
+    fileHandle=handle;
+    fileName=handle?handle.name:suggested;
+    dirty=false;
+    renderFileState();
+  }catch(e){ if(e.name!=="AbortError") window.alert(e.message); }
+}
+
+/* The question code: .txt for STACK, .html for a stand-alone page. It does not change the exercise file. */
+async function saveCode(){
+  const html=state.target==="html";
+  try{
+    await writeFile(snippet(),null,baseName()+(html?".html":".txt"),
+      html?[{description:"Web page",accept:{"text/html":[".html"]}}]:[{description:"Text",accept:{"text/plain":[".txt"]}}],
+      html?"text/html":"text/plain");
+  }catch(e){ if(e.name!=="AbortError") window.alert(e.message); }
 }
 
 /* ================================================================
@@ -2165,6 +2510,17 @@ $("copyOutput").addEventListener("click",()=>{
   else { document.execCommand("copy"); done(); }
 });
 
+$("saveCode").addEventListener("click",saveCode);
+$("copyFileJson").addEventListener("click",()=>{
+  const area=$("fileJson");
+  area.select();
+  const done=()=>{ $("copyFileJsonStatus").textContent=t("copied"); };
+  if(navigator.clipboard) navigator.clipboard.writeText(area.value).then(done,()=>{ document.execCommand("copy"); done(); });
+  else { document.execCommand("copy"); done(); }
+});
+TABS.forEach(n=>{ $(tabId("tabBtn",n)).addEventListener("click",()=>showTab(n)); });
+$("didEditRef").addEventListener("click",()=>{ showTab("checker"); referenceKeyboard.show(); });
+
 $("newBtn").addEventListener("click",()=>{ if(confirmDiscard()) loadState(null); });
 $("openBtn").addEventListener("click",openFile);
 $("saveBtn").addEventListener("click",()=>saveFile(false));
@@ -2184,9 +2540,26 @@ window.addEventListener("beforeunload",e=>{
    ================================================================ */
 buildPeriodicTable();
 loadState(null);
+showTab(currentTab);
+
+/* for tests (headless browser), as window.playground in the math keyboard's playground */
+window.builder={
+  showTab:showTab,
+  get state(){ return state; },
+  get tab(){ return currentTab; },
+  keyboards:()=>({reference:referenceKeyboard,initial:initialKeyboard,preview:previewKeyboard,student:studentKeyboard,
+    molecule:moleculeKeyboard,try:tryRun&&tryRun.keyboard}),
+  embedConfig:embedConfig,
+  questionConfig:questionConfig,
+  code:snippet,
+  fileText:fileText,
+  openText:openText,
+  newQuestion:()=>loadState(null)
+};
 }
 
 loadKeyboardLibrary(LIBRARY_SOURCES,startBuilder,function(){
+  document.querySelector("main").hidden=false;   // the first tab - hidden until the builder starts
   document.querySelector("main").innerHTML=
     "<section><h2>The keyboard library could not be loaded.</h2>" +
     "<p dir='ltr'>" + PUBLIC_LIBRARY_URL + "</p>" +

@@ -5,6 +5,10 @@ equation (A → B, then B → C), not one equation with several arrows. Two need
 first equation to the second - **implemented** (library 3.2.0, COPYPASTE-DESIGN.md); (2) grading and feedback of a
 later step that take a mistake of an earlier step into account - this document.
 
+2026-11-02: continued in MULTIPART-DESIGN.md - one frame with all the steps (option B, the user's leaning) vs one
+frame per step (section 2 here); one keyboard and rubric for all steps; a single equation with stages rejected again;
+copying one substance (without its coefficient) from the ⧉ menu, if the teachers need it.
+
 ## 1. The problem
 
 Reference: step 1 `A → B`, step 2 `B → C`. A student writes step 1 `A → B'` (B' wrong) and then step 2. Graded

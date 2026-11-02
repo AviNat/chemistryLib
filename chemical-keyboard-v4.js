@@ -39,6 +39,7 @@
     nothingToPaste:"Nothing copied yet",
     clipMenu:"Copy / paste",
     copyProducts:"Products (right side)",
+    copyProduct:"Product, no coefficient",
     copyWhole:"Whole equation",
     copyReactants:"Reactants (left side)",
     copyFormula:"Copy",
@@ -105,6 +106,7 @@
     nothingToPaste:"עדיין לא הועתק דבר",
     clipMenu:"העתקה / הדבקה",
     copyProducts:"תוצרים (אגף ימין)",
+    copyProduct:"תוצר, בלי מקדם",
     copyWhole:"המשוואה כולה",
     copyReactants:"מגיבים (אגף שמאל)",
     copyFormula:"העתקה",
@@ -171,6 +173,7 @@
     nothingToPaste:"لم يُنسخ شيء بعد",
     clipMenu:"نسخ / لصق",
     copyProducts:"النواتج (الطرف الأيمن)",
+    copyProduct:"ناتج، بدون معامل",
     copyWhole:"المعادلة كلها",
     copyReactants:"المتفاعلات (الطرف الأيسر)",
     copyFormula:"نسخ",
@@ -4626,6 +4629,33 @@ ChemicalKeyboard.prototype.answerParts=function(){
   };
 };
 
+/*
+ * The substances of the products side, each without its coefficient (2026-11-02, the user - a multi-stage process,
+ * MULTIPART-DESIGN.md 8.4): the next stage takes one product, usually with another coefficient, and leaves the
+ * by-products out. Substances are separated by a "+" on the line (a charge's "+" is a superscript); the coefficient
+ * is the line's digits at the start. Each substance once.
+ */
+ChemicalKeyboard.prototype.productSubstances=function(){
+  var chars=this.chars,i,arrow=-1,out=[],part=[];
+  for(i=0;i<chars.length;i++){
+    if(chars[i].script==="normal"&&isArrowChar(chars[i].ch)){ arrow=i; break; }
+  }
+  if(arrow<0)return out;
+  function flush(){
+    var k=0,text;
+    while(k<part.length&&part[k].script==="normal"&&/^[0-9]$/.test(part[k].ch))k++;
+    text=valueTextOf(part.slice(k));
+    if(text&&out.indexOf(text)<0)out.push(text);
+    part=[];
+  }
+  for(i=arrow+1;i<chars.length;i++){
+    if(chars[i].script==="normal"&&chars[i].ch==="+")flush();
+    else part.push(chars[i]);
+  }
+  flush();
+  return out;
+};
+
 /* copy value text: the library's own clipboard (exact) and the system clipboard (readable text) */
 ChemicalKeyboard.prototype.copyValue=function(value){
   var t=T[this.language]||T.en,plain;
@@ -4729,6 +4759,10 @@ ChemicalKeyboard.prototype.openClipMenu=function(anchor){
 
   if(parts.arrow){
     item(t.copyProducts,parts.products,function(){ self.copyValue(parts.products); },!!parts.products);
+    /* a stage of a process: each product alone, without its coefficient (unless that is the whole side already) */
+    if(this.config.multistage)this.productSubstances().forEach(function(s){
+      if(s!==parts.products)item(t.copyProduct,s,function(){ self.copyValue(s); },true);
+    });
     item(t.copyWhole,parts.whole,function(){ self.copyValue(parts.whole); },true);
     item(t.copyReactants,parts.reactants,function(){ self.copyValue(parts.reactants); },!!parts.reactants);
   }else{
@@ -7623,6 +7657,7 @@ function runQuestion(host,cfg,adapter){
   if(cfg.displayChars>0)options.displayChars=cfg.displayChars;   // keyboard window width, in characters
   if(cfg.layout)options.layout=cfg.layout;                // "docked": the keys open in place of the answer box
   if(cfg.clipboard===false)options.clipboard=false;       // no copy / paste menu, no Ctrl+C / Ctrl+V
+  if(cfg.multistage)options.multistage=true;              // a stage of a process: the menu copies single products
 
   /*
    * The platform (adapter): the saved state - the keyboard starts from its answer -, the review flag, and where a
@@ -7790,7 +7825,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.5.0"// raise with every change, to see in the console which copy a page runs
+  version:"3.6.0"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

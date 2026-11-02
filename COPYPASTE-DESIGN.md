@@ -1,5 +1,12 @@
 # Chemical keyboard: copy and paste (design)
 
+**Single products, library 3.6.0 (2026-11-02, the user: "makes a lot of sense if the teacher chooses a multistage
+question"):** with `config.multistage: true` the menu also lists each substance of the products side alone, without
+its coefficient ("Product, no coefficient" - NO, H₂O for 4NO + 6H₂O), under Products; each substance once, and none
+when it would equal the whole side. Substances are split at a "+" on the line (a charge's "+" is a superscript), the
+coefficient is the leading digits (`productSubstances()`). Builder: "A stage of a multi-stage process" under "Allow copy
+and paste" (shown only when that is on). Background: MULTIPART-DESIGN.md 8.4.
+
 **Menu version, library 3.3.0 (2026-10-20, the user):** the keys in the keyboard row were replaced by a ⧉ menu button
 at the corner of the box that shows the answer - the answer box on the page (closed, both layouts) and the typing area
 (open: next to × when docked, below the title bar when floating). The menu: Products (right side) / Whole equation /

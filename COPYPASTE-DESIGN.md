@@ -4,7 +4,8 @@
 question"):** with `config.multistage: true` the menu also lists each substance of the products side alone, without
 its coefficient ("Product, no coefficient" - NO, H₂O for 4NO + 6H₂O), under Products; each substance once, and none
 when it would equal the whole side. Substances are split at a "+" on the line (a charge's "+" is a superscript), the
-coefficient is the leading digits (`productSubstances()`). Builder: "A stage of a multi-stage process" under "Allow copy
+coefficient is the leading digits (`productSubstances()`). These items use the same `copyValue` as the others, so the
+system clipboard gets both the readable text and the formatted (HTML) version that pastes into Word. Builder: "A stage of a multi-stage process" under "Allow copy
 and paste" (shown only when that is on). Background: MULTIPART-DESIGN.md 8.4.
 
 **Menu version, library 3.3.0 (2026-10-20, the user):** the keys in the keyboard row were replaced by a ⧉ menu button

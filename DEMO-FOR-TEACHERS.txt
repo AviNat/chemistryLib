@@ -1,10 +1,12 @@
 CHEMICAL KEYBOARD FOR MOODLE - DEMO FOR THE CHEMISTRY TEACHERS TEAM
 =====================================================================
+Updated 10 November 2026 (library 3.7.1)
 
 What it is, in one sentence:
 A keyboard for writing chemical formulas and equations inside a Moodle question, which checks the
 student's answer against the teacher's answer, explains every mistake on the formula itself, and gives
-a grade by a rubric the teacher controls.
+a grade by a rubric the teacher controls - and, for the mistakes the teacher knows students make, gives
+the teacher's own feedback.
 
 All results quoted below (scores, messages) were produced by the system itself with the builder's
 default rubric. All three interface languages are supported: Hebrew, Arabic, English.
@@ -20,9 +22,9 @@ PART 1 - THE QUICK TOUR (5 minutes)
    while the student types - before the answer is submitted.
 
 2. The teacher decides what the question allows
-   One builder page: type the correct answer with the same keyboard, choose which keys the student
-   gets, which mistakes cost how much, and what the student sees after submitting. Then copy one
-   line of code into the Moodle question.
+   One builder page in 5 tabs: type the correct answer with the same keyboard, choose which keys the
+   student gets, which mistakes cost how much, and what the student sees after submitting. Then copy
+   the code into the Moodle question.
 
 3. The student gets feedback, not just "wrong"
    Every mistake is marked on the student's formula (red) and on the correct answer (blue), with a
@@ -33,7 +35,11 @@ PART 1 - THE QUICK TOUR (5 minutes)
    "One mistake = one penalty": a wrong coefficient is not charged again for the unbalanced atoms
    it causes.
 
-5. Special topics
+5. The teacher's knowledge, built in
+   For the mistakes students typically make, the teacher writes the explanation and the score. The
+   student gets "why", not only "what is different".
+
+6. Special topics
    Nuclear equations (²³⁸₉₂U, α, β, γ ...) and fatty acids / triglycerides (C18:1(ω9)cis, TG(...)),
    graded by the bagrut rules.
 
@@ -69,43 +75,70 @@ Also worth showing:
 - Molecule keys: one press types a whole formula (H₂O, SO₄²⁻, NH₃). The student can still edit it.
 - "All elements": the full periodic list is always one click away, even when the panel shows a few.
 - The physical keyboard works too (letters, digits, ^ _ for super/subscript, ( ) ).
+- Copy and paste: the ⧉ button at the corner of the answer box opens a menu: copy the products,
+  the whole equation or the reactants, then paste into the next equation (also Ctrl+C / Ctrl+V).
+  Made for a sequence of reactions, where the product of one step is the reactant of the next.
+  With the option "a stage of a multi-stage process" the menu also copies each product alone,
+  without its coefficient (from 4NO + 6H₂O: "NO", "H₂O").
+- In a Moodle question the keyboard opens in place of the answer box and closes back to it
+  (×, Esc, or a click outside the question).
 
 
 ---------------------------------------------------------------------
-B. THE QUESTION BUILDER - FLEXIBILITY FOR THE TEACHER
+B. THE QUESTION BUILDER - 5 TABS
 ---------------------------------------------------------------------
 
-Open chemical-question-builder.html. Everything is set with clicks; no code.
+Open chemical-question-builder.html. Everything is set with clicks; no code. The builder's own
+interface is in Hebrew, Arabic or English. A tab with something to fix shows ⚠ on its button.
 
-1. Reference answer - typed with the same keyboard. "Check" warns if the teacher's own answer has a
-   writing mistake.
+TAB 1 - KEYBOARD: what the student gets
+  - Student language: Hebrew / Arabic / English, or "system" - one copy of the question serves all
+    languages, in the language the student uses in Moodle.
+  - Element keys: the default set, a custom set (click on a periodic table; sorted by atomic number
+    or A-Z; drag to any order), or none. "Add the elements of the reference answer" in one click.
+  - Molecule keys: off / a default set (H₂O, SO₄²⁻, NH₃, named in the student's language) / your own.
+    The builder warns when a key would give the answer away.
+  - Options: condition keys (Δ, hν, °C), automatic subscript on/off (turn it off when the skill
+    being tested IS writing the subscripts), ion keys ⁺(aq) ⁻(aq), the X₍▢₎ key, copy and paste
+    (and "a stage of a multi-stage process").
+  - Question types: nuclear equation, fatty acids / triglycerides (section F).
+  - Preview: the keyboard exactly as the student will get it - try it.
 
-2. Which keys the student gets
-   - Element keys: the default set, a custom set (click on a periodic table; sorted by atomic number
-     or A-Z; drag to any order), or none. "Add the elements of the reference answer" in one click.
-   - Molecule keys: off / a default set (H₂O, SO₄²⁻, NH₃, named in the student's language) / your own.
-     The builder warns when a key would give the answer away.
-   - Options: condition keys (Δ, hν, °C), automatic subscript on/off (turn it off when the skill
-     being tested IS writing the subscripts), ion keys ⁺(aq) ⁻(aq), the X₍▢₎ key.
-   - Question types: nuclear equation, fatty acids / triglycerides (section E).
+TAB 2 - CHECKER: what is correct and how it is graded
+  - Reference answer - typed with the same keyboard. "Check the reference answer" warns about a
+    writing mistake, an unknown element or unbalanced atoms in the teacher's own answer.
+  - Student answer: type any answer as a student would; on every change it is graded against
+    the reference by the rubric below - grade, penalty lines, marked answers. The fastest way to
+    check that the rubric does what you want.
+  - The rubric - see section D.
+  - Isomers - by default C₂H₅OH and CH₃OCH₃ are "the same atoms" (accepted, with a note). Turn on
+    "treat isomers as different" when the structure matters (then CH₃OCH₃: -25, "same atoms but a
+    different structure (isomers)").
 
-3. Initial answer (optional) - the student starts from a partial answer and completes it, e.g. give
-   "CH₄ + O₂ → CO₂ + H₂O" and ask only for the coefficients.
+TAB 3 - DIDACTICS: how the student is led
+  - The correct answer, read only (it is edited in tab 2).
+  - Initial answer (optional) - the student starts from a partial answer and completes it, e.g. give
+    "CH₄ + O₂ → CO₂ + H₂O" and ask only for the coefficients. The builder tells you if the initial
+    answer is already correct, and what it would get as an answer. A student who leaves it as it is
+    gets no grade.
+  - Common mistakes - section E.
 
-4. Isomers - by default C₂H₅OH and CH₃OCH₃ are "the same atoms" (accepted, with a note). Turn on
-   "treat isomers as different" when the structure matters (then CH₃OCH₃: -25, "same atoms but a
-   different structure (isomers)").
+TAB 4 - EXERCISE FILE: save and open
+  - New / Open / Save / Save as. The file (.chemq) holds everything the builder needs to open the
+    question again - keyboard, reference answer, rubric, mistakes, code settings. Keep it: it is how
+    you change a question later.
+  - Files can be shared between teachers: open a colleague's file, change it, save as your own.
 
-5. The rubric - see section D.
-
-6. What the student sees after submitting: the grade, the correct answer, the explanations - each
-   can be turned off (e.g. hide the answer until the quiz closes).
-
-7. "Try it as a student" + "Submit and see the feedback": test the question exactly as the student
-   will see it, before it goes to Moodle.
-
-8. Save the question to a file, open it later to change it; "Copy" the Moodle code and paste it into
-   the question (one line).
+TAB 5 - QUESTION CODE: what goes into Moodle
+  - Code for a Moodle STACK question, or for a stand-alone web page (other systems).
+  - What the student sees after submitting: the grade, the correct answer, the explanations - each
+    can be turned off (e.g. hide the answer until the quiz closes).
+  - The STACK inputs, with a "?" that explains how to set up the STACK question.
+  - A list of what to fix before pasting (e.g. an error in the reference answer).
+  - "Try it as a student" + "Submit and see the feedback": test the question exactly as the student
+    will see it, before it goes to Moodle.
+  - "Copy the code" - paste it into the question text. The code is short: only what the student's
+    keyboard needs.
 
 
 ---------------------------------------------------------------------
@@ -138,6 +171,9 @@ Notes, not mistakes (no penalty) - the system knows what is "the same answer wri
     "has the correct atoms, but the reference answer writes it with a dot: CuSO₄·5H₂O"
   - a redundant subscript 1 (H₂O₁), a substance written twice on one side - a note.
 
+Errors that follow from another error are shown in grey, without a penalty, under the error that
+caused them ("one mistake = one penalty").
+
 The texts are in the student's language (Hebrew / Arabic / English), right-to-left where needed;
 the formulas stay left-to-right.
 
@@ -149,6 +185,7 @@ D. AUTOMATED GRADING - THE RUBRIC
 The teacher sets a penalty per category, "once" or "per mistake" with a maximum. Default:
 
   Wrong answer type (a formula instead of an equation)   100
+  Common mistake (used only by a mistake without its own score)
   Unknown element                                         50
   Wrong / missing / extra substance                       25
   Coefficients                       10 each, at most 20
@@ -189,10 +226,86 @@ The grade is passed to Moodle (STACK question type): it counts in the gradebook 
 
 
 ---------------------------------------------------------------------
-E. SPECIAL QUESTION TYPES
+E. COMMON MISTAKES - THE TEACHER'S OWN FEEDBACK
 ---------------------------------------------------------------------
 
-E1. Nuclear equations
+Why: the checker explains WHAT is different from the correct answer ("the coefficient of Al is 2,
+the reference has 4"). The teacher knows WHY students write it ("oxygen is diatomic"). A common
+mistake turns that knowledge into feedback, and lets the teacher decide how much it costs.
+
+How (tab 3, "Add a mistake"):
+  - Type the wrong answer with the same keyboard.
+  - Score 0-100: the grade of a student who writes it. Empty: the rubric grades it, with the row
+    "Common mistake" (tab 2) for the message.
+  - Feedback in Hebrew, Arabic and English (only the languages you need).
+  - Each card says at once what a student who writes it gets - "a student who writes this gets 50%"
+    - and warns when the "mistake" is the correct answer, or when a mistake above it already catches
+    the same answer.
+
+What the student sees: the teacher's message first, with the score; under it, in grey and without a
+penalty, the checker's detailed errors - marked on the formula as usual.
+
+How an answer is matched: as with the correct answer - substances in any order, a reversed
+equilibrium, w for ω in a fatty acid. The first mistake in the list that matches is used. A mistake
+may be wrong in itself (not balanced, mass numbers not conserved, a triglyceride with two fatty
+acids) - it still matches.
+
+Example file: example-aluminium-oxide.chemq (open it in tab 4)
+  Correct: 4Al + 3O₂ → 2Al₂O₃
+  Mistake 1: 2Al + 3O → Al₂O₃, score 50
+     "Oxygen exists as a diatomic molecule: write O₂, not O. Write O₂ and balance again - with
+      coefficients only."
+  Mistake 2: Al + O₂ → AlO₂, score 25
+     "To balance, you changed the product's formula to AlO₂. The formula of aluminium oxide comes
+      from the ion charges: Al³⁺ and O²⁻ give Al₂O₃. Balance only with coefficients in front of the
+      formulas - never change the small numbers inside a formula."
+
+  Student answer                Score  What the student gets
+  ----------------------------  -----  ----------------------------------------------------------
+  4Al + 3O₂ → 2Al₂O₃             100   correct
+  2Al + 3O → Al₂O₃                50   mistake 1: the message; in grey: "O has 1 atom of O, the
+                                       reference 2", the coefficients of Al and Al₂O₃
+  Al + O₂ → AlO₂                  25   mistake 2: the message; in grey: the atoms in AlO₂ and the
+                                       three coefficients
+  2Al + 3O₂ → 2Al₂O₃              90   not a listed mistake - the rubric: coefficient of Al
+  4Al + 3O → 2Al₂O₃               75   not a listed mistake - the rubric: wrong substance O
+                                       (to give the O₂ message here too, add it as mistake 3)
+
+Nuclear equation - Correct: ²³⁸₉₂U → ²³⁴₉₀Th + ⁴₂He
+  ²³⁸₉₂U → ²³⁸₉₃Np + ⁰₋₁e         20   teacher's mistake (beta instead of alpha):
+                                       "You emitted a beta particle, but uranium-238 undergoes alpha
+                                        decay: a helium nucleus ⁴₂He is emitted, so the mass number
+                                        drops by 4 and the atomic number by 2."
+  ²³⁸₉₂U → ²³⁶₈₈Ra + ⁴₂He         40   teacher's mistake (the numbers swapped - not conserved):
+                                       "You swapped the numbers: in alpha decay the mass number drops
+                                        by 4 (238 → 234) and the atomic number by 2 (92 → 90)."
+  ²³⁸₉₂U → ²³⁴₉₁Pa + ⁴₂He         75   not a listed mistake - the rubric: wrong substance
+
+Fatty acid - Correct: C18:2(ω6)cis (linoleic acid)
+  C18:2(ω9)cis                    60   teacher's mistake (ω counted from the wrong end):
+                                       "You counted the double bond from the carboxyl end. ω is
+                                        counted from the methyl (CH₃) end: in linoleic acid the
+                                        first double bond is ω6."
+                                       (also when the student types w9 instead of ω9)
+  C18:2(ω6)trans                  70   teacher's mistake: "In natural fatty acids the double bonds
+                                        are cis. The trans form comes mainly from industrial
+                                        hydrogenation."
+  C18:1(ω6)cis                    67   not a listed mistake - the rubric: number of double bonds
+
+Triglyceride - Correct: TG(C16:0, C18:1ω9cis, C18:0)
+  TG(C18:1ω9cis, C16:0)           30   teacher's mistake, in any order: "A triglyceride is an ester
+                                        of glycerol with three fatty acids - glycerol has three OH
+                                        groups. You wrote only two."
+
+The feedback texts above are drafts: please correct them, and bring the mistakes your students
+make in the questions you teach.
+
+
+---------------------------------------------------------------------
+F. SPECIAL QUESTION TYPES
+---------------------------------------------------------------------
+
+F1. Nuclear equations
   Particle keys: α β β⁺ γ e⁻ n p - shown as symbols or with their numbers (⁴₂α, ⁰₋₁β).
   Option: numbers filled in automatically when the student picks an element (C -> ¹²₆C, editable).
   Graded by conservation of mass numbers and atomic numbers.
@@ -207,8 +320,9 @@ E1. Nuclear equations
   Correct: ¹⁴₆C → ¹⁴₇N + ⁰₋₁e                  (beta decay, carbon dating)
     ¹⁴₆C → ¹⁴₆N + ⁰₋₁e                       90   "the atomic number of ¹⁴N is 6, but it should be 7"
   α = ⁴₂α = ⁴₂He and β = ⁰₋₁β = ⁰₋₁e = e⁻ are recognized as the same particle.
+  Common mistakes work here too (section E).
 
-E2. Fatty acids and triglycerides (bagrut rules)
+F2. Fatty acids and triglycerides (bagrut rules)
   Keys: : ω cis trans = TG(▢) and the groups COOH CH₃ CH₂ CH=CH.
   A fatty acid is graded in three parts: carbons / double bonds / ω position + cis-trans.
 
@@ -226,30 +340,43 @@ E2. Fatty acids and triglycerides (bagrut rules)
     TG(C18:0, C16:0, C18:1ω9cis)            100  the order of the fatty acids does not matter
     TG(C16:0, C18:1ω9cis)                    34  "C18:0 is missing; a triglyceride is made of three
                                                   fatty acids"
+  Common mistakes work here too (section E).
 
 
 ---------------------------------------------------------------------
-F. IN MOODLE
+G. IN MOODLE
 ---------------------------------------------------------------------
 
-- The question is a STACK question with two fields; the builder's code goes in the question text.
+- The question is a STACK question. The builder's code goes into the question text (plain-text
+  editor or HTML view); it already contains the STACK inputs. The "?" in tab 5 explains the rest
+  of the setup.
+- Each keyboard runs in its own frame (STACK-JS), so several keyboard questions can be on one page.
+- The keyboard opens in place of the answer box and closes back to it.
 - The keyboard and its checks are loaded from one central place: an improvement reaches all existing
   questions without editing them.
 - The review page (after the quiz) shows the marked answers and explanations, by the options the
   teacher chose.
+- Other systems: tab 5 also makes a stand-alone web page with the keyboard, Submit and Try again.
 
 
 =====================================================================
-SUGGESTED DEMO ORDER (about 20 minutes)
+SUGGESTED DEMO ORDER (about 25 minutes)
 =====================================================================
 
 1. Part 1 overview (5 min).
-2. Student view: type CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(l) live; show the red "!" with "Hcl".
-3. Builder: create the methane question - reference answer, element keys (add from the reference),
-   rubric defaults. "Try it as a student", submit three answers from the table in D: 100, 90, 75.
-4. Feedback: the colors and the sentences; switch the student language to Arabic / English.
-5. Flexibility: turn off automatic subscript; add molecule keys; turn on isomers.
-6. Nuclear: alpha decay of uranium-238, with α instead of ⁴₂He.
-7. Fatty acids: oleic acid, C16:1(ω9)cis -> 67.
-8. Moodle: paste the code, answer the question, show the review page and the gradebook.
-9. Questions; collect wishes (which molecules for the default set, which topics next).
+2. Student view: type CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(l) live; show the red "!" with "Hcl";
+   copy the products with ⧉ and paste them into a second keyboard.
+3. Builder, tab 1: element keys (add from the reference), the preview keyboard.
+4. Tab 2: the methane question - reference answer, rubric defaults. Type three answers from the
+   table in D in "Student answer": 100, 90, 75.
+5. Feedback: the colors and the sentences; switch the student language to Arabic / English.
+6. Common mistakes: open example-aluminium-oxide.chemq; in tab 3 show the two mistakes and what each
+   card says; in tab 2 type 2Al + 3O → Al₂O₃ (50, the teacher's message) and 2Al + 3O₂ → 2Al₂O₃
+   (90, the rubric). Add a mistake together with the team.
+7. Flexibility: turn off automatic subscript; add molecule keys; turn on isomers; an initial answer.
+8. Nuclear: alpha decay of uranium-238, with α instead of ⁴₂He; β instead of α as a common mistake.
+9. Fatty acids: oleic acid, C16:1(ω9)cis -> 67.
+10. Tabs 4-5: save the .chemq file; "Try it as a student" and Submit; copy the code; in Moodle:
+    paste, answer, the review page and the gradebook.
+11. Questions; collect wishes: the common mistakes for your questions, the molecules for the default
+    set, which topics next.

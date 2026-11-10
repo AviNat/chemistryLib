@@ -1,0 +1,42 @@
+{
+  "tool": "chemkbd-question-builder",
+  "formatVersion": 1,
+  "questionId": "aluminium-oxide",
+  "libraryUrl": "https://avinat.github.io/chemistryLib/chemical-keyboard-v4.js",
+  "language": "he",
+  "elementsMode": "default",
+  "correctAnswer": "4Al+3O_{2}→2Al_{2}O_{3}",
+  "value": "",
+  "checkButton": false,
+  "review": { "grade": true, "reference": true, "details": true },
+  "inputs": { "score": "ans1", "state": "ans2" },
+  "rubric": {
+    "answerType": 100,
+    "unknownElement": 50,
+    "substances": 25,
+    "coefficients": { "each": 10, "max": 20 },
+    "scaledCoefficients": 15,
+    "balance": 10,
+    "arrow": 10
+  },
+  "mistakes": [
+    {
+      "answer": "2Al+3O→Al_{2}O_{3}",
+      "score": 50,
+      "message": {
+        "he": "חמצן בטבע הוא מולקולה דו־אטומית: כותבים O₂ ולא O. כתבו O₂ ואזנו מחדש - רק בעזרת מקדמים.",
+        "ar": "الأكسجين في الطبيعة جزيء ثنائي الذرة: نكتب O₂ وليس O. اكتبوا O₂ ثم وازنوا من جديد - بالمعاملات فقط.",
+        "en": "Oxygen exists as a diatomic molecule: write O₂, not O. Write O₂ and balance again - with coefficients only."
+      }
+    },
+    {
+      "answer": "Al+O_{2}→AlO_{2}",
+      "score": 25,
+      "message": {
+        "he": "כדי לאזן שיניתם את נוסחת התוצר ל־AlO₂. הנוסחה של תחמוצת אלומיניום נקבעת לפי מטעני היונים: Al³⁺ ו־O²⁻ נותנים Al₂O₃. מאזנים רק בעזרת מקדמים לפני הנוסחאות - לעולם לא משנים את המספרים הקטנים בתוך הנוסחה.",
+        "ar": "لكي توازنوا غيّرتم صيغة الناتج إلى AlO₂. صيغة أكسيد الألومنيوم تُحدَّد حسب شحنات الأيونات: Al³⁺ و O²⁻ يعطيان Al₂O₃. نوازن بالمعاملات أمام الصيغ فقط - ولا نغيّر أبدًا الأرقام الصغيرة داخل الصيغة.",
+        "en": "To balance, you changed the product's formula to AlO₂. The formula of aluminium oxide comes from the ion charges: Al³⁺ and O²⁻ give Al₂O₃. Balance only with coefficients in front of the formulas - never change the small numbers inside a formula."
+      }
+    }
+  ]
+}

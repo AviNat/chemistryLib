@@ -113,6 +113,11 @@ button.on,button.on:hover{background:#cfe8ff;border-color:var(--accent)}
 .periodic button.in-reference.picked{outline:2px solid #7cc08f}
 .disabled{opacity:.45;pointer-events:none}
 .kbd-host{max-width:820px}
+.mistake{border:1px solid #d5dbe3;border-radius:8px;padding:10px 12px;margin:10px 0;max-width:820px}
+.mistake-head{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.mistake-head b{flex:1}
+.mistake-msg{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;margin-top:8px}
+.mistake-msg input{width:100%;box-sizing:border-box}
 .status{margin-top:8px;font-size:14px}
 .status.ok{color:var(--ok)} .status.bad{color:var(--bad)} .status.info{color:var(--muted)}
 .rubric-scroll{overflow-x:auto}
@@ -307,7 +312,7 @@ dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
 </section>
 </main>
 
-<!-- 3. didactics: the answer the student starts from (common mistakes: later) -->
+<!-- 3. didactics: the answer the student starts from, the common mistakes and their feedback -->
 <main id="tabDidactics" role="tabpanel" hidden>
 
 <section>
@@ -326,6 +331,13 @@ dialog#stackHelp::backdrop{background:rgba(20,30,40,.35)}
   <div id="initialHost" class="kbd-host"></div>
   <div id="initialInfo" class="status info"></div>
   <div id="initialWarn" class="status warn"></div>
+</section>
+
+<section>
+  <h2 data-t="secMistakes"></h2>
+  <div class="hint" data-t="mistakesHint"></div>
+  <div id="mistakeList"></div>
+  <div class="row"><button type="button" id="addMistake" data-t="addMistake"></button></div>
 </section>
 </main>
 
@@ -583,6 +595,7 @@ const TEXT={
     resetRubric:"Restore the sample values",
     cat:{
       answerType:"Wrong answer type (e.g. a formula instead of an equation)",
+      mistake:"Common mistake (tab 3) without a score of its own",
       unknownElement:"Unknown element",
       substances:"Wrong, missing or extra substance",
       massNumbers:"Mass number wrong or missing, or numbers missing (nuclear)",
@@ -628,6 +641,20 @@ const TEXT={
     initialCorrect:"The initial answer is already the correct answer: the student has nothing to do.",
     initialProblems:"The initial answer has writing problems (fine for a part to complete):",
     initialGrade:"Left as it is, it is not graded. Graded as an answer, it would get {grade}.",
+    secMistakes:"Common mistakes",
+    mistakesHint:"Wrong answers you expect, each with its own feedback. An answer equal to a mistake (the same substances, coefficients, states..., in any order) gets your message, and the checker's errors are shown under it. Score: the grade of this answer (0-100); empty: graded by the rubric, with the row \"Common mistake\" (tab 2) for the message. The first mistake in the list that matches is used.",
+    addMistake:"Add a mistake",
+    mistakeN:"Mistake {n}",
+    removeMistake:"Remove",
+    mistakeScore:"Score",
+    mistakeScoreEmpty:"rubric",
+    mistakeMessage:"Feedback",
+    mistakeEmpty:"Type the wrong answer with the keyboard.",
+    mistakeIsReference:"This is the reference answer, not a mistake.",
+    mistakeProblems:"Writing problems:",
+    mistakeGets:"A student who writes this gets {grade}, with your feedback.",
+    mistakeCaughtBy:"Mistake {n} above already matches this answer: this one is never used.",
+    mistakeNoMessage:"No feedback yet: the student gets the general text \"This is a common mistake\".",
     secFile:"Exercise file",
     fileHint:"One file holds everything the builder needs to open the question again: the keyboard (tab 1), the reference answer and the rubric (tab 2), the initial answer (tab 3) and the code settings (tab 5). The file has its own extension, .chemq (a chemical keyboard question; JSON inside). Files saved before (the .txt / .html code) still open - Save then makes a new .chemq file.",
     secFileJson:"The file's content",
@@ -742,6 +769,7 @@ const TEXT={
     resetRubric:"שחזור ערכי הדוגמה",
     cat:{
       answerType:"סוג תשובה שגוי (למשל נוסחה במקום משוואה)",
+      mistake:"טעות נפוצה (לשונית 3) בלי ציון משלה",
       unknownElement:"יסוד לא מוכר",
       substances:"חומר שגוי, חסר או מיותר",
       massNumbers:"מספר מסה שגוי או חסר, או מספרים חסרים (גרעינית)",
@@ -787,6 +815,20 @@ const TEXT={
     initialCorrect:"התשובה ההתחלתית היא כבר התשובה הנכונה: לתלמיד אין מה לעשות.",
     initialProblems:"בתשובה ההתחלתית יש בעיות כתיבה (תקין לחלק שצריך להשלים):",
     initialGrade:"אם היא נשארת כמו שהיא, היא לא מקבלת ציון. כתשובה, היא הייתה מקבלת {grade}.",
+    secMistakes:"טעויות נפוצות",
+    mistakesHint:"תשובות שגויות שצפויות, כל אחת עם משוב משלה. תשובה ששווה לטעות (אותם חומרים, מקדמים, מצבי צבירה..., בכל סדר) מקבלת את ההודעה שלך, ושגיאות הבודק מוצגות מתחתיה. ציון: הציון של התשובה הזו (0-100); ריק: הציון לפי המחוון, עם השורה \"טעות נפוצה\" (לשונית 2) עבור ההודעה. משתמשים בטעות הראשונה ברשימה שמתאימה.",
+    addMistake:"הוספת טעות",
+    mistakeN:"טעות {n}",
+    removeMistake:"הסרה",
+    mistakeScore:"ציון",
+    mistakeScoreEmpty:"מחוון",
+    mistakeMessage:"משוב",
+    mistakeEmpty:"יש להקליד את התשובה השגויה במקלדת.",
+    mistakeIsReference:"זו תשובת הייחוס, לא טעות.",
+    mistakeProblems:"בעיות כתיבה:",
+    mistakeGets:"תלמיד שכותב את זה מקבל {grade}, עם המשוב שלך.",
+    mistakeCaughtBy:"טעות {n} שמעל כבר מתאימה לתשובה הזו: בטעות הזו לא ישתמשו לעולם.",
+    mistakeNoMessage:"אין עדיין משוב: התלמיד יקבל את הטקסט הכללי \"זו טעות נפוצה\".",
     secFile:"קובץ התרגיל",
     fileHint:"קובץ אחד מכיל את כל מה שהבונה צריך כדי לפתוח את השאלה שוב: המקלדת (לשונית 1), תשובת הייחוס והמחוון (לשונית 2), התשובה ההתחלתית (לשונית 3) והגדרות הקוד (לשונית 5). לקובץ סיומת משלו, ‎.chemq (שאלה עם מקלדת כימית; בתוכו JSON). קבצים שנשמרו קודם (הקוד, ‎.txt / ‎.html) עדיין נפתחים - שמירה יוצרת אז קובץ ‎.chemq חדש.",
     secFileJson:"תוכן הקובץ",
@@ -901,6 +943,7 @@ const TEXT={
     resetRubric:"استعادة القيم النموذجية",
     cat:{
       answerType:"نوع إجابة خاطئ (مثل صيغة بدل معادلة)",
+      mistake:"خطأ شائع (التبويب 3) بدون درجة خاصة به",
       unknownElement:"عنصر غير معروف",
       substances:"مادة خاطئة أو ناقصة أو زائدة",
       massNumbers:"عدد كتلي خاطئ أو مفقود، أو أعداد مفقودة (نووية)",
@@ -946,6 +989,20 @@ const TEXT={
     initialCorrect:"الإجابة الابتدائية هي الإجابة الصحيحة: لا يبقى للطالب ما يفعله.",
     initialProblems:"في الإجابة الابتدائية مشكلات في الكتابة (لا بأس بذلك لجزء يجب إكماله):",
     initialGrade:"إذا بقيت كما هي فلا تُقدَّر. كإجابة، كانت ستحصل على {grade}.",
+    secMistakes:"أخطاء شائعة",
+    mistakesHint:"إجابات خاطئة متوقعة، لكل منها تغذية راجعة خاصة. الإجابة المساوية لخطأ (نفس المواد والمعاملات وحالات المادة...، بأي ترتيب) تحصل على رسالتك، وتظهر أخطاء الفاحص تحتها. الدرجة: درجة هذه الإجابة (0-100)؛ فارغة: حسب سلّم التقييم، مع السطر \"خطأ شائع\" (التبويب 2) للرسالة. يُستخدم أول خطأ في القائمة يطابق الإجابة.",
+    addMistake:"إضافة خطأ",
+    mistakeN:"الخطأ {n}",
+    removeMistake:"حذف",
+    mistakeScore:"الدرجة",
+    mistakeScoreEmpty:"السلّم",
+    mistakeMessage:"التغذية الراجعة",
+    mistakeEmpty:"اكتب الإجابة الخاطئة بلوحة المفاتيح.",
+    mistakeIsReference:"هذه هي الإجابة المرجعية، وليست خطأ.",
+    mistakeProblems:"مشكلات في الكتابة:",
+    mistakeGets:"الطالب الذي يكتب هذا يحصل على {grade}، مع تغذيتك الراجعة.",
+    mistakeCaughtBy:"الخطأ {n} أعلاه يطابق هذه الإجابة مسبقًا: لن يُستخدم هذا الخطأ أبدًا.",
+    mistakeNoMessage:"لا توجد تغذية راجعة بعد: سيحصل الطالب على النص العام \"هذا خطأ شائع\".",
     secFile:"ملف التمرين",
     fileHint:"ملف واحد يحتوي على كل ما يحتاجه المُنشئ لفتح السؤال مرة أخرى: لوحة المفاتيح (التبويب 1)، والإجابة المرجعية وسلّم التقدير (التبويب 2)، والإجابة الابتدائية (التبويب 3)، وإعدادات الرمز (التبويب 5). للملف امتداد خاص، ‎.chemq (سؤال بلوحة مفاتيح كيميائية؛ بداخله JSON). الملفات المحفوظة سابقًا (الرمز، ‎.txt / ‎.html) ما زالت تُفتح - والحفظ عندها ينشئ ملف ‎.chemq جديدًا.",
     secFileJson:"محتوى الملف",
@@ -963,7 +1020,7 @@ const DEFAULT_ELEMENTS=["H","C","N","O","Na","Mg","Al","Cl","K","Ca","Fe","Cu","
 const ALL_ELEMENTS=ChemicalGrammar.elements;   // in atomic-number order
 
 /* Rubric categories the teacher can set ("syntax" is fixed by the system: 0). */
-const RUBRIC_CATEGORIES=["answerType","unknownElement","substances","massNumbers","atomicNumbers",
+const RUBRIC_CATEGORIES=["answerType","mistake","unknownElement","substances","massNumbers","atomicNumbers",
   "lipidCarbons","lipidDoubleBonds","lipidOmega","lipidStructure","lipidFattyAcids","lipidNotation","coefficients","scaledCoefficients",
   "balance","states","charges","arrow","conditions","notation"];
 const NUCLEAR_ONLY={massNumbers:true,atomicNumbers:true};   // rubric rows shown only for a nuclear equation
@@ -1058,8 +1115,20 @@ function newState(){
     correctAnswer:"",
     value:"",
     rubricEnabled:true,
-    rubric:rubricRulesFrom(SAMPLE_RUBRIC)
+    rubric:rubricRulesFrom(SAMPLE_RUBRIC),
+    mistakes:[]               // common mistakes (tab 3): [{answer, score ("" = the rubric), message: {he, ar, en}}]
   };
+}
+
+/* the common mistakes as the library reads them: only those with an answer; empty messages and scores left out */
+function mistakesForLibrary(){
+  return state.mistakes.filter(m=>m.answer).map(m=>{
+    const out={answer:m.answer},message={};
+    ["he","ar","en"].forEach(l=>{ if(m.message[l]&&m.message[l].trim()) message[l]=m.message[l].trim(); });
+    if(Object.keys(message).length) out.message=message;
+    if(m.score!==""&&m.score!==null&&m.score!==undefined) out.score=clampPercent(m.score);
+    return out;
+  });
 }
 
 function loadPreference(key,fallback){
@@ -1158,6 +1227,8 @@ function questionConfig(){
   if(displayChars()) cfg.displayChars=displayChars();
   const rubric=rubricForLibrary();
   if(rubric) cfg.rubric=rubric;
+  /* the file keeps every mistake, also one not finished yet */
+  if(state.mistakes.length) cfg.mistakes=state.mistakes.map(m=>({answer:m.answer,score:m.score,message:Object.assign({},m.message)}));
   return cfg;
 }
 
@@ -1177,6 +1248,8 @@ function embedConfig(){
    "nuclear","particleLabels","autoNuclideNumbers","states","molecules","displayChars","rubric"].forEach(key=>{
     if(full[key]!==undefined) cfg[key]=full[key];
   });
+  const mistakes=mistakesForLibrary();
+  if(mistakes.length) cfg.mistakes=mistakes;
   const review={};
   Object.keys(full.review).forEach(key=>{ if(full.review[key]===false) review[key]=false; });
   if(Object.keys(review).length) cfg.review=review;
@@ -1235,6 +1308,13 @@ function applyConfig(cfg){
   s.target=cfg.target==="html"?"html":"stack";
   s.rubricEnabled=!!cfg.rubric;
   s.rubric=rubricRulesFrom(cfg.rubric||SAMPLE_RUBRIC);
+  /* common mistakes: from the file (any score) or from the question code (only filled in, message maybe one text) */
+  s.mistakes=(Array.isArray(cfg.mistakes)?cfg.mistakes:[]).filter(m=>m&&typeof m==="object").map(m=>{
+    const msg=typeof m.message==="string"?{he:"",ar:"",en:""}:Object.assign({he:"",ar:"",en:""},m.message||{});
+    if(typeof m.message==="string") msg[s.language==="system"?"en":s.language]=m.message;
+    const n=Number(m.score);
+    return {answer:typeof m.answer==="string"?m.answer:"",score:m.score===""||m.score===undefined||m.score===null||!isFinite(n)?"":clampPercent(n),message:msg};
+  });
   state=s;
 }
 
@@ -1406,7 +1486,8 @@ function keyboardElements(){
 
 /* Only one keyboard window open at a time: opening one closes the others. */
 function openKeyboards(){
-  return [referenceKeyboard,initialKeyboard,moleculeKeyboard,previewKeyboard,studentKeyboard,tryRun&&tryRun.keyboard].filter(Boolean);
+  return [referenceKeyboard,initialKeyboard,moleculeKeyboard,previewKeyboard,studentKeyboard,tryRun&&tryRun.keyboard]
+    .concat(mistakeKeyboards).filter(Boolean);
 }
 function oneWindowAtATime(keyboard){
   const show=keyboard.show;
@@ -1464,6 +1545,7 @@ function buildKeyboards(){
     renderAddReminder();
   });
   renderAddReminder();
+  renderMistakes();
   building=false;
   buildTry();
 }
@@ -1516,6 +1598,7 @@ function syncTry(){
   const keyboard=tryRun.keyboard;
   keyboard.setCorrectAnswer(state.correctAnswer);
   keyboard.setRubric(rubricForLibrary());
+  if(keyboard.setMistakes) keyboard.setMistakes(mistakesForLibrary());
   keyboard.config.distinguishIsomers=state.distinguishIsomers;
 }
 
@@ -1592,6 +1675,7 @@ function renderDidactics(){
   const info=$("initialInfo"),warn=$("initialWarn");
   info.textContent="";
   warn.textContent="";
+  renderMistakeStatus();
   if(!state.value||!state.correctAnswer) return;
   const result=ChemicalGrammar.compare(state.value,state.correctAnswer,previewLanguage(),
     {rubric:rubricForLibrary(),distinguishIsomers:state.distinguishIsomers,lipids:state.lipids});
@@ -1602,6 +1686,132 @@ function renderDidactics(){
   const problems=ChemicalGrammar.validate(state.value,teacherLanguage);
   const grade=result.score?result.score.total+"%":"0%";
   info.textContent=(problems.length?t("initialProblems")+" "+problems.join(" ")+" ":"")+t("initialGrade").replace("{grade}",grade);
+}
+
+/* ================================================================
+   Common mistakes (tab 3, 2026-11-10): each a wrong answer typed with the keyboard, an optional score, and the
+   feedback in he / ar / en. The library: config.mistakes (matchTeacherMistake).
+   ================================================================ */
+let mistakeKeyboards=[];
+let mistakeCards=[];
+
+function renderMistakes(){
+  mistakeKeyboards.forEach(removeKeyboard);
+  mistakeKeyboards=[];
+  mistakeCards=[];
+  const list=$("mistakeList");
+  list.textContent="";
+  const wasBuilding=building;
+  building=true;
+  state.mistakes.forEach((m,i)=>{
+    const card=document.createElement("div");
+    card.className="mistake";
+    const head=document.createElement("div");
+    head.className="mistake-head";
+    const title=document.createElement("b");
+    head.appendChild(title);
+    const scoreLabel=document.createElement("label");
+    const scoreText=document.createElement("span");
+    scoreLabel.appendChild(scoreText);
+    const pct=document.createElement("span");
+    pct.className="pct";
+    pct.dir="ltr";
+    const score=document.createElement("input");
+    score.type="number"; score.min="0"; score.max="100"; score.step="1";
+    score.style.width="5em";
+    score.style.marginInlineStart="6px";
+    score.value=m.score;
+    score.addEventListener("input",()=>{ m.score=score.value===""?"":clampPercent(score.value); mistakesChanged(); });
+    pct.appendChild(score);
+    pct.appendChild(document.createTextNode("%"));
+    scoreLabel.appendChild(pct);
+    head.appendChild(scoreLabel);
+    const remove=document.createElement("button");
+    remove.type="button";
+    remove.addEventListener("click",()=>{ state.mistakes.splice(i,1); renderMistakes(); mistakesChanged(); });
+    head.appendChild(remove);
+    card.appendChild(head);
+
+    const host=document.createElement("div");
+    host.id="mistakeHost"+i;
+    host.className="kbd-host";
+    card.appendChild(host);
+
+    const msg=document.createElement("div");
+    msg.className="mistake-msg";
+    const msgTitle=document.createElement("div");
+    msgTitle.style.gridColumn="1 / 3";
+    msgTitle.style.fontWeight="bold";
+    msg.appendChild(msgTitle);
+    ["he","ar","en"].forEach(l=>{
+      const lab=document.createElement("label");
+      lab.textContent=LANGUAGE_NAMES[l];
+      lab.htmlFor="mistakeMsg"+i+l;
+      const input=document.createElement("input");
+      input.type="text";
+      input.id="mistakeMsg"+i+l;
+      input.dir=l==="en"?"ltr":"rtl";
+      input.value=m.message[l]||"";
+      input.addEventListener("input",()=>{ m.message[l]=input.value; mistakesChanged(); });
+      msg.appendChild(lab);
+      msg.appendChild(input);
+    });
+    card.appendChild(msg);
+
+    const status=document.createElement("div");
+    status.className="status";
+    card.appendChild(status);
+    list.appendChild(card);
+
+    const keyboard=makeEditor(host.id,m.answer,v=>{ m.answer=v; mistakesChanged(); });
+    mistakeKeyboards.push(keyboard);
+    mistakeCards.push({title,scoreText,score,remove,msgTitle,status});
+  });
+  building=wasBuilding;
+  renderMistakeStatus();
+}
+
+function mistakesChanged(){ changed({try:"sync"}); }
+
+/* the texts of the cards (the interface language) and what each mistake does for a student who writes it */
+function renderMistakeStatus(){
+  const lang=previewLanguage();
+  const all=mistakesForLibrary();
+  mistakeCards.forEach((c,i)=>{
+    const m=state.mistakes[i];
+    c.title.textContent=t("mistakeN").replace("{n}",i+1);
+    c.scoreText.textContent=t("mistakeScore");
+    c.score.placeholder=t("mistakeScoreEmpty");
+    c.remove.textContent=t("removeMistake");
+    c.msgTitle.textContent=t("mistakeMessage");
+    const s=c.status;
+    s.textContent="";
+    s.className="status";
+    if(!m.answer){ s.textContent=t("mistakeEmpty"); s.classList.add("info"); return; }
+    if(!state.correctAnswer) return;
+    const options={distinguishIsomers:state.distinguishIsomers,lipids:state.lipids};
+    if(ChemicalGrammar.compare(m.answer,state.correctAnswer,lang,options).correct){
+      s.textContent=t("mistakeIsReference"); s.classList.add("bad"); return;
+    }
+    const problems=ChemicalGrammar.validate(m.answer,teacherLanguage);
+    const result=ChemicalGrammar.compare(m.answer,state.correctAnswer,lang,
+      Object.assign({rubric:rubricForLibrary(),mistakes:all},options));
+    const hit=result.errors.filter(e=>e.code==="teacher-mistake")[0];
+    /* the number of the mistake that matched, among those with an answer */
+    const index=state.mistakes.filter(x=>x.answer).indexOf(m)+1;
+    const parts=[];
+    if(problems.length) parts.push(t("mistakeProblems")+" "+problems.join(" "));
+    if(hit&&hit.mistake!==index){
+      const first=state.mistakes.indexOf(state.mistakes.filter(x=>x.answer)[hit.mistake-1])+1;
+      parts.push(t("mistakeCaughtBy").replace("{n}",first));
+      s.classList.add("warn");
+    }else{
+      parts.push(t("mistakeGets").replace("{grade}",result.score?result.score.total+"%":"—"));
+      if(!["he","ar","en"].some(l=>m.message[l]&&m.message[l].trim())) parts.push(t("mistakeNoMessage"));
+      s.classList.add(problems.length?"warn":"ok");
+    }
+    s.textContent=parts.join(" ");
+  });
 }
 
 /* Tab 4: what the file holds, and its content */
@@ -2506,6 +2716,11 @@ $("sortAtomic").addEventListener("click",()=>{ state.elementsSort="atomic"; elem
 
 $("copyFromReference").addEventListener("click",()=>{ initialKeyboard.setValue(state.correctAnswer); });
 $("clearInitial").addEventListener("click",()=>{ initialKeyboard.setValue(""); });
+$("addMistake").addEventListener("click",()=>{
+  state.mistakes.push({answer:"",score:"",message:{he:"",ar:"",en:""}});
+  renderMistakes();
+  mistakesChanged();
+});
 
 $("useRubric").addEventListener("change",e=>{ state.rubricEnabled=e.target.checked; renderRubric(); rubricChanged(); });
 $("resetRubric").addEventListener("click",()=>{ state.rubric=rubricRulesFrom(SAMPLE_RUBRIC); renderRubric(); rubricChanged(); });

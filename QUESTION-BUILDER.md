@@ -94,7 +94,15 @@ five tabs (the open tab is remembered; a tab with something to fix gets ⚠ on i
    review options hide), the rubric, and "isomers are different substances" (a grading rule, moved from the settings).
 3. **Didactics** - the correct answer read-only ("Edit in the Checker tab"), the initial answer with messages:
    already correct (warning) / writing problems (fine for a part to complete) / "graded as an answer it would get X%".
-   Common mistakes: not yet.
+   **Common mistakes** (2026-11-10, library 3.7.0): a list of cards, each a wrong answer typed with the keyboard, a
+   score (0-100, empty = the rubric's row "Common mistake"), and the feedback in he / ar / en. Each card says what a
+   student who writes it gets, or warns when it equals the reference or an earlier mistake already catches it.
+   Library: `config.mistakes = [{answer, message:{he,ar,en}, score}]` (see `matchTeacherMistake`): the first mistake
+   the answer equals (compared as with the reference) puts the teacher's message first; with a score that is the
+   grade and the checker's errors are shown under it, not counted. Also for nuclear equations and fatty acids /
+   triglycerides (3.7.1). A mistake that is wrong in itself (not balanced, mass / atomic numbers not conserved, a
+   triglyceride with two fatty acids) still matches: errors the mistake also gets compared with itself do not count.
+   Example: `example-aluminium-oxide.chemq` (4Al + 3O₂ → 2Al₂O₃; mistakes O for O₂, and AlO₂ to balance).
 4. **Exercise file** - New / Open / Save / Save as (moved from the header), a summary, the file's JSON (Copy).
 5. **Question code** - target, question id, library address, keyboard width, review options, STACK inputs (+ "?"),
    the issues list, "Try it as a student" + Submit, the code with **Copy the code** and **Save the code…**.

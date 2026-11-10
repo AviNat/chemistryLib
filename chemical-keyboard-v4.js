@@ -545,8 +545,26 @@ var GRADE_TEXT={
   charges:{en:"Charges",he:"מטענים",ar:"الشحنات"},
   arrow:{en:"Reaction arrow",he:"חץ התגובה",ar:"سهم التفاعل"},
   conditions:{en:"Reaction conditions",he:"תנאי התגובה",ar:"شروط التفاعل"},
-  notation:{en:"Notation",he:"כתיב",ar:"طريقة الكتابة"}
+  notation:{en:"Notation",he:"כתיב",ar:"طريقة الكتابة"},
+  mistake:{en:"Common mistake",he:"טעות נפוצה",ar:"خطأ شائع"}
 };
+
+/* a teacher mistake without a message of its own (TEACHER MISTAKES, below) */
+var TEACHER_MISTAKE_TEXT={
+  en:"This is a common mistake. Check your answer again.",
+  he:"זו טעות נפוצה. יש לבדוק שוב את התשובה.",
+  ar:"هذا خطأ شائع. راجع إجابتك مرة أخرى."
+};
+
+/* the teacher's message in the feedback language, else in English, else in the language it has */
+function teacherMistakeText(message,language){
+  var other;
+  if(typeof message==="string"&&message.trim())return message;
+  message=message&&typeof message==="object"?message:{};
+  if(message[language]&&String(message[language]).trim())return String(message[language]);
+  other=["en","he","ar"].filter(function(l){return message[l]&&String(message[l]).trim();})[0];
+  return other?String(message[other]):TEACHER_MISTAKE_TEXT[language]||TEACHER_MISTAKE_TEXT.en;
+}
 
 /* Answer types, used by "wrong-answer-type" as {expectedType} / {actualType}. */
 var ANSWER_TYPE_TEXT={
@@ -737,6 +755,7 @@ function replaceTextToken(text,token,value){
 
 function localizedErrorTemplate(error,language){
   var messages=ERROR_TEXT[language]||ERROR_TEXT.en;
+  if(error.code==="teacher-mistake")return teacherMistakeText(error.message,language);
   /* nuclear equations: the "atoms" #A and #Z are the conservation of mass and atomic numbers */
   var code=error.code==="unbalanced-atom"&&error.atom==="#A"?"mass-not-conserved"
     :error.code==="unbalanced-atom"&&error.atom==="#Z"?"atomic-number-not-conserved":error.code;
@@ -3416,7 +3435,14 @@ function compareLipidAnswers(studentAst,referenceAst,language,options){
     errors:errors,
     lipid:{student:st,reference:rf}
   };
+  /* the teacher's common mistakes (as in compareChemicalAnswers): a fatty acid or triglyceride the teacher expects */
+  var mistake=errors.length?matchTeacherMistake(studentAst,errors,language,Object.assign({},options,{lipids:true}),false):null;
+  if(mistake){
+    mistake.description=localizedErrorDescription(mistake,language);
+    errors.unshift(mistake);
+  }
   if(options.rubric)gradeComparison(result,options.rubric);
+  else if(mistake&&typeof mistake.score==="number")gradeComparison(result,{});
   return result;
 }
 
@@ -3621,6 +3647,13 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
     notes.push(formNotes[i]);
   }
 
+  /* the teacher's common mistakes: the first one the student's answer equals, as a message before the other errors */
+  var mistake=errors.length?matchTeacherMistake(studentValue,errors,language,options,nuclear):null;
+  if(mistake){
+    mistake.description=localizedErrorDescription(mistake,language);
+    errors.unshift(mistake);
+  }
+
   var result={
     notes:notes,
     correct:errors.length===0,
@@ -3631,9 +3664,61 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
     errors:errors
   };
 
+  /* a mistake with its own score is graded also without a rubric */
   if(options.rubric)gradeComparison(result,options.rubric);
+  else if(mistake&&typeof mistake.score==="number")gradeComparison(result,{});
 
   return result;
+}
+
+/* ============================================================
+   TEACHER MISTAKES (2026-11-10, as in the math keyboard's MathCheck)
+
+   options.mistakes: [{ answer, message, score }]
+     answer   a wrong answer the teacher expects, in the value notation
+              ("2Al+3O→Al_{2}O_{3}"); compared as with the reference: the
+              same substances, coefficients, states... (notation notes
+              do not matter)
+     message  the feedback: { he, ar, en } or one text
+     score    optional, 0-100: the grade of this answer; the other errors
+              are then shown under it, not counted. Without a score the
+              mistake is graded by the rubric's category "mistake" and the
+              other errors count as usual.
+   The first mistake in the list that matches is used. Not checked when
+   the answer is correct or cannot be read (a syntax error).
+   ============================================================ */
+/*
+ * A mistake may be wrong in itself: not balanced (Al + O₂ → Al₂O₃), mass / atomic numbers not conserved, a
+ * triglyceride with two fatty acids. Compared with the mistake, the student's answer then gets those errors too.
+ * It still matches when its errors are exactly the ones the mistake gets compared with itself.
+ */
+function sameOwnErrors(check,answer,language,sub){
+  var own=compareChemicalAnswers(answer,answer,language,sub).errors,keys={},i,key;
+  if(!own.length)return false;
+  for(i=0;i<own.length;i++)keys[own[i].code+"|"+own[i].description]=true;
+  for(i=0;i<check.errors.length;i++){
+    key=check.errors[i].code+"|"+check.errors[i].description;
+    if(!keys[key]||check.errors[i].answer==="reference")return false;
+  }
+  return check.errors.length===own.length;
+}
+
+function matchTeacherMistake(studentValue,errors,language,options,nuclear){
+  var list=options.mistakes,i,m,check,sub;
+  if(!list||!list.length)return null;
+  for(i=0;i<errors.length;i++)if(errors[i].code==="syntax-error"&&errors[i].answer!=="reference")return null;
+  sub={distinguishIsomers:options.distinguishIsomers===true,lipids:options.lipids===true,nuclear:nuclear===true};
+  for(i=0;i<list.length;i++){
+    m=list[i];
+    if(!m||typeof m.answer!=="string"||!m.answer.trim())continue;
+    check=compareChemicalAnswers(studentValue,m.answer,language,sub);
+    if(!check.correct&&!sameOwnErrors(check,m.answer,language,sub))continue;
+    var error={code:"teacher-mistake",mistake:i+1,message:m.message,studentRanges:[],referenceRanges:[]};
+    var score=Number(m.score);
+    if(m.score!==undefined&&m.score!==null&&m.score!==""&&isFinite(score))error.score=Math.max(0,Math.min(100,score));
+    return error;
+  }
+  return null;
 }
 
 /* ============================================================
@@ -3651,13 +3736,14 @@ function compareChemicalAnswers(studentValue,referenceValue,language,options){
    the error that caused it. result.score = { total, penalties: [{ category,
    penalty, errorIds, capped }] } - a penalty is listed once for all its errors.
    ============================================================ */
-var RUBRIC_CATEGORIES=["syntax","answerType","unknownElement","substances","massNumbers","atomicNumbers",
+var RUBRIC_CATEGORIES=["syntax","answerType","mistake","unknownElement","substances","massNumbers","atomicNumbers",
   "lipidCarbons","lipidDoubleBonds","lipidOmega","lipidStructure","lipidFattyAcids","lipidNotation","coefficients","scaledCoefficients",
   "balance","states","charges","arrow","conditions","notation"];
 
 var RUBRIC_CATEGORY_OF={
   "syntax-error":"syntax",
   "wrong-answer-type":"answerType",
+  "teacher-mistake":"mistake",
   "unknown-element":"unknownElement",
   "missing-species":"substances","unexpected-species":"substances","wrong-atom-count":"substances",
   "wrong-structure":"substances","missing-structure":"substances","wrong-dot-parts":"substances",
@@ -3759,6 +3845,23 @@ function gradeComparison(result,rubric){
   for(i=0;i<graded.length&&!fatal;i++){
     /* the wrong kind of answer: an expression for an equation, another fatty-acid format, TG 54:3 */
     if(graded[i].code==="wrong-answer-type"||graded[i].code==="wrong-lipid-format"||graded[i].code==="academic-tg-notation")fatal=graded[i];
+  }
+
+  /* a teacher mistake with its own score: that grade; the other errors are shown under it, not counted */
+  var ownScore=null;
+  for(i=0;i<graded.length&&!ownScore;i++)if(graded[i].code==="teacher-mistake"&&typeof graded[i].score==="number")ownScore=graded[i];
+  if(ownScore){
+    for(i=0;i<graded.length;i++){
+      if(graded[i]!==ownScore){
+        graded[i].counted=false;
+        graded[i].suppressedBy=ownScore.id;
+      }
+    }
+    result.score={
+      total:ownScore.score,
+      penalties:ownScore.score<100?[{category:"mistake",penalty:100-ownScore.score,errorIds:[ownScore.id],capped:false}]:[]
+    };
+    return result;
   }
 
   if(fatal){
@@ -3868,8 +3971,14 @@ ChemicalKeyboard.prototype.compareOptions=function(){
   return {
     distinguishIsomers:this.config.distinguishIsomers===true,
     lipids:this.config.lipids===true,
-    rubric:this.config.rubric||null
+    rubric:this.config.rubric||null,
+    mistakes:this.config.mistakes||null
   };
+};
+
+/* The teacher's common mistakes (see matchTeacherMistake); null = none. */
+ChemicalKeyboard.prototype.setMistakes=function(mistakes){
+  this.config.mistakes=mistakes&&mistakes.length?mistakes:null;
 };
 
 /* The grading rubric (see gradeComparison); null = no grading. */
@@ -7641,6 +7750,7 @@ function runQuestion(host,cfg,adapter){
   if(cfg.elementsMode==="none")options.elements=[];
   else if(cfg.elementsMode==="custom")options.elements=(cfg.elements||[]).slice();
   if(cfg.rubric)options.rubric=cfg.rubric;
+  if(cfg.mistakes&&cfg.mistakes.length)options.mistakes=cfg.mistakes;   // the teacher's common mistakes
   if(cfg.distinguishIsomers)options.distinguishIsomers=true;
   if(cfg.conditions===false)options.conditions=false;     // no reaction-condition (process) keys
   if(cfg.autoSubscript===false)options.autoSubscript=false; // the student chooses subscripts with _ or the key
@@ -7682,7 +7792,7 @@ function runQuestion(host,cfg,adapter){
   }
   function compare(ast){
     return global.ChemicalGrammar.compare(ast,cfg.correctAnswer||"",lang,
-      {rubric:cfg.rubric||null,distinguishIsomers:cfg.distinguishIsomers===true,lipids:cfg.lipids===true});
+      {rubric:cfg.rubric||null,mistakes:cfg.mistakes||null,distinguishIsomers:cfg.distinguishIsomers===true,lipids:cfg.lipids===true});
   }
 
   /*
@@ -7825,7 +7935,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.6.0"// raise with every change, to see in the console which copy a page runs
+  version:"3.7.1"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

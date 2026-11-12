@@ -140,7 +140,7 @@ ChemicalKeyboard.mountStackJs({"formatVersion":2,"correctAnswer":"2H_{2}+O_{2}â†
 ```
 
 Plus a short instruction the builder shows (not code): input types (ans1 numeric or algebraic, ans2 string),
-"validation: none", the PRT on ans1 (`ATNumAbsolute(ans1, 1, 0.0001)` or a mark = ans1).
+"validation: none", the PRT on ans1 (one node `AlgEquiv(ans1, 1)`, false branch score = ans1).
 
 - **Several questions on one page:** each question has its own frame (its own document: no shared ids or
   globals); `limittoquestion = true` binds each frame to the inputs of its own question even when two questions

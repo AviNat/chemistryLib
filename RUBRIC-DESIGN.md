@@ -58,7 +58,7 @@ rubric: {
 | `substances` | `missing-species`, `unexpected-species`, `wrong-atom-count`, `wrong-structure`, `missing-structure`, `wrong-dot-parts`, `unexpected-atom`, `missing-atom` |
 | `coefficients` | `wrong-coefficient` (also a missing coefficient, i.e. 1 instead of n) |
 | `scaledCoefficients` | **new code** `scaled-coefficients`: the equation is balanced, the substances are right, but all coefficients are the same whole-number multiple of the reference (`4H₂ + 2O₂ → 4H₂O` for `2H₂ + O₂ → 2H₂O`). Reported as **one** error; it's a different misunderstanding from a wrong coefficient |
-| `balance` | `unbalanced-atom`, counted only when not explained by a substance or coefficient error (see 5). In a nuclear equation: conservation of mass / atomic numbers (atoms #A / #Z) |
+| `balance` | `unbalanced-atom`: the student's own equation is not balanced. Counted unless a wrong coefficient explains it (see 5); since 2026-11-13 it is counted **in addition to** a wrong / missing / extra substance. In a nuclear equation: conservation of mass / atomic numbers (atoms #A / #Z) |
 | `massNumbers` | nuclear: `wrong-mass-number`, `missing-mass-number` (2026-10-15, ENHANCEMENTS-DESIGN.md) |
 | `atomicNumbers` | nuclear: `wrong-atomic-number`, `missing-atomic-number` |
 | `states` | `missing-state`, `wrong-state`, `unexpected-state` |
@@ -80,12 +80,19 @@ Rule: **one mistake = one penalty.** A counted error hides the errors it causes.
 | If this is counted… | …these are not counted |
 |---|---|
 | `wrong-answer-type` | everything else; grading stops (comparing an expression with an equation is meaningless). Score = 100 − the teacher's `answerType` penalty |
-| wrong / missing / unexpected **substance** | `unbalanced-atom` for the atoms of that substance; coefficient, state and charge errors of that substance; `missing-atom` / `unexpected-atom` explained by the missing or extra substance |
+| wrong / missing / unexpected **substance** | (nuclear equations only: `unbalanced-atom` of the mass / atomic numbers;) coefficient, state and charge errors of that substance; `missing-atom` / `unexpected-atom` explained by the missing or extra substance |
 | `wrong-coefficient` of a substance (including a missing coefficient) | `unbalanced-atom` for **all atoms of that substance**. One wrong coefficient is one error, however many atoms it unbalances |
 | `scaled-coefficients` | all the individual `wrong-coefficient` errors (one error for the whole equation) |
 | states missing on every substance (`allMissing` in the rubric) | the individual `missing-state` errors |
 
-- `unbalanced-atom` is counted only when no substance or coefficient error explains it.
+- `unbalanced-atom` is counted only when no coefficient error explains it.
+- **Changed by the user, 2026-11-13 (library 3.8.0):** a wrong substance no longer hides the balance. "The purpose of
+  the system is to teach, to establish good practices; balancing is a basic skill" - so an equation that is not
+  balanced with the substances the student wrote loses the `balance` penalty **in addition to** the `substances`
+  penalty (`2H₂ + O₃ → 2H₂O`: 65, not 75). A student who balances their own wrong equation loses only the substance
+  (`4NO + 3O₂ + 2H₂O → 4HNO₃`: 75; its coefficients are not compared with the reference). The exception is a nuclear
+  equation: a wrong or missing nuclide is itself the mass / atomic number mistake, so it still hides that balance.
+  The builder's default rubric got the row `balance: 10` (once per answer); a rubric without the row is not affected.
 - Keep these rules as a **data table** in the code, so they can be adjusted without touching the logic.
 - A "count all errors" switch for teachers is not planned; add it only if someone asks.
 
@@ -142,7 +149,19 @@ score: {
   to enter a fraction coefficient anyway.)
 - A penalty that covers several errors is written once (`score.penalties`, see 6).
 
-## 8a. Reaction conditions, part by part (design, 2026-10-09 - not implemented)
+## 8a. Reaction conditions, part by part (design, 2026-10-09; implemented 2026-11-13 in library 3.8.0, simplified)
+
+**Implemented:** the condition is split at its commas into typed parts (heat Δ, light hν, temperature, formula,
+other text) and matched by type, not position. Each reference part gives its own error, all in the existing
+`conditions` category, so the rubric counts them with `{ each, max }` (builder default `{ each: 5, max: 10 }`):
+`missing-condition` (per part), `wrong-condition` (a student part of the same kind: Δ / hν, temperature, substance),
+`heat-instead-of-temperature`; a part the reference does not have is the note `condition-not-required`. The
+temperature tolerance and the Δ / temperature rules below are as designed. **Marking:** only the part itself
+(the target's `condStart` / `condEnd` in the arrow's condition); a part the student left out is an empty marked box
+after the student's condition (`condMissing`); with no condition at all the arrow is marked. **Not implemented:** the
+rubric object with separate penalties per kind (below) - one `conditions` rule covers all of them. Tests: group "Conditions" in chemTests.js.
+
+The original design:
 
 Today the condition above the arrow is compared as one text (spaces removed, comma parts sorted):
 `missing-condition`, `wrong-condition`, or a note when the reference has none. "Δ, 400°C" vs "Δ, 450°C" is the same
@@ -198,7 +217,8 @@ Today the condition above the arrow is compared as one text (spaces removed, com
 - `gradeComparison` with the tables `RUBRIC_CATEGORY_OF` and `SUPPRESSION_RULES` (rules as data, applied in order):
   1. several `wrong-atom-count` of one substance → one error
   2. a wrong substance hides its coefficient, state and charge errors
-  3. missing / extra / wrong substance or unknown element hides the `missing-atom`, `unexpected-atom`, `unbalanced-atom` of its atoms
+  3. missing / extra / wrong substance or unknown element hides the `missing-atom`, `unexpected-atom` of its atoms
+     (and, in a nuclear equation only, the `unbalanced-atom` of #A / #Z - changed 2026-11-13, see 5)
   4. a `wrong-coefficient` hides `unbalanced-atom` of its substance's atoms
   5. an unknown element hides the extra substance that contains it
 - Errors are tagged with `speciesKey` / `speciesAtoms` (`stampSpecies`) so the rules can match them.

@@ -11,6 +11,8 @@ parts) for chemistry, because it can handle errors carried from one stage to the
 teachers' requirements (section 6). Math is postponed and will be thought about separately (section 9).
 Follow-up the same day (section 8): one keyboard and rubric for all stages; a single equation with stages is not
 recommended - separate stage equations with the carried species found automatically.
+2026-11-13 (section 10): a worked design on one example - the STACK question, an error in stage 1, and the rule
+against a double penalty; five points to decide (10.7).
 
 ## 1. The request (2026-11-02)
 
@@ -176,6 +178,131 @@ copying single products (no coefficient) is quicker - both are in the menu.
 - The user (2026-11-02): "the cheap improvement makes a lot of sense if the teacher chooses a multistage question" -
   **implemented, library 3.6.0**: `multistage: true` (builder: "A stage of a multi-stage process", under copy and
   paste); details in COPYPASTE-DESIGN.md. The future multi-stage question turns it on by itself.
+
+## 10. Worked design (2026-11-13): two products carried, an error in stage 1, no double penalty
+
+The user: "find an example where the first stage creates 2 or more products. The second stage takes some of those
+products and uses them as input. Design how it will work in a STACK question, how to deal with an error in the first
+stage, and how to define the rubric so there's no double penalty." **Design only - nothing is built.**
+
+### 10.1 The example: lead(II) nitrate, then nitric acid
+
+| Stage | Reference | |
+|---|---|---|
+| 1 | `2Pb(NO₃)₂(s) →[Δ] 2PbO(s) + 4NO₂(g) + O₂(g)` | three products |
+| 2 | `4NO₂(g) + O₂(g) + 2H₂O(l) → 4HNO₃(aq)` | uses two of them (NO₂, O₂); PbO is left; H₂O is new |
+
+Chosen because one question shows every case: a product that is not carried (PbO), two that are (NO₂, O₂), a new
+reactant (H₂O), and a realistic stage-1 mistake that still gives a balanced stage 2 (NO for NO₂:
+`4NO + 3O₂ + 2H₂O → 4HNO₃`). To check with the teachers that it fits the curriculum; the table of 8.4 has others
+(Cu + conc. HNO₃: coefficients change; marble + HCl: simpler).
+
+### 10.2 The STACK question (option B, one frame)
+
+- **Question text:** the teacher's introduction, then the builder's code - one frame. In the frame: "Stage 1" text and
+  answer box, "Stage 2" text and answer box, one keyboard dock for the box being edited (8.1). The ⧉ menu of stage 2
+  lists the student's stage-1 products one by one, without coefficients (`multistage`, built in 3.6.0).
+- **Inputs, as today:** ans1 = the score of the whole question (Numerical), ans2 = the state (String):
+  `{ v: 3, parts: [ { answer, score, feedback }, { answer, score, feedback } ], score }`.
+  Total = the weighted mean of the stage scores (weights in the builder, default equal).
+- **PRT, as today:** one node, `AlgEquiv(ans1, 1)`, false branch score `ans1`.
+- **A mark per stage in Moodle - decided no (10.7):** the frame could also fill one more score input per stage (ans3, ans4), each
+  with its own one-node PRT. Then Moodle shows a mark per stage, and the frame still grades the stages together.
+  Only if the teachers want it (question 6 of section 6).
+- **Every change regrades all the stages:** stage 2's score depends on stage 1's answer, so a later correction of
+  stage 1 changes stage 2's score too. Both are in one frame, so this is one function call.
+- **Review page:** per stage - the evaluation (grade, feedback), the marked answer, the marked reference - then the
+  total. A carried-forward note names the stage-1 mistake (10.4).
+
+### 10.3 What "carried" means (found by the system, nothing for the teacher to mark)
+
+- **Carried species:** a reactant of the reference's stage 2 that is a product of the reference's stage 1. Here NO₂
+  and O₂. PbO is not carried; H₂O is not carried (new in stage 2).
+- **Coefficients are never carried:** each stage is balanced by itself (4NO₂ in both stages here is a coincidence;
+  in Cu + HNO₃ it is 2NO₂ then 3NO₂).
+
+### 10.4 The rule against a double penalty
+
+**One rule: what the student writes about a carried species in stage 2 exactly as in their own stage 1, and that was
+already an error in stage 1, is not counted again in stage 2.** It covers a wrong formula, a wrong state and a wrong
+charge. It is a hiding rule of the system, like those of RUBRIC-DESIGN.md (`SUPPRESSION_RULES`): **the rubric stays
+one rubric for all the stages, with no new row and no teacher setting.** The error stays in the feedback of stage 2,
+shown as "not counted - this continues your stage 1; the mistake was counted there", and the species is not marked red.
+
+Stage 2 is graded in this order:
+
+1. **Equal to the reference:** 100%.
+2. **An alternative the teacher anticipated** (the common-mistakes list of tab 3, per stage): "stage 2 written as
+   `4NO + 3O₂ + 2H₂O → 4HNO₃`" with its score and feedback. Optional; for the mistakes the teacher wants to word.
+3. **Otherwise, against the reference, with the carried rule:**
+   - a. An error on a carried species that repeats the student's stage 1 (wrong formula / state / charge): not counted.
+   - b. A carried species that the student left out of stage 1 and also out of stage 2: not counted (it was a
+     missing substance in stage 1).
+   - c. When a or b applies to a formula, the reference's coefficients no longer fit the student's substances, so
+     **the coefficients are not compared with the reference; the student's own equation must be balanced.** An
+     unbalanced atom then costs the `balance` row (decided 2026-11-13, 10.7 point 2).
+   - d. Everything else is graded as today: the new reactant (H₂O), the products (HNO₃), states, arrow, conditions.
+4. **Stage 1 wrong but stage 2 written with the correct species** (the student did not continue their own answer):
+   graded as today - full marks if it equals the reference - with a note. No penalty (MULTISTEP question 3).
+5. **Stage 1 empty or with a syntax error:** nothing is carried; stage 2 is graded as today.
+
+### 10.5 The example, graded (the builder's default rubric: substances 25, coefficients 10 each, states 5 each)
+
+| # | Stage 1 | Stage 2 | Stage 1 | Stage 2 today | Stage 2 with the rule |
+|---|---|---|---|---|---|
+| A | `Pb` for `PbO` (not carried) | correct | 75 | 100 | 100 |
+| B | `4NO + 3O₂` for `4NO₂ + O₂` | `4NO + 3O₂ + 2H₂O → 4HNO₃` (own NO, balanced) | 65 | 65 | **100** + note |
+| C | `4NO + O₂` (NO, unbalanced) | `4NO + O₂ + 2H₂O → 4HNO₃` (own NO, unbalanced) | 75 | 75 | **90** (balance) |
+| D | `4NO + 3O₂` | `4NO₂ + O₂ + 2H₂O → 4HNO₃` (the correct one) | 65 | 100 | 100 + note |
+| E | correct | `4NO + 3O₂ + 2H₂O → 4HNO₃` | 100 | 65 | 65 (a new mistake) |
+| F | `NO₂(aq)` for `NO₂(g)` | `NO₂(aq)` again | 95 | 95 | **100** + note |
+| G | a wrong coefficient | correct | 90 | 100 | 100 (coefficients are not carried) |
+| H | `O₂` left out | `4NO₂ + 2H₂O → ...` (no O₂, as in stage 1) | 75 | 75 | **90**: missing O₂ not counted; own balance checked (unbalanced O) |
+
+**The table is as first written. After the decisions of 10.7 (default rubric with `balance: 10`):** row B's stage 1 and
+stage 2 "today" are 75; rows C and H's stage 1 and stage 2 "today" are 65 (substance 25 + balance 10); with the rule
+their stage 2 stays 90.
+
+"Today" = each stage graded alone with library 3.8.0 (run on 2026-11-13). Without the rule, student B loses 35 points
+twice for one mistake.
+
+**Found while grading the example (today's library, one stage):** the student of row B who balanced their own wrong
+equation gets 65, and the student of row C who did not gets 75 - the wrong substance hides the unbalanced atom, but
+not the coefficient that differs from the reference. To fix with rule 3c also inside one stage: a wrong coefficient
+next to a wrong substance is not counted when the student's own equation is balanced.
+
+### 10.6 What it needs in the library and the builder
+
+- Library: `cfg.parts` (section 4.1) with the shared keyboard and rubric (8.1); `compare` gets the previous stage's
+  comparison (`options.previous = { student, reference }`) and applies rule 10.4 as a suppression step in
+  `gradeComparison`; a note code `carried-forward`; the combined score and state `v: 3`.
+- Builder: the Checker tab's list of stages (8.1) with a weight each; the student-answer test of tab 2 with one box
+  per stage, so the teacher can try rows A-H; tab 5's help: the same two inputs and PRT (plus the optional input per
+  stage).
+
+### 10.7 Decided by the user (2026-11-13)
+
+1. **Full marks** for a stage 2 that consistently continues a wrong stage 1 (rows B, F), **plus an option in the
+   rubric** that lets the teacher penalize this case: a rubric row `carriedForward` (shown only in a multi-stage
+   question; default 0 = no penalty; a number = that penalty once per stage, whatever the number of carried
+   mistakes). The row replaces the hidden errors' penalties - it is never added to them.
+2. **Fix the 65 / 75 finding inside one stage - done, library 3.8.0:** with a wrong substance and the student's own
+   equation balanced, a coefficient that differs from the reference is not counted (`gradeComparison`; test in
+   chemTests.js, group "Grade"). Row B's stage 1 and its stage 2 "today" are now 75, like row C.
+   **Then decided: the one-stage behaviour was too loose.** "The purpose of the system is to teach, to establish good
+   practices; balancing is a basic skill" - an unbalanced equation with a wrong substance is penalized for the balance
+   **in addition to** the substance. Done in library 3.8.0: a wrong / missing / extra substance no longer hides
+   `unbalanced-atom` (except the mass / atomic numbers of a nuclear equation); the default rubric got `balance: 10`.
+   Row C's stage 1 is now 65, row B's 75 - balancing is rewarded. So in stage 2 the strict design stands: row C = 90.
+3. **Decided: one mistake, one penalty.** The same wrong formula for the same reference substance in both stages is
+   counted in stage 1 only, also when the substance is not carried. So the rule of 10.4 is about **any substance of
+   the reference that appears in both stages**, not only a product of stage 1 used as a reactant of stage 2 (10.3's
+   "carried" is widened to this). The case: a substance that is not carried (not a product of stage 1 used as a
+   reactant of stage 2) but appears in both stages. Cu + conc. HNO₃: `Cu + 4HNO₃ → Cu(NO₃)₂ + 2NO₂ + 2H₂O`, then
+   `3NO₂ + H₂O → 2HNO₃ + NO` - HNO₃ is a reactant of stage 1 and a product of stage 2. A student who writes HNO₂ in
+   both stages: one mistake (counted in stage 1 only), or two?
+4. **One mark:** only ans1 and ans2, no score input per stage. The stage marks are shown in the frame.
+5. **Look back one stage only.**
 
 ## 9. Math (postponed)
 

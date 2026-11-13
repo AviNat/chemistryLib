@@ -1,6 +1,6 @@
 CHEMICAL KEYBOARD FOR MOODLE - DEMO FOR THE CHEMISTRY TEACHERS TEAM
 =====================================================================
-Updated 10 November 2026 (library 3.7.1)
+Updated 13 November 2026 (library 3.8.0)
 
 What it is, in one sentence:
 A keyboard for writing chemical formulas and equations inside a Moodle question, which checks the
@@ -33,7 +33,8 @@ PART 1 - THE QUICK TOUR (5 minutes)
 4. The grade is automatic and fair
    Partial credit by categories (substances, coefficients, states, charges, arrow, conditions ...).
    "One mistake = one penalty": a wrong coefficient is not charged again for the unbalanced atoms
-   it causes.
+   it causes. Balancing is a basic skill: an equation that is not balanced with the substances the
+   student wrote loses points for the balance too, also next to a wrong substance.
 
 5. The teacher's knowledge, built in
    For the mistakes students typically make, the teacher writes the explanation and the score. The
@@ -157,7 +158,9 @@ and one sentence per mistake. Examples (real output):
 
   Correct:  CaCO₃(s) →[Δ] CaO(s) + CO₂(g)
   Student:  CaCO₃(s) → CaO(s) + CO₂(g)
-     "The reaction conditions above the arrow are missing; the reference answer specifies Δ."
+     "The condition Δ above the arrow is missing."
+     Conditions are checked one by one, and only the wrong or missing condition is marked - not
+     the whole arrow (examples in section D).
 
   Correct:  NaCl(s) → Na⁺(aq) + Cl⁻(aq)
   Student:  NaCl(s) → NaCl(aq)
@@ -190,10 +193,12 @@ The teacher sets a penalty per category, "once" or "per mistake" with a maximum.
   Wrong / missing / extra substance                       25
   Coefficients                       10 each, at most 20
   All coefficients multiplied (2× the right ones)         15
-  States                             5 each, at most 15; 20 if no state is written at all
+  The student's equation is not balanced                  10
+     (not when a wrong coefficient already explains it)
+  States                            5 each, at most 15; 20 if no state is written at all
   Charges                            10 each, at most 20
   Arrow (→ instead of ⇌)                                  10
-  Conditions above the arrow                               5
+  Conditions above the arrow          5 per condition, at most 10
   A writing (syntax) error                    the answer gets 0
 
 Demo - one reaction, many students: methane combustion
@@ -208,12 +213,19 @@ Demo - one reaction, many students: methane combustion
   2CH₄(g) + 4O₂(g) → 2CO₂(g) + 4H₂O(l)           85   balanced, but all coefficients ×2
   CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(g)             95   state of H₂O
   CH₄ + 2O₂ → CO₂ + 2H₂O                         80   no states at all
-  CH₄(g) + 2O₂(g) → CO(g) + 2H₂O(l)              75   wrong substance: CO instead of CO₂
+  CH₄(g) + 2O₂(g) → CO(g) + 2H₂O(l)              65   wrong substance: CO instead of CO₂ (25), and
+                                                       the equation as written is not balanced for
+                                                       O: 4 on the left, 3 on the right (10)
+
+A wrong substance and the balance: the substance is one mistake, the balance is another. A student
+who writes a wrong substance but balances the equation they wrote loses only the substance (25); the
+coefficients are then not compared with the reference.
 
 More examples:
   Correct: Mg(s) + 2HCl(aq) → MgCl₂(aq) + H₂(g)
     Mg(s) + HCl(aq) → MgCl₂(aq) + H₂(g)           90   coefficient
-    Mg(s) + 2HCl(aq) → MgCl(aq) + H₂(g)           75   MgCl is the wrong substance (formula of the salt)
+    Mg(s) + 2HCl(aq) → MgCl(aq) + H₂(g)           65   MgCl is the wrong substance (formula of the salt),
+                                                       and Cl is not balanced
     Mg(s) + 2Hcl(aq) → ...                          0   "Hc is not a recognized element" - the red "!"
                                                        showed it before submitting
 
@@ -221,6 +233,20 @@ More examples:
   Correct: Al₂(SO₄)₃        student Al₃(SO₄)₂         75   wrong formula of the salt
   Correct: N₂ + 3H₂ ⇌ 2NH₃  student uses →             90   arrow
   Correct: I₂(s) → I₂(CCl₄) student writes I₂(aq)       95   state
+
+Conditions above the arrow, checked one by one:
+  Correct: N₂(g) + 3H₂(g) ⇌[Fe, 450°C] 2NH₃(g)
+
+  Above the student's arrow   Score  What the student gets
+  --------------------------  -----  ------------------------------------------------------------
+  Fe, 460°C                    100   a close temperature is accepted
+  Fe, 400°C                     95   "The condition above the arrow is 400°C, but the reference
+                                      answer specifies 450°C."
+  Fe, Δ                         95   "Δ only says that the mixture is heated; the reference answer
+                                      specifies the temperature 450°C."
+  (nothing)                     90   one message per condition: "The condition Fe above the arrow
+                                      is missing." and the same for 450°C
+  The other way round - Correct: CaCO₃(s) →[Δ] ...; a student who writes 900°C gets 100.
 
 The grade is passed to Moodle (STACK question type): it counts in the gradebook like any question.
 
@@ -268,7 +294,8 @@ Example file: example-aluminium-oxide.chemq (open it in tab 4)
   Al + O₂ → AlO₂                  25   mistake 2: the message; in grey: the atoms in AlO₂ and the
                                        three coefficients
   2Al + 3O₂ → 2Al₂O₃              90   not a listed mistake - the rubric: coefficient of Al
-  4Al + 3O → 2Al₂O₃               75   not a listed mistake - the rubric: wrong substance O
+  4Al + 3O → 2Al₂O₃               65   not a listed mistake - the rubric: wrong substance O, and
+                                       O is not balanced
                                        (to give the O₂ message here too, add it as mistake 3)
 
 Nuclear equation - Correct: ²³⁸₉₂U → ²³⁴₉₀Th + ⁴₂He
@@ -368,8 +395,10 @@ SUGGESTED DEMO ORDER (about 25 minutes)
    copy the products with ⧉ and paste them into a second keyboard.
 3. Builder, tab 1: element keys (add from the reference), the preview keyboard.
 4. Tab 2: the methane question - reference answer, rubric defaults. Type three answers from the
-   table in D in "Student answer": 100, 90, 75.
+   table in D in "Student answer": 100, 90, 65 (CO: the substance and the balance).
 5. Feedback: the colors and the sentences; switch the student language to Arabic / English.
+   Conditions: the ammonia question with Fe, 450°C - type Fe, 400°C and then Fe, Δ; only the
+   wrong condition is marked.
 6. Common mistakes: open example-aluminium-oxide.chemq; in tab 3 show the two mistakes and what each
    card says; in tab 2 type 2Al + 3O → Al₂O₃ (50, the teacher's message) and 2Al + 3O₂ → 2Al₂O₃
    (90, the rubric). Add a mistake together with the team.

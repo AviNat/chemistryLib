@@ -53,7 +53,7 @@ li{margin:4px 0}
 
 <header><div class="in">
   <h1>מקלדת כימית ב־Moodle</h1>
-  <p>הדגמה לצוות מורי הכימיה · עדכון: 10 בנובמבר 2026 (ספרייה 3.7.1)</p>
+  <p>הדגמה לצוות מורי הכימיה · עדכון: 13 בנובמבר 2026 (ספרייה 3.8.0)</p>
 </div></header>
 
 <main>
@@ -78,7 +78,8 @@ li{margin:4px 0}
   <li><b>התלמיד מקבל משוב, לא רק "שגוי".</b> כל טעות מסומנת על הנוסחה של התלמיד (באדום) ועל התשובה הנכונה (בכחול),
     עם משפט שמסביר אותה, בשפת התלמיד.</li>
   <li><b>ציון אוטומטי והוגן.</b> ניקוד חלקי לפי קטגוריות (חומרים, מקדמים, מצבי צבירה, מטענים, חץ, תנאים ...).
-    "טעות אחת = הורדה אחת": מקדם שגוי לא נענש פעם נוספת על האטומים הלא מאוזנים שהוא גורם.</li>
+    "טעות אחת = הורדה אחת": מקדם שגוי לא נענש פעם נוספת על האטומים הלא מאוזנים שהוא גורם.
+    איזון הוא מיומנות יסוד: משוואה שאינה מאוזנת עם החומרים שהתלמיד כתב מאבדת נקודות גם על האיזון, גם כשיש בה חומר שגוי.</li>
   <li><b>הידע של המורה - בתוך השאלה.</b> על הטעויות האופייניות המורה כותב את ההסבר
     ואת הציון. התלמיד מקבל "למה", ולא רק "מה שונה".</li>
   <li><b>נושאים מיוחדים.</b> משוואות גרעיניות (<span class="f">²³⁸₉₂U</span>, α, β, γ ...) וחומצות שומן / טריגליצרידים
@@ -217,7 +218,8 @@ li{margin:4px 0}
 
 <div class="example">נכון: <span class="f">CaCO₃(s) →<sup>Δ</sup> CaO(s) + CO₂(g)</span> &nbsp;|&nbsp; תלמיד:
   <span class="f">CaCO₃(s) → CaO(s) + CO₂(g)</span></div>
-<span class="msg">חסרים תנאי התגובה מעל החץ; בתשובת הייחוס מופיע: Δ.</span>
+<span class="msg">התנאי <span class="f">Δ</span> חסר מעל החץ.</span>
+<p>התנאים נבדקים אחד־אחד, ורק התנאי השגוי או החסר מסומן - לא כל החץ (דוגמאות בסעיף ד).</p>
 
 <div class="example">נכון: <span class="f">NaCl(s) → Na⁺(aq) + Cl⁻(aq)</span> &nbsp;|&nbsp; תלמיד:
   <span class="f">NaCl(s) → NaCl(aq)</span></div>
@@ -249,10 +251,11 @@ li{margin:4px 0}
   <tr><td>חומר שגוי / חסר / מיותר</td><td>25</td></tr>
   <tr><td>מקדמים</td><td>10 לכל טעות, עד 20</td></tr>
   <tr><td>כל המקדמים מוכפלים (פי 2 מהנכונים)</td><td>15</td></tr>
+  <tr><td>משוואת התלמיד אינה מאוזנת (לא כשמקדם שגוי כבר מסביר זאת)</td><td>10</td></tr>
   <tr><td>מצבי צבירה</td><td>5 לכל טעות, עד 15; 20 אם לא נכתב אף מצב צבירה</td></tr>
   <tr><td>מטענים</td><td>10 לכל טעות, עד 20</td></tr>
   <tr><td>חץ (<span class="f">→</span> במקום <span class="f">⇌</span>)</td><td>10</td></tr>
-  <tr><td>תנאים מעל החץ</td><td>5</td></tr>
+  <tr><td>תנאים מעל החץ</td><td>5 לכל תנאי, עד 10</td></tr>
   <tr><td>שגיאת כתיבה (תחביר)</td><td>התשובה מקבלת 0</td></tr>
 </table>
 
@@ -265,21 +268,34 @@ li{margin:4px 0}
   <tr><td><span class="f">2CH₄(g) + 4O₂(g) → 2CO₂(g) + 4H₂O(l)</span></td><td class="score s7x">85</td><td>מאוזנת, אבל כל המקדמים פי 2</td></tr>
   <tr><td><span class="f">CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(g)</span></td><td class="score s9x">95</td><td>מצב הצבירה של <span class="f">H₂O</span></td></tr>
   <tr><td><span class="f">CH₄ + 2O₂ → CO₂ + 2H₂O</span></td><td class="score s7x">80</td><td>אין מצבי צבירה בכלל</td></tr>
-  <tr><td><span class="f">CH₄(g) + 2O₂(g) → CO(g) + 2H₂O(l)</span></td><td class="score s7x">75</td><td>חומר שגוי: <span class="f">CO</span> במקום <span class="f">CO₂</span></td></tr>
+  <tr><td><span class="f">CH₄(g) + 2O₂(g) → CO(g) + 2H₂O(l)</span></td><td class="score s7x">65</td><td>חומר שגוי: <span class="f">CO</span> במקום <span class="f">CO₂</span> (25), והמשוואה כפי שנכתבה אינה מאוזנת עבור O: 4 בצד שמאל ו־3 בצד ימין (10)</td></tr>
 </table>
+<p><b>חומר שגוי ואיזון:</b> החומר הוא טעות אחת, והאיזון הוא טעות אחרת. תלמיד שכתב חומר שגוי אבל איזן את המשוואה שכתב
+  מאבד רק את החומר (25); המקדמים שלו אינם מושווים אז לתשובת הייחוס.</p>
 
 <p class="example">דוגמאות נוספות</p>
 <table>
   <tr><th>תשובה נכונה</th><th>תשובת התלמיד</th><th>ציון</th><th>למה</th></tr>
   <tr><td rowspan="3"><span class="f">Mg(s) + 2HCl(aq) → MgCl₂(aq) + H₂(g)</span></td>
       <td><span class="f">Mg(s) + HCl(aq) → MgCl₂(aq) + H₂(g)</span></td><td class="score s9x">90</td><td>מקדם</td></tr>
-  <tr><td><span class="f">Mg(s) + 2HCl(aq) → MgCl(aq) + H₂(g)</span></td><td class="score s7x">75</td><td><span class="f">MgCl</span> - נוסחת המלח שגויה</td></tr>
+  <tr><td><span class="f">Mg(s) + 2HCl(aq) → MgCl(aq) + H₂(g)</span></td><td class="score s7x">65</td><td><span class="f">MgCl</span> - נוסחת המלח שגויה, ו־Cl אינו מאוזן</td></tr>
   <tr><td><span class="f">Mg(s) + 2Hcl(aq) → …</span></td><td class="score s0">0</td><td>"Hc אינו סמל מוכר של יסוד כימי." - ה־"!" האדום הראה את זה עוד לפני ההגשה</td></tr>
   <tr><td><span class="f">Ca(OH)₂</span></td><td><span class="f">CaOH₂</span></td><td class="score s7x">75</td><td>"ב־<span class="f">CaOH2</span> יש 1 אטומים של O, אך בחומר המתאים בתשובת הייחוס יש 2."</td></tr>
   <tr><td><span class="f">Al₂(SO₄)₃</span></td><td><span class="f">Al₃(SO₄)₂</span></td><td class="score s7x">75</td><td>נוסחת המלח שגויה</td></tr>
   <tr><td><span class="f">N₂ + 3H₂ ⇌ 2NH₃</span></td><td><span class="f">N₂ + 3H₂ → 2NH₃</span></td><td class="score s9x">90</td><td>חץ</td></tr>
   <tr><td><span class="f">I₂(s) → I₂(CCl₄)</span></td><td><span class="f">I₂(s) → I₂(aq)</span></td><td class="score s9x">95</td><td>מצב צבירה</td></tr>
 </table>
+
+<p class="example">תנאים מעל החץ, נבדקים אחד־אחד<br>
+נכון: <span class="f">N₂(g) + 3H₂(g) ⇌<sup>Fe, 450°C</sup> 2NH₃(g)</span></p>
+<table>
+  <tr><th>מעל החץ אצל התלמיד</th><th>ציון</th><th>מה התלמיד מקבל</th></tr>
+  <tr><td><span class="f">Fe, 460°C</span></td><td class="score s100">100</td><td>טמפרטורה קרובה מתקבלת</td></tr>
+  <tr><td><span class="f">Fe, 400°C</span></td><td class="score s9x">95</td><td>"התנאי מעל החץ הוא <span class="f">400°C</span>, אך בתשובת הייחוס מופיע: <span class="f">450°C</span>."</td></tr>
+  <tr><td><span class="f">Fe, Δ</span></td><td class="score s9x">95</td><td>"Δ מציין רק שהתערובת מחוממת; בתשובת הייחוס מופיעה הטמפרטורה <span class="f">450°C</span>."</td></tr>
+  <tr><td>בלי תנאים</td><td class="score s9x">90</td><td>הודעה לכל תנאי: "התנאי <span class="f">Fe</span> חסר מעל החץ." וכך גם ל־<span class="f">450°C</span></td></tr>
+</table>
+<p>ובכיוון ההפוך: כשבתשובת הייחוס כתוב <span class="f">Δ</span>, תלמיד שכותב <span class="f">900°C</span> מקבל 100.</p>
 <p>הציון עובר ל־Moodle (סוג שאלה STACK): הוא נכנס לגיליון הציונים כמו כל שאלה אחרת.</p>
 </section>
 
@@ -330,7 +346,7 @@ li{margin:4px 0}
       <td><span class="tmsg">טעות 2: ההודעה של המורה</span>
       <span class="greyed">באפור: האטומים ב־<span class="f">AlO₂</span> ושלושת המקדמים.</span></td></tr>
   <tr><td><span class="f">2Al + 3O₂ → 2Al₂O₃</span></td><td class="score s9x">90</td><td>לא ברשימת הטעויות - המחוון: המקדם של Al</td></tr>
-  <tr><td><span class="f">4Al + 3O → 2Al₂O₃</span></td><td class="score s7x">75</td><td>לא ברשימת הטעויות - המחוון: חומר שגוי <span class="f">O</span>.<br>
+  <tr><td><span class="f">4Al + 3O → 2Al₂O₃</span></td><td class="score s7x">65</td><td>לא ברשימת הטעויות - המחוון: חומר שגוי <span class="f">O</span>, ו־O אינו מאוזן.<br>
       <span class="note">כדי לתת את הודעת ה־<span class="f">O₂</span> גם כאן, מוסיפים אותה כטעות 3.</span></td></tr>
 </table>
 
@@ -429,8 +445,9 @@ li{margin:4px 0}
     העתקת התוצרים ב־<span class="k">⧉</span> והדבקה במקלדת שנייה.</li>
   <li>הבונה, לשונית 1: מקשי יסודות (הוספה מתשובת הייחוס), מקלדת התצוגה המקדימה.</li>
   <li>לשונית 2: שאלת המתאן - תשובת ייחוס, מחוון ברירת המחדל. הקלדת שלוש תשובות מהטבלה בסעיף ד ב"תשובת תלמיד":
-    100, 90, 75.</li>
-  <li>משוב: הצבעים והמשפטים; החלפת שפת התלמיד לערבית / אנגלית.</li>
+    100, 90, 65 (<span class="f">CO</span>: החומר והאיזון).</li>
+  <li>משוב: הצבעים והמשפטים; החלפת שפת התלמיד לערבית / אנגלית. תנאים: שאלת האמוניה עם <span class="f">Fe, 450°C</span> -
+    הקלדת <span class="f">Fe, 400°C</span> ואחר כך <span class="f">Fe, Δ</span>; רק התנאי השגוי מסומן.</li>
   <li><b>טעויות נפוצות:</b> פתיחת <span class="k">example-aluminium-oxide.chemq</span>; בלשונית 3 שתי הטעויות ומה כל כרטיס
     אומר; בלשונית 2 הקלדת <span class="f">2Al + 3O → Al₂O₃</span> (50, ההודעה של המורה) ו־<span class="f">2Al + 3O₂ → 2Al₂O₃</span>
     (90, המחוון). הוספת טעות יחד עם הצוות.</li>

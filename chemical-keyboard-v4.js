@@ -252,8 +252,9 @@ var ERROR_TEXT={
     "scaled-coefficients":"The equation is balanced, but all the coefficients are {factor} times the reference coefficients.",
     "wrong-arrow":"The equation uses the wrong reaction arrow.",
     "wrong-structure":"{species} has the same atoms as {referenceSpecies} but a different structure; they are different substances (isomers).",
-    "missing-condition":"The reaction conditions above the arrow are missing; the reference answer specifies {expectedCondition}.",
-    "wrong-condition":"The reaction conditions above the arrow are {condition}, but the reference answer specifies {expectedCondition}.",
+    "missing-condition":"The condition {expectedCondition} above the arrow is missing.",
+    "wrong-condition":"The condition above the arrow is {condition}, but the reference answer specifies {expectedCondition}.",
+    "heat-instead-of-temperature":"Δ only says that the mixture is heated; the reference answer specifies the temperature {expectedCondition}.",
     "missing-structure":"The formula {species} does not show the structure of the substance; the reference answer writes it as {referenceSpecies}.",
     "wrong-dot-parts":"{species} has the same total atoms as {referenceSpecies}, but the parts joined by the dot are different. The number after the dot counts whole molecules: 5H₂O is five H₂O molecules.",
     "wrong-answer-type":"The expected answer is a chemical {expectedType}, but the student's answer is a chemical {actualType}.",
@@ -311,8 +312,9 @@ var ERROR_TEXT={
     "scaled-coefficients":"המשוואה מאוזנת, אך כל המקדמים גדולים פי {factor} מהמקדמים בתשובת הייחוס.",
     "wrong-arrow":"במשוואה נעשה שימוש בחץ תגובה שגוי.",
     "wrong-structure":"ל־{species} יש אותם אטומים כמו ל־{referenceSpecies}, אך מבנה שונה; אלה חומרים שונים (איזומרים).",
-    "missing-condition":"חסרים תנאי התגובה מעל החץ; בתשובת הייחוס מופיע: {expectedCondition}.",
-    "wrong-condition":"תנאי התגובה מעל החץ הם {condition}, אך בתשובת הייחוס מופיע: {expectedCondition}.",
+    "missing-condition":"התנאי {expectedCondition} חסר מעל החץ.",
+    "wrong-condition":"התנאי מעל החץ הוא {condition}, אך בתשובת הייחוס מופיע: {expectedCondition}.",
+    "heat-instead-of-temperature":"Δ מציין רק שהתערובת מחוממת; בתשובת הייחוס מופיעה הטמפרטורה {expectedCondition}.",
     "missing-structure":"הנוסחה {species} אינה מראה את מבנה החומר; בתשובת הייחוס הוא כתוב כך: {referenceSpecies}.",
     "wrong-dot-parts":"ל־{species} יש אותו מספר אטומים כולל כמו ל־{referenceSpecies}, אך החלקים המחוברים בנקודה שונים. המספר אחרי הנקודה סופר מולקולות שלמות: ⁦5H₂O⁩ הן חמש מולקולות ⁦H₂O⁩.",
     "wrong-answer-type":"נדרשת תשובה מסוג {expectedType}, אך תשובת התלמיד היא מסוג {actualType}.",
@@ -370,8 +372,9 @@ var ERROR_TEXT={
     "scaled-coefficients":"المعادلة موزونة، لكن جميع المعاملات أكبر بـ {factor} مرات من معاملات الإجابة المرجعية.",
     "wrong-arrow":"تم استخدام سهم تفاعل غير صحيح.",
     "wrong-structure":"تحتوي {species} على نفس ذرات {referenceSpecies} لكن ببنية مختلفة؛ إنهما مادتان مختلفتان (متصاوغات).",
-    "missing-condition":"شروط التفاعل فوق السهم مفقودة؛ تحدد الإجابة المرجعية: {expectedCondition}.",
-    "wrong-condition":"شروط التفاعل فوق السهم هي {condition}، لكن الإجابة المرجعية تحدد: {expectedCondition}.",
+    "missing-condition":"الشرط {expectedCondition} مفقود فوق السهم.",
+    "wrong-condition":"الشرط فوق السهم هو {condition}، لكن الإجابة المرجعية تحدد: {expectedCondition}.",
+    "heat-instead-of-temperature":"يدل Δ فقط على أن الخليط يُسخَّن؛ تحدد الإجابة المرجعية درجة الحرارة {expectedCondition}.",
     "missing-structure":"الصيغة {species} لا تُظهر بنية المادة؛ الإجابة المرجعية تكتبها هكذا: {referenceSpecies}.",
     "wrong-dot-parts":"تحتوي {species} على نفس العدد الكلي من الذرات مثل {referenceSpecies}، لكن الأجزاء المرتبطة بالنقطة مختلفة. الرقم بعد النقطة يعدّ جزيئات كاملة: ⁦5H₂O⁩ هي خمسة جزيئات ⁦H₂O⁩.",
     "wrong-answer-type":"نوع الإجابة المطلوب هو {expectedType}، لكن إجابة الطالب من النوع {actualType}.",
@@ -508,9 +511,9 @@ var NOTE_TEXT={
     ar:"تحتوي {species} على الذرات الصحيحة، لكن الإجابة المرجعية تكتبها مع نقطة (·): {referenceSpecies}."
   },
   "condition-not-required":{
-    en:"The reaction conditions above the arrow ({condition}) are not required in this answer.",
-    he:"תנאי התגובה מעל החץ ({condition}) אינם נדרשים בתשובה זו.",
-    ar:"شروط التفاعل فوق السهم ({condition}) غير مطلوبة في هذه الإجابة."
+    en:"The condition {condition} above the arrow is not required in this answer.",
+    he:"התנאי {condition} מעל החץ אינו נדרש בתשובה זו.",
+    ar:"الشرط {condition} فوق السهم غير مطلوب في هذه الإجابة."
   },
   "redundant-charge-one":{
     en:"In {species}, the number 1 in the charge is redundant and should be omitted.",
@@ -1886,8 +1889,65 @@ function conditionInfo(condition){
 
   return {
     text:text.replace(/^\s+|\s+$/g,""),
-    key:parts.join(",")
+    key:parts.join(","),
+    parts:conditionParts(condition)
   };
+}
+
+/*
+ * The parts of a condition, split at its commas (2026-11-13: compared and graded one by one), each with a type:
+ *   heat (Δ), light (hν), temperature (a number with °C or K: value, unit), formula (MnO₂, V₂O₅, H⁺), other (text).
+ * display: the part as the student sees it (subscripts and superscripts as Unicode), for the feedback.
+ */
+var SUB_DIGITS={"0":"₀","1":"₁","2":"₂","3":"₃","4":"₄","5":"₅","6":"₆","7":"₇","8":"₈","9":"₉","+":"₊","-":"₋","−":"₋"};
+var SUP_DIGITS={"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹","+":"⁺","-":"⁻","−":"⁻"};
+
+function conditionParts(condition){
+  var parts=[],run=[],runStart=0,i;
+
+  function finish(){
+    var text="",display="",k,c,t,m,first=0,last=run.length;
+    /* where the part is in the condition's characters, without the spaces around it (for the marking) */
+    while(first<last&&run[first].ch===" ")first++;
+    while(last>first&&run[last-1].ch===" ")last--;
+    var from=runStart+first,to=runStart+last;
+    for(k=0;k<run.length;k++){
+      c=run[k];
+      text+=c.ch;
+      display+=c.script==="sub"&&SUB_DIGITS[c.ch]?SUB_DIGITS[c.ch]:c.script==="sup"&&SUP_DIGITS[c.ch]?SUP_DIGITS[c.ch]:c.ch;
+    }
+    run=[];
+    t=text.replace(/\s+/g,"");
+    if(!t)return;
+    var part={text:text.replace(/^\s+|\s+$/g,""),display:display.replace(/^\s+|\s+$/g,""),key:display.replace(/\s+/g,""),type:"other",
+      start:from,end:to};
+    if(t==="Δ")part.type="heat";
+    else if(t==="hν")part.type="light";
+    else if((m=/^([-−]?\d+(?:\.\d+)?)(°C|K)$/.exec(t))){
+      part.type="temperature";
+      part.value=Number(m[1].replace("−","-"));
+      part.unit=m[2];
+    }
+    else if(/^(?:[A-Z][a-z]?|\d+|[()·+\-−])+$/.test(t)&&/[A-Z]/.test(t))part.type="formula";
+    parts.push(part);
+  }
+
+  for(i=0;i<(condition||[]).length;i++){
+    if(condition[i].ch===","&&condition[i].script!=="sub"&&condition[i].script!=="sup"){ finish(); runStart=i+1; }
+    else run.push(condition[i]);
+  }
+  finish();
+  return parts;
+}
+
+/*
+ * A student temperature that matches the reference one: converted to the reference's unit (723 K = 450°C), within
+ * 10% of the reference value and at least ±5 degrees (RUBRIC-DESIGN.md 8a).
+ */
+function sameTemperature(student,reference){
+  var value=student.value;
+  if(student.unit!==reference.unit)value=student.unit==="K"?value-273:value+273;
+  return Math.abs(value-reference.value)<=Math.max(5,Math.abs(reference.value)*0.1);
 }
 
 /* Plain text of a condition, e.g. "MnO2" or "Fe, 450°C". */
@@ -3015,13 +3075,20 @@ function unmatchedPartTargets(parts,other){
   return targets;
 }
 /*
-  Reaction conditions above the arrow (equations only).
-    reference has none, student has some -> note (not required)
-    reference has some, student has none -> error "missing-condition"
-    both, different                      -> error "wrong-condition"
+  Reaction conditions above the arrow (equations only), part by part (2026-11-13; RUBRIC-DESIGN.md 8a): the parts
+  between the commas are matched by type, not by position, and each reference part gives its own error - so the
+  rubric's "conditions" row can count per error ({ each, max }).
+    the same part (a temperature within 10%, °C / K converted)  -> correct
+    reference Δ, student a temperature                           -> correct (a temperature means heating)
+    reference a temperature, student only Δ                      -> "heat-instead-of-temperature"
+    a reference part, a student part of the same kind            -> "wrong-condition" (Δ / hν, temperature, substance)
+    a reference part with nothing for it                         -> "missing-condition"
+    a student part the reference does not have                   -> note "condition-not-required"
 */
+var CONDITION_GROUP={heat:"energy",light:"energy",temperature:"temperature",formula:"substance",other:"substance"};
+
 function compareConditions(studentAst,referenceAst,errors,notes){
-  var student,reference,studentRanges,referenceRanges;
+  var student,reference,studentRanges,referenceRanges,ref,stu,used,i,j,r,found;
 
   if(studentAst.type!=="equation"||referenceAst.type!=="equation")return;
 
@@ -3029,36 +3096,71 @@ function compareConditions(studentAst,referenceAst,errors,notes){
   reference=referenceAst.arrow.condition;
   studentRanges=oneTarget(studentAst.arrow.range,"condition");
   referenceRanges=oneTarget(referenceAst.arrow.range,"condition");
+  ref=reference?reference.parts:[];
+  stu=student?student.parts:[];
+  used=stu.map(function(){ return false; });
 
-  if(!reference){
-    if(student){
-      addError(notes,"condition-not-required",{
-        condition:student.text,
-        studentRanges:studentRanges,
-        referenceRanges:[]
-      });
+  function equal(s,r){
+    if(s.type!==r.type)return false;
+    return r.type==="temperature"?sameTemperature(s,r):s.key===r.key;
+  }
+  function unused(test){
+    for(var k=0;k<stu.length;k++)if(!used[k]&&test(stu[k]))return k;
+    return -1;
+  }
+  function hasType(type){
+    for(var k=0;k<stu.length;k++)if(stu[k].type===type)return k;
+    return -1;
+  }
+  /*
+   * The marking (2026-11-13): only the part itself - condStart / condEnd are its characters in the arrow's
+   * condition. A part the student left out is shown as an empty marked box after the student's condition
+   * (condMissing); with no condition at all the arrow is marked, as before.
+   */
+  function partTarget(arrowRange,part){
+    return [{start:arrowRange[0],end:arrowRange[1],part:"condition",condStart:part.start,condEnd:part.end}];
+  }
+  function missingTarget(){
+    return student?[{start:studentAst.arrow.range[0],end:studentAst.arrow.range[1],part:"condition",condMissing:true}]:studentRanges;
+  }
+
+  /* 1. the parts the student got right */
+  var matched=ref.map(function(){ return false; });
+  for(i=0;i<ref.length;i++){
+    j=unused(function(s){ return equal(s,ref[i]); });
+    if(j>=0){ used[j]=true; matched[i]=true; }
+  }
+  /* 2. Δ in the reference: a temperature also says the mixture is heated */
+  for(i=0;i<ref.length;i++){
+    if(matched[i]||ref[i].type!=="heat")continue;
+    j=hasType("temperature");
+    if(j>=0){ used[j]=true; matched[i]=true; }
+  }
+  /* 3. the rest of the reference: wrong, Δ for a temperature, or missing - one error each */
+  for(i=0;i<ref.length;i++){
+    if(matched[i])continue;
+    r=ref[i];
+    j=unused(function(s){ return CONDITION_GROUP[s.type]===CONDITION_GROUP[r.type]; });
+    if(j>=0){
+      used[j]=true;
+      addError(errors,"wrong-condition",{condition:stu[j].display,expectedCondition:r.display,
+        studentRanges:partTarget(studentAst.arrow.range,stu[j]),referenceRanges:partTarget(referenceAst.arrow.range,r)});
+      continue;
     }
-
-    return;
+    if(r.type==="temperature"&&(found=hasType("heat"))>=0){
+      used[found]=true;
+      addError(errors,"heat-instead-of-temperature",{condition:stu[found].display,expectedCondition:r.display,
+        studentRanges:partTarget(studentAst.arrow.range,stu[found]),referenceRanges:partTarget(referenceAst.arrow.range,r)});
+      continue;
+    }
+    addError(errors,"missing-condition",{expectedCondition:r.display,
+      studentRanges:missingTarget(),referenceRanges:partTarget(referenceAst.arrow.range,r)});
   }
-
-  if(!student){
-    addError(errors,"missing-condition",{
-      expectedCondition:reference.text,
-      studentRanges:studentRanges,
-      referenceRanges:referenceRanges
-    });
-
-    return;
-  }
-
-  if(student.key!==reference.key){
-    addError(errors,"wrong-condition",{
-      condition:student.text,
-      expectedCondition:reference.text,
-      studentRanges:studentRanges,
-      referenceRanges:referenceRanges
-    });
+  /* 4. what the student added: a note, not an error */
+  for(j=0;j<stu.length;j++){
+    if(used[j])continue;
+    addError(notes,"condition-not-required",{condition:stu[j].display,
+      studentRanges:partTarget(studentAst.arrow.range,stu[j]),referenceRanges:[]});
   }
 }
 function addRepeatedSpeciesNotes(notes,side,sideName,language){
@@ -3099,7 +3201,7 @@ function localizedErrorDescription(error,language){
 function comparisonHighlights(result,answer){
   var highlights=[],errors=result&&result.errors?result.errors:[],field=answer==="reference"?"referenceRanges":"studentRanges",i,j,error,target,color;
   for(i=0;i<errors.length;i++){
-    error=errors[i];color=answer==="reference"?"#cfe8ff":error.code==="unbalanced-atom"?"#ffe49c":"#ffb9b9";for(j=0;j<(error[field]||[]).length;j++){target=error[field][j];if(target&&target.end>target.start)highlights.push({start:target.start,end:target.end,color:color,code:error.code,part:target.part});}}
+    error=errors[i];color=answer==="reference"?"#cfe8ff":error.code==="unbalanced-atom"?"#ffe49c":"#ffb9b9";for(j=0;j<(error[field]||[]).length;j++){target=error[field][j];if(target&&target.end>target.start)highlights.push(conditionMark({start:target.start,end:target.end,color:color,code:error.code,part:target.part},target));}}
 
   /*
    * Notes: soft grey, in both answers (e.g. missing-dot marks the hydrate
@@ -3110,12 +3212,18 @@ function comparisonHighlights(result,answer){
     for(i=0;i<result.notes.length;i++){
       for(j=0;j<(result.notes[i][field]||[]).length;j++){
         target=result.notes[i][field][j];
-        if(target&&target.end>target.start)highlights.push({start:target.start,end:target.end,color:"#e2e6ea",code:result.notes[i].code,part:"note"});
+        if(target&&target.end>target.start)highlights.push(conditionMark({start:target.start,end:target.end,color:"#e2e6ea",code:result.notes[i].code,part:"note"},target));
       }
     }
   }
 
   return highlights;
+}
+/* a mark on one part of the condition above an arrow keeps where the part is (condStart / condEnd, condMissing) */
+function conditionMark(highlight,target){
+  if(target.condStart!==undefined){ highlight.condStart=target.condStart; highlight.condEnd=target.condEnd; }
+  if(target.condMissing)highlight.condMissing=true;
+  return highlight;
 }
 ChemicalKeyboard.prototype.setComparisonFeedback=function(result,answer,value){
   if(value!==undefined)this.setValue(value);
@@ -3766,7 +3874,7 @@ var RUBRIC_CATEGORY_OF={
   "missing-state":"states","wrong-state":"states","unexpected-state":"states",
   "missing-charge":"charges","wrong-charge":"charges","unexpected-charge":"charges",
   "wrong-arrow":"arrow",
-  "missing-condition":"conditions","wrong-condition":"conditions",
+  "missing-condition":"conditions","wrong-condition":"conditions","heat-instead-of-temperature":"conditions",
   "redundant-subscript-one":"notation","redundant-charge-one":"notation","repeated-species":"notation",
   "different-form":"notation","missing-dot":"notation","condition-not-required":"notation"
 };
@@ -3789,9 +3897,16 @@ var SUPPRESSION_RULES=[
   /* a wrong substance: its coefficient, state and charge are not judged */
   {codes:["wrong-coefficient","missing-state","wrong-state","unexpected-state","missing-charge","wrong-charge","unexpected-charge"],
     by:WRONG_SPECIES_CODES,match:"species"},
-  /* atoms missing, extra or unbalanced because of a missing, extra or wrong substance */
-  {codes:["missing-atom","unexpected-atom","unbalanced-atom"],
+  /* atoms missing or extra because of a missing, extra or wrong substance */
+  {codes:["missing-atom","unexpected-atom"],
     by:["missing-species","unexpected-species","unknown-element"].concat(WRONG_SPECIES_CODES),match:"atom"},
+  /*
+    The balance is the student's own skill (decided 2026-11-13): an equation that is not balanced with the
+    substances the student wrote is penalized in addition to the wrong substance. Only in a nuclear equation
+    the mass / atomic number balance is still explained by the wrong or missing nuclide (the same mistake).
+  */
+  {codes:["unbalanced-atom"],
+    by:["missing-species","unexpected-species","unknown-element"].concat(WRONG_SPECIES_CODES),match:"nuclearAtom"},
   /* one wrong coefficient unbalances all the atoms of its substance: one error */
   {codes:["unbalanced-atom"],by:["wrong-coefficient"],match:"atom"},
   /* a particle's wrong atomic number (⁰₁e for ⁰₋₁e) unbalances the atomic numbers: one error (2026-10-19) */
@@ -3804,6 +3919,7 @@ function suppressionMatches(error,other,match){
   if(match==="species")return !!error.speciesKey&&error.speciesKey===other.speciesKey;
   if(match==="containsAtom")return !!error.speciesAtoms&&error.speciesAtoms.indexOf(other.atom)>=0;
   if(match==="atomicNumber")return error.atom==="#Z";
+  if(match==="nuclearAtom"&&!(error.atom&&error.atom.charAt(0)==="#"))return false;
 
   if(!error.atom)return false;
   if(other.speciesAtoms)return other.speciesAtoms.indexOf(error.atom)>=0;
@@ -3891,6 +4007,28 @@ function gradeComparison(result,rubric){
             item.suppressedBy=other.id;
             break;
           }
+        }
+      }
+    }
+  }
+
+  /*
+   * A wrong substance in an equation that the student balanced with it (2026-11-13, MULTIPART-DESIGN.md 10.5): the
+   * coefficients cannot equal the reference's any more, so they are not counted - the one mistake is the substance.
+   * (Before: 4NO + 3O₂ for 4NO₂ + O₂, balanced, lost more than 4NO + O₂, unbalanced.)
+   */
+  if(!fatal){
+    var substanceCodes=["missing-species","unexpected-species","unknown-element"].concat(WRONG_SPECIES_CODES);
+    var wrongSubstance=null,unbalanced=false;
+    for(i=0;i<graded.length;i++){
+      if(graded[i].code==="unbalanced-atom")unbalanced=true;
+      if(!wrongSubstance&&graded[i].counted&&substanceCodes.indexOf(graded[i].code)>=0)wrongSubstance=graded[i];
+    }
+    if(wrongSubstance&&!unbalanced){
+      for(i=0;i<graded.length;i++){
+        if(graded[i].counted&&graded[i].code==="wrong-coefficient"){
+          graded[i].counted=false;
+          graded[i].suppressedBy=wrongSubstance.id;
         }
       }
     }
@@ -6309,6 +6447,8 @@ ChemicalKeyboard.prototype.showValidation=function(problems){
 
       for ( j = 0; j < this.highlights.length; j++ ) {
         h = this.highlights[j];
+        /* a mark on one part of a condition colors that part, not the arrow (conditionMarks) */
+        if ( h.condStart !== undefined || h.condMissing ) continue;
 
         if ( i >= h.start && i < h.end ) {
           return ( h.color || "#ffd2d2" );
@@ -6317,6 +6457,24 @@ ChemicalKeyboard.prototype.showValidation=function(problems){
 
       return null;
     };
+
+/*
+ * The marks on the condition above the arrow chars[i] (2026-11-13): colors[k] for its character k (or null), and
+ * missing - the color of the empty box for a part the student left out (or null). The first mark wins, so an error
+ * wins over a note.
+ */
+ChemicalKeyboard.prototype.conditionMarks=function(i){
+  var n=(this.chars[i]&&this.chars[i].condition||[]).length,colors=[],missing=null,j,k,h;
+  for(k=0;k<n;k++)colors.push(null);
+  for(j=0;j<this.highlights.length;j++){
+    h=this.highlights[j];
+    if(i<h.start||i>=h.end)continue;
+    if(h.condMissing){ if(!missing)missing=h.color||"#ffd2d2"; continue; }
+    if(h.condStart===undefined)continue;
+    for(k=Math.max(0,h.condStart);k<Math.min(n,h.condEnd);k++)if(!colors[k])colors[k]=h.color||"#ffd2d2";
+  }
+  return {colors:colors,missing:missing};
+};
 /*
  * Read-only displays (feedback, reference answer) typeset with MathJax, like the formula box on the page, with
  * the marking as colored boxes (toLatex(true)). Only when the page has MathJax (Moodle and the builder load it);
@@ -6724,6 +6882,7 @@ function appendCharacter(parent,index,mode){
  */
 ChemicalKeyboard.prototype.renderCondition=function(index,condition){
   var line=node("span",""),editing=this.mode==="edit"&&this.cond&&this.cond.arrow===index,k,ch;
+  var marks=this.conditionMarks(index);
 
   function caret(){
     var caretSpan=node("span","");
@@ -6769,7 +6928,16 @@ ChemicalKeyboard.prototype.renderCondition=function(index,condition){
     }else if(condition[k].script==="sup"){
       apply(ch,{fontSize:"75%",verticalAlign:"super"});
     }
+    if(marks.colors[k])ch.style.backgroundColor=marks.colors[k];
 
+    line.appendChild(ch);
+  }
+  /* a part the student left out: an empty marked box after the condition */
+  if(marks.missing&&condition.length){
+    line.appendChild(node("span",", "));
+    ch=node("span","");
+    apply(ch,{display:"inline-block",width:".9em",height:".9em",verticalAlign:"-.1em",backgroundColor:marks.missing,
+      borderRadius:"2px"});
     line.appendChild(ch);
   }
 
@@ -6865,6 +7033,23 @@ function conditionToLatex(condition){
     else out+=esc(c.ch);
   }
 
+  return out;
+}
+
+/*
+ * LaTeX of a condition with its marks (conditionMarks): each run of characters with one color in a \bbox - a run
+ * is one whole part, so its subscripts stay together -, and an empty marked box for a part the student left out.
+ */
+function markedConditionLatex(condition,marks){
+  if(!marks)return conditionToLatex(condition);
+  var out="",k=0,col,run;
+  while(k<condition.length){
+    col=marks.colors[k];
+    run=[];
+    while(k<condition.length&&marks.colors[k]===col){ run.push(condition[k]); k++; }
+    out+=col?"\\bbox["+col+"]{"+conditionToLatex(run)+"}":conditionToLatex(run);
+  }
+  if(marks.missing)out+=",\\ \\bbox["+marks.missing+"]{\\phantom{X}}";
   return out;
 }
 
@@ -6990,11 +7175,11 @@ ChemicalKeyboard.prototype.toLatex=function(withHighlights){
       continue;
     }
 
-    /* Arrow with a condition: \xrightarrow stretches under the text. */
+    /* Arrow with a condition: \xrightarrow stretches under the text. Its marked parts in their own boxes. */
     if(c.ch==="→"&&c.condition&&c.condition.length){
-      normal.push({tex:"\\xrightarrow{"+conditionToLatex(c.condition)+"}",color:colorOf(i)});
+      normal.push({tex:"\\xrightarrow{"+markedConditionLatex(c.condition,withHighlights?this.conditionMarks(i):null)+"}",color:colorOf(i)});
     }else if(c.ch==="⇌"&&c.condition&&c.condition.length){
-      normal.push({tex:"\\overset{"+conditionToLatex(c.condition)+"}{\\rightleftharpoons}",color:colorOf(i)});
+      normal.push({tex:"\\overset{"+markedConditionLatex(c.condition,withHighlights?this.conditionMarks(i):null)+"}{\\rightleftharpoons}",color:colorOf(i)});
     }else if(c.ch==="→"){
       normal.push({tex:"\\longrightarrow ",color:colorOf(i)});
     }else if(c.ch==="⇌"){
@@ -7935,7 +8120,7 @@ function runQuestion(host,cfg,adapter){
   nuclearKeys:NUCLEAR_KEYS,     // particle keys of a nuclear question (config.nuclear)
   plainFormula:plainFormula,    // "H_{2}O" -> "H₂O" (molecule keys in the builder)
   defaultMolecules:function(){ return JSON.parse(JSON.stringify(DEFAULT_MOLECULES)); },   // a copy (the builder's default set)
-  version:"3.7.1"// raise with every change, to see in the console which copy a page runs
+  version:"3.8.0"// raise with every change, to see in the console which copy a page runs
 };
 
 })(window);

@@ -69,6 +69,8 @@ textarea.code{width:100%;height:240px;font:12px/1.4 Consolas,monospace;direction
 .status.warn{color:var(--warn)}
 .student-result{margin-top:10px}
 .student-result:empty{display:none}
+.student-result .evaluation{margin-bottom:14px}
+.student-result .evaluation h3{margin:4px 0 2px;font-size:1.05em}
 main{max-width:1000px;margin:0 auto;padding:16px}
 section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
 section h2{font-size:16px;margin:0 0 10px}
@@ -608,7 +610,7 @@ const TEXT={
       lipidNotation:"Letter case: C, cis (fatty acids)",
       coefficients:"Wrong coefficient",
       scaledCoefficients:"All coefficients a multiple of the reference",
-      balance:"Unbalanced atom (not caused by another error)",
+      balance:"The student's equation is not balanced (not caused by a wrong coefficient)",
       states:"States of matter",
       charges:"Charges",
       arrow:"Arrow",
@@ -635,6 +637,7 @@ const TEXT={
     secStudent:"Student answer",
     studentHint:"Type an answer as a student would: it is graded against the reference answer with the rubric below on every change. Not saved.",
     studentEmpty:"Type an answer to see its grade and feedback.",
+    evaluationTitle:"Evaluation",
     didRefTitle:"Correct answer",
     didEditRef:"Edit in the Checker tab",
     didRefHint:"Read-only here - the reference answer of tab 2.",
@@ -782,7 +785,7 @@ const TEXT={
       lipidNotation:"אותיות גדולות/קטנות: C, cis (חומצות שומן)",
       coefficients:"מקדם שגוי",
       scaledCoefficients:"כל המקדמים כפולה של מקדמי הייחוס",
-      balance:"אטום לא מאוזן (שלא נובע משגיאה אחרת)",
+      balance:"משוואת התלמיד אינה מאוזנת (שלא בגלל מקדם שגוי)",
       states:"מצבי צבירה",
       charges:"מטענים",
       arrow:"חץ",
@@ -809,6 +812,7 @@ const TEXT={
     secStudent:"תשובת תלמיד",
     studentHint:"הקלידו תשובה כמו שתלמיד היה כותב: בכל שינוי היא נבדקת מול תשובת הייחוס לפי המחוון שלמטה. לא נשמר.",
     studentEmpty:"הקלידו תשובה כדי לראות את הציון והמשוב.",
+    evaluationTitle:"הערכה",
     didRefTitle:"התשובה הנכונה",
     didEditRef:"עריכה בלשונית הבדיקה",
     didRefHint:"כאן לקריאה בלבד - תשובת הייחוס מלשונית 2.",
@@ -956,7 +960,7 @@ const TEXT={
       lipidNotation:"الأحرف الكبيرة/الصغيرة: C، cis (أحماض دهنية)",
       coefficients:"معامل خاطئ",
       scaledCoefficients:"جميع المعاملات مضاعف لمعاملات الإجابة المرجعية",
-      balance:"ذرة غير موزونة (لا تنتج عن خطأ آخر)",
+      balance:"معادلة الطالب غير موزونة (ليس بسبب معامل خاطئ)",
       states:"حالات المادة",
       charges:"الشحنات",
       arrow:"السهم",
@@ -983,6 +987,7 @@ const TEXT={
     secStudent:"إجابة طالب",
     studentHint:"اكتب إجابة كما يكتبها الطالب: تُقيَّم مقابل الإجابة المرجعية وفق سلّم التقدير أدناه عند كل تغيير. لا تُحفظ.",
     studentEmpty:"اكتب إجابة لترى درجتها والتغذية الراجعة.",
+    evaluationTitle:"التقييم",
     didRefTitle:"الإجابة الصحيحة",
     didEditRef:"التعديل في تبويب الفحص",
     didRefHint:"للقراءة فقط هنا - الإجابة المرجعية من التبويب 2.",
@@ -1043,10 +1048,11 @@ const SAMPLE_RUBRIC={
   substances:25,
   coefficients:{each:10,max:20},
   scaledCoefficients:15,
+  balance:10,                    // once: the student's own equation is not balanced, also next to a wrong substance
   states:{each:5,max:15,allMissing:20},
   charges:{each:10,max:20},
   arrow:10,
-  conditions:5
+  conditions:{each:5,max:10}     // per condition above the arrow (library 3.8.0)
 };
 
 /*
@@ -1658,6 +1664,24 @@ function renderStudentResult(){
   host.id="studentResultRun";
   box.appendChild(host);
   studentRun=ChemicalKeyboard.mount(host,cfg,{state:{answer:studentDraft},readOnly:true});
+
+  /*
+   * The library's review order is: marked answer, grade, details, reference. Here (2026-11-13) the grade and
+   * details come first, under "Evaluation", and the two marked formulas - the student's (red) and the
+   * reference (blue) - after them, next to each other.
+   */
+  const part=suffix=>Array.from(host.children).find(e=>e.id&&e.id.slice(-suffix.length)===suffix);
+  const marked=part("-keyboard"),summary=part("-summary"),details=part("-details");
+  if(marked&&(summary||details)){
+    const evaluation=document.createElement("div");
+    evaluation.className="evaluation";
+    const title=document.createElement("h3");
+    title.textContent=t("evaluationTitle");
+    evaluation.appendChild(title);
+    if(summary) evaluation.appendChild(summary);
+    if(details) evaluation.appendChild(details);
+    host.insertBefore(evaluation,marked);
+  }
 }
 
 /* Tab 3: the reference answer read-only, and what the initial answer means for the student */
@@ -2125,8 +2149,31 @@ function renderMolecules(){
 }
 
 /* Element symbols in an answer (reaction conditions in [...] and states are skipped). */
+/*
+ * The elements of a value, including those of formulas in the conditions above an arrow ("→[MnO_{2}]",
+ * "→[conc. H_{2}SO_{4}, Δ]"). A condition is free text, so only its formula-like words count:
+ * "450°C", "Catalyst" or "UV" add nothing.
+ */
 function elementsIn(value){
-  const text=(value||"").replace(/\[[^\]]*\]/g," ").replace(/\((s|l|g|aq)\)/g," ");
+  const found=[];
+  const conditions=[];
+  const text=(value||"")
+    .replace(/\[([^\]]*)\]/g,(all,inside)=>{ conditions.push(inside); return " "; })
+    .replace(/\((s|l|g|aq)\)/g," ");
+  symbolsIn(text).forEach(symbol=>{ if(found.indexOf(symbol)<0) found.push(symbol); });
+  conditions.forEach(condition=>{
+    condition.split(/[\s,;]+/).forEach(word=>{
+      if(!/^(?:[A-Z][a-z]?|\d+|[_^]\{[^}]*\}|[()·.+-])+$/.test(word)||word==="UV") return;
+      const symbols=symbolsIn(word,true);
+      if(!symbols) return;
+      symbols.forEach(symbol=>{ if(found.indexOf(symbol)<0) found.push(symbol); });
+    });
+  });
+  return found;
+}
+
+/* The element symbols in a text; strict: null when a capital starts something that is not an element. */
+function symbolsIn(text,strict){
   const found=[];
   const re=/[A-Z][a-z]?/g;
   let m;
@@ -2136,7 +2183,8 @@ function elementsIn(value){
       symbol=symbol[0];
       re.lastIndex-=1;
     }
-    if(ALL_ELEMENTS.indexOf(symbol)>=0&&found.indexOf(symbol)<0) found.push(symbol);
+    if(ALL_ELEMENTS.indexOf(symbol)>=0) found.push(symbol);
+    else if(strict) return null;
   }
   return found;
 }
